@@ -248,7 +248,7 @@ include __DIR__ . '/../includes/header.php';
     }
 
     body.light-mode {
-        background: #f0f2f5;
+        background: #ffffff;
     }
 
     .container { 
