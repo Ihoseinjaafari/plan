@@ -128,6 +128,19 @@ function predictFutureCycles($cycles, $count = 12) {
     $prediction = calculateNextPeriod($cycles);
     if (!$prediction) return [];
     
+    // محاسبه شدت خونریزی پیش‌فرض بر اساس میانگین سیکل‌های قبلی
+    $defaultFlow = 'medium';
+    if (!empty($cycles)) {
+        $flowCounts = ['light' => 0, 'medium' => 0, 'heavy' => 0];
+        foreach ($cycles as $cycle) {
+            $flow = $cycle['flow'] ?? 'medium';
+            if (isset($flowCounts[$flow])) {
+                $flowCounts[$flow]++;
+            }
+        }
+        $defaultFlow = array_keys($flowCounts, max($flowCounts))[0];
+    }
+    
     $futureCycles = [];
     $currentStart = $prediction['next_period_start'];
     $avgLength = $prediction['avg_cycle_length'];
@@ -141,7 +154,8 @@ function predictFutureCycles($cycles, $count = 12) {
             'start_date' => $start->format('Y-m-d'),
             'end_date' => $end->format('Y-m-d'),
             'is_predicted' => true,
-            'cycle_number' => $i + 1
+            'cycle_number' => $i + 1,
+            'flow' => $defaultFlow
         ];
         
         $currentStart = date('Y-m-d', strtotime($currentStart . ' + ' . $avgLength . ' days'));
@@ -396,9 +410,7 @@ include_once __DIR__ . '/../includes/header.php';
                 <a href="?y=<?= $prev_y ?>&m=<?= $prev_m ?>" class="nav-arrow" title="ماه قبل">‹</a>
                 <span class="month-title"><?= $month_names[$jm] ?> <?= $jy ?></span>
                 <a href="?y=<?= $next_y ?>&m=<?= $next_m ?>" class="nav-arrow" title="ماه بعد">›</a>
-                <a href="?" class="today-link">امروز</a>
-                <a href="?y=<?= $jy-1 ?>&m=<?= $jm ?>" class="year-link" title="سال قبل">« سال قبل</a>
-                <a href="?y=<?= $jy+1 ?>&m=<?= $jm ?>" class="year-link" title="سال بعد">سال بعد »</a>
+                <a href="?y=<?= $current_jy ?>&m=<?= $current_jm ?>" class="today-link">امروز</a>
             </div>
 
             <div class="calendar-grid" id="calendarGrid">
@@ -420,13 +432,17 @@ include_once __DIR__ . '/../includes/header.php';
                     $is_today = ($jy == $current_jy && $jm == $current_jm && $day == $current_jd);
                     $dateStr = sprintf("%04d-%02d-%02d", $jy, $jm, $day);
                     
+                    // تبدیل تاریخ شمسی به میلادی برای مقایسه با داده‌ها
+                    list($day_gy, $day_gm, $day_gd) = jalali_to_gregorian($jy, $jm, $day);
+                    $gregDateStr = sprintf("%04d-%02d-%02d", $day_gy, $day_gm, $day_gd);
+                    
                     // بررسی سیکل‌های واقعی
                     $hasCycle = false;
                     $cycleFlow = '';
                     foreach ($cycles as $cycle) {
                         $start = new DateTime($cycle['start_date']);
                         $end = $cycle['end_date'] ? new DateTime($cycle['end_date']) : (clone $start)->modify('+5 days');
-                        $current = new DateTime($dateStr);
+                        $current = new DateTime($gregDateStr);
                         if ($current >= $start && $current <= $end) {
                             $hasCycle = true;
                             $cycleFlow = $cycle['flow'] ?? 'medium';
@@ -437,13 +453,24 @@ include_once __DIR__ . '/../includes/header.php';
                     // بررسی سیکل‌های پیش‌بینی شده
                     $isPredicted = false;
                     $predictedNumber = 0;
+                    $predictedFlow = 'medium'; // پیش‌فرض برای پیش‌بینی
                     foreach ($futureCycles as $future) {
                         $start = new DateTime($future['start_date']);
                         $end = new DateTime($future['end_date']);
-                        $current = new DateTime($dateStr);
+                        $current = new DateTime($gregDateStr);
                         if ($current >= $start && $current <= $end) {
                             $isPredicted = true;
                             $predictedNumber = $future['cycle_number'] ?? 0;
+                            $predictedFlow = $future['flow'] ?? 'medium';
+                            break;
+                        }
+                    }
+                    
+                    // بررسی علائم ثبت شده برای این روز
+                    $hasSymptoms = false;
+                    foreach ($symptoms as $symptom) {
+                        if ($symptom['date'] === $gregDateStr) {
+                            $hasSymptoms = true;
                             break;
                         }
                     }
@@ -452,17 +479,20 @@ include_once __DIR__ . '/../includes/header.php';
                     if ($is_today) $class .= ' today';
                     if ($hasCycle) {
                         $class .= ' period period-' . $cycleFlow;
-                    }
-                    if ($isPredicted && !$hasCycle) {
-                        $class .= ' predicted';
+                    } elseif ($isPredicted) {
+                        $class .= ' predicted predicted-' . $predictedFlow;
+                    } elseif ($hasSymptoms) {
+                        $class .= ' has-symptoms';
                     }
                     
-                    echo '<div class="' . $class . '" data-date="' . $dateStr . '" onclick="selectDate(\'' . $dateStr . '\')">';
+                    echo '<div class="' . $class . '" data-date="' . $gregDateStr . '" onclick="selectDate(\'' . $gregDateStr . '\')">';
                     echo '<span class="day-number">' . $day . '</span>';
                     if ($hasCycle) {
                         echo '<span class="period-dot">●</span>';
                     } elseif ($isPredicted) {
                         echo '<span class="predicted-dot">○</span>';
+                    } elseif ($hasSymptoms) {
+                        echo '<span class="symptom-dot">◆</span>';
                     }
                     echo '</div>';
                 }
@@ -478,12 +508,12 @@ include_once __DIR__ . '/../includes/header.php';
             <div class="calendar-legend">
                 <span class="legend-item"><span class="legend-dot period-dot">●</span> سیکل ثبت‌شده</span>
                 <span class="legend-item"><span class="legend-dot predicted-dot">○</span> پیش‌بینی شده</span>
-                <span class="legend-item"><span class="legend-dot today-dot">◆</span> امروز</span>
-                <span class="legend-item" style="display:flex; gap:4px;">
-                    <span class="legend-dot" style="background:#f5576c; width:10px; height:10px; border-radius:50%; display:inline-block;"></span>
-                    <span class="legend-dot" style="background:#ffc107; width:10px; height:10px; border-radius:50%; display:inline-block;"></span>
-                    <span class="legend-dot" style="background:#28a745; width:10px; height:10px; border-radius:50%; display:inline-block;"></span>
-                    شدت خونریزی
+                <span class="legend-item"><span class="legend-dot symptom-dot">◆</span> دارای علامت</span>
+                <span class="legend-item"><span class="legend-dot today-dot">★</span> امروز</span>
+                <span class="legend-item">شدت خونریزی: 
+                    <span class="flow-indicator flow-light" title="کم"></span>
+                    <span class="flow-indicator flow-medium" title="متوسط"></span>
+                    <span class="flow-indicator flow-heavy" title="زیاد"></span>
                 </span>
             </div>
         </div>
