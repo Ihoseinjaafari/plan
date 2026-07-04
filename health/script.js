@@ -3,13 +3,29 @@
 // ============================================
 // متغیرها
 // ============================================
-let cycles = initialCycles || [];
-let symptoms = initialSymptoms || [];
-let predictionData = prediction || null;
-let currentPhase = currentPhase || 'not_started';
+let cycles = [];
+let symptoms = [];
+let predictionData = null;
+let currentPhase = 'not_started';
 let currentTab = 'dashboard';
 let editCycleId = null;
 let editSymptomId = null;
+
+// ============================================
+// تابع مقداردهی اولیه - فراخوانی از index.php
+// ============================================
+function initHealthApp() {
+    // مقداردهی متغیرها از داده‌های PHP
+    cycles = (typeof initialCycles !== 'undefined') ? initialCycles : [];
+    symptoms = (typeof initialSymptoms !== 'undefined') ? initialSymptoms : [];
+    predictionData = (typeof prediction !== 'undefined') ? prediction : null;
+    currentPhase = (typeof currentPhase !== 'undefined') ? currentPhase : 'not_started';
+    
+    // رندر اولیه
+    renderAll();
+    
+    console.log('Health App initialized with', cycles.length, 'cycles and', symptoms.length, 'symptoms');
+}
 
 // ============================================
 // توابع کمکی
@@ -45,22 +61,24 @@ function toPersianNumbers(str) {
 // ============================================
 // مدیریت تب‌ها
 // ============================================
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
+function initTabs() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
 
-        let tabName = this.dataset.tab;
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('panel-' + tabName).classList.add('active');
-        currentTab = tabName;
+            let tabName = this.dataset.tab;
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + tabName).classList.add('active');
+            currentTab = tabName;
 
-        if (tabName === 'dashboard') renderDashboard();
-        if (tabName === 'cycles') renderCycles();
-        if (tabName === 'symptoms') renderSymptoms();
-        if (tabName === 'predict') renderPrediction();
+            if (tabName === 'dashboard') renderDashboard();
+            if (tabName === 'cycles') renderCycles();
+            if (tabName === 'symptoms') renderSymptoms();
+            if (tabName === 'predict') renderPrediction();
+        });
     });
-});
+}
 
 // ============================================
 // رندر وضعیت فعلی
@@ -117,14 +135,17 @@ function renderDashboard() {
 
 function renderMiniCalendar() {
     let container = document.getElementById('miniCalendar');
+    if (!container) return;
+    
+    // استفاده از تاریخ شمسی برای نمایش تقویم
     let today = new Date();
     let year = today.getFullYear();
     let month = today.getMonth();
     let firstDay = new Date(year, month, 1);
     let lastDay = new Date(year, month + 1, 0);
     let daysInMonth = lastDay.getDate();
-    let startDay = firstDay.getDay();
-
+    let startDay = (firstDay.getDay() + 1) % 7; // تنظیم برای شروع از شنبه
+    
     let periodDays = [];
     cycles.forEach(cycle => {
         let start = new Date(cycle.start_date);
@@ -137,7 +158,7 @@ function renderMiniCalendar() {
             current.setDate(current.getDate() + 1);
         }
     });
-
+    
     let fertileDays = [];
     if (predictionData && predictionData.fertile_window_start && predictionData.fertile_window_end) {
         let start = new Date(predictionData.fertile_window_start);
@@ -150,7 +171,7 @@ function renderMiniCalendar() {
             current.setDate(current.getDate() + 1);
         }
     }
-
+    
     let ovulationDay = null;
     if (predictionData && predictionData.ovulation_date) {
         let ov = new Date(predictionData.ovulation_date);
@@ -158,26 +179,30 @@ function renderMiniCalendar() {
             ovulationDay = ov.getDate();
         }
     }
-
+    
+    // نام روزهای هفته به فارسی (شنبه تا جمعه)
     let dayNames = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
     let html = '<div class="mini-calendar">';
     dayNames.forEach(name => {
         html += '<div class="cal-header">' + name + '</div>';
     });
-
+    
+    // روزهای خالی قبل از شروع ماه
     for (let i = 0; i < startDay; i++) {
         html += '<div class="cal-day"></div>';
     }
-
+    
+    // روزهای ماه
+    let todayDate = today.getDate();
     for (let d = 1; d <= daysInMonth; d++) {
         let cls = 'cal-day';
-        if (d === today.getDate()) cls += ' today';
+        if (d === todayDate) cls += ' today';
         if (periodDays.includes(d)) cls += ' period';
         if (fertileDays.includes(d)) cls += ' fertile';
-        if (d === ovulationDay) cls += ' ovulation';
+        if (ovulationDay && d === ovulationDay) cls += ' ovulation';
         html += '<div class="' + cls + '">' + toPersianNumbers(d) + '</div>';
     }
-
+    
     html += '</div>';
     container.innerHTML = html;
 }
@@ -328,67 +353,75 @@ function renderPrediction() {
 // ============================================
 // مدیریت سیکل‌ها
 // ============================================
-document.getElementById('addCycleBtn').addEventListener('click', function() {
-    editCycleId = null;
-    document.getElementById('editCycleId').value = '';
-    document.getElementById('cycleStartDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('cycleEndDate').value = '';
-    document.getElementById('cycleFlow').value = 'medium';
-    document.getElementById('cycleNotes').value = '';
-    document.getElementById('cycleModal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-});
+function initCycleButtons() {
+    const addCycleBtn = document.getElementById('addCycleBtn');
+    if (addCycleBtn) {
+        addCycleBtn.addEventListener('click', function() {
+            editCycleId = null;
+            document.getElementById('editCycleId').value = '';
+            document.getElementById('cycleStartDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('cycleEndDate').value = '';
+            document.getElementById('cycleFlow').value = 'medium';
+            document.getElementById('cycleNotes').value = '';
+            document.getElementById('cycleModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        });
+    }
+    
+    const saveCycleBtn = document.getElementById('saveCycleBtn');
+    if (saveCycleBtn) {
+        saveCycleBtn.addEventListener('click', function() {
+            let startDate = document.getElementById('cycleStartDate').value;
+            if (!startDate) {
+                showToast('لطفاً تاریخ شروع را وارد کنید', 'error');
+                return;
+            }
+
+            let data = {
+                start_date: startDate,
+                end_date: document.getElementById('cycleEndDate').value || '',
+                flow: document.getElementById('cycleFlow').value,
+                notes: document.getElementById('cycleNotes').value
+            };
+
+            if (editCycleId) {
+                // ویرایش سیکل
+                let cycle = cycles.find(c => c.id === editCycleId);
+                if (cycle) {
+                    Object.assign(cycle, data);
+                    saveCycles();
+                }
+            } else {
+                // افزودن سیکل جدید
+                let formData = new FormData();
+                formData.append('action', 'add_cycle');
+                formData.append('start_date', data.start_date);
+                formData.append('end_date', data.end_date);
+                formData.append('flow', data.flow);
+                formData.append('notes', data.notes);
+
+                fetch(window.location.href, { method: 'POST', body: formData })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            cycles = result.cycles;
+                            predictionData = result.prediction;
+                            currentPhase = result.phase;
+                            closeCycleModal();
+                            showToast('سیکل با موفقیت ثبت شد', 'success');
+                            renderAll();
+                        }
+                    });
+            }
+        });
+    }
+}
 
 function closeCycleModal() {
     document.getElementById('cycleModal').style.display = 'none';
     document.body.style.overflow = '';
     editCycleId = null;
 }
-
-document.getElementById('saveCycleBtn').addEventListener('click', function() {
-    let startDate = document.getElementById('cycleStartDate').value;
-    if (!startDate) {
-        showToast('لطفاً تاریخ شروع را وارد کنید', 'error');
-        return;
-    }
-
-    let data = {
-        start_date: startDate,
-        end_date: document.getElementById('cycleEndDate').value || '',
-        flow: document.getElementById('cycleFlow').value,
-        notes: document.getElementById('cycleNotes').value
-    };
-
-    if (editCycleId) {
-        // ویرایش سیکل
-        let cycle = cycles.find(c => c.id === editCycleId);
-        if (cycle) {
-            Object.assign(cycle, data);
-            saveCycles();
-        }
-    } else {
-        // افزودن سیکل جدید
-        let formData = new FormData();
-        formData.append('action', 'add_cycle');
-        formData.append('start_date', data.start_date);
-        formData.append('end_date', data.end_date);
-        formData.append('flow', data.flow);
-        formData.append('notes', data.notes);
-
-        fetch(window.location.href, { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    cycles = result.cycles;
-                    predictionData = result.prediction;
-                    currentPhase = result.phase;
-                    closeCycleModal();
-                    showToast('سیکل با موفقیت ثبت شد', 'success');
-                    renderAll();
-                }
-            });
-    }
-});
 
 function deleteCycle(id) {
     if (!confirm('آیا از حذف این سیکل مطمئن هستید؟')) return;
@@ -432,55 +465,63 @@ function saveCycles() {
 // ============================================
 // مدیریت علائم
 // ============================================
-document.getElementById('addSymptomBtn').addEventListener('click', function() {
-    editSymptomId = null;
-    document.getElementById('editSymptomId').value = '';
-    document.getElementById('symptomDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('symptomType').value = 'pain';
-    document.getElementById('symptomSeverity').value = 'medium';
-    document.getElementById('symptomNotes').value = '';
-    document.getElementById('symptomModal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-});
+function initSymptomButtons() {
+    const addSymptomBtn = document.getElementById('addSymptomBtn');
+    if (addSymptomBtn) {
+        addSymptomBtn.addEventListener('click', function() {
+            editSymptomId = null;
+            document.getElementById('editSymptomId').value = '';
+            document.getElementById('symptomDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('symptomType').value = 'pain';
+            document.getElementById('symptomSeverity').value = 'medium';
+            document.getElementById('symptomNotes').value = '';
+            document.getElementById('symptomModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        });
+    }
+    
+    const saveSymptomBtn = document.getElementById('saveSymptomBtn');
+    if (saveSymptomBtn) {
+        saveSymptomBtn.addEventListener('click', function() {
+            let date = document.getElementById('symptomDate').value;
+            if (!date) {
+                showToast('لطفاً تاریخ را وارد کنید', 'error');
+                return;
+            }
+
+            let data = {
+                date: date,
+                type: document.getElementById('symptomType').value,
+                severity: document.getElementById('symptomSeverity').value,
+                notes: document.getElementById('symptomNotes').value
+            };
+
+            let formData = new FormData();
+            formData.append('action', 'add_symptom');
+            formData.append('date', data.date);
+            formData.append('type', data.type);
+            formData.append('severity', data.severity);
+            formData.append('notes', data.notes);
+
+            fetch(window.location.href, { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        symptoms = result.symptoms;
+                        closeSymptomModal();
+                        showToast('علامت با موفقیت ثبت شد', 'success');
+                        renderAll();
+                    }
+                });
+        });
+    }
+}
 
 function closeSymptomModal() {
     document.getElementById('symptomModal').style.display = 'none';
     document.body.style.overflow = '';
     editSymptomId = null;
 }
-
-document.getElementById('saveSymptomBtn').addEventListener('click', function() {
-    let date = document.getElementById('symptomDate').value;
-    if (!date) {
-        showToast('لطفاً تاریخ را وارد کنید', 'error');
-        return;
-    }
-
-    let data = {
-        date: date,
-        type: document.getElementById('symptomType').value,
-        severity: document.getElementById('symptomSeverity').value,
-        notes: document.getElementById('symptomNotes').value
-    };
-
-    let formData = new FormData();
-    formData.append('action', 'add_symptom');
-    formData.append('date', data.date);
-    formData.append('type', data.type);
-    formData.append('severity', data.severity);
-    formData.append('notes', data.notes);
-
-    fetch(window.location.href, { method: 'POST', body: formData })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                symptoms = result.symptoms;
-                closeSymptomModal();
-                showToast('علامت با موفقیت ثبت شد', 'success');
-                renderAll();
-            }
-        });
-});
 
 function deleteSymptom(id) {
     if (!confirm('آیا از حذف این علامت مطمئن هستید؟')) return;
@@ -503,10 +544,12 @@ function deleteSymptom(id) {
 // ============================================
 // فیلتر علائم
 // ============================================
-let filterTypeEl = document.getElementById('symptomFilterType');
-let filterDateEl = document.getElementById('symptomFilterDate');
-if (filterTypeEl) filterTypeEl.addEventListener('change', renderSymptoms);
-if (filterDateEl) filterDateEl.addEventListener('change', renderSymptoms);
+function initSymptomFilters() {
+    let filterTypeEl = document.getElementById('symptomFilterType');
+    let filterDateEl = document.getElementById('symptomFilterDate');
+    if (filterTypeEl) filterTypeEl.addEventListener('change', renderSymptoms);
+    if (filterDateEl) filterDateEl.addEventListener('change', renderSymptoms);
+}
 
 // ============================================
 // رندر همه
@@ -528,6 +571,28 @@ window.onclick = function(event) {
 };
 
 // ============================================
-// شروع
+// مقداردهی اولیه تمام کامپوننت‌ها
 // ============================================
-renderAll();
+function initAllComponents() {
+    initTabs();
+    initCycleButtons();
+    initSymptomButtons();
+    initSymptomFilters();
+}
+
+// به‌روزرسانی تابع initHealthApp برای فراخوانی تمام توابع مقداردهی
+function initHealthApp() {
+    // مقداردهی متغیرها از داده‌های PHP
+    cycles = (typeof initialCycles !== 'undefined') ? initialCycles : [];
+    symptoms = (typeof initialSymptoms !== 'undefined') ? initialSymptoms : [];
+    predictionData = (typeof prediction !== 'undefined') ? prediction : null;
+    currentPhase = (typeof currentPhase !== 'undefined') ? currentPhase : 'not_started';
+    
+    // مقداردهی تمام کامپوننت‌ها
+    initAllComponents();
+    
+    // رندر اولیه
+    renderAll();
+    
+    console.log('Health App initialized with', cycles.length, 'cycles and', symptoms.length, 'symptoms');
+}
