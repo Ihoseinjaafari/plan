@@ -701,6 +701,12 @@ if (!isset($page_title)) $page_title = 'Life+';
                 <span>لایف‌ پلن</span>
             </a>
 
+            <!-- دکمه مدیریت مالی -->
+            <a href="<?= BASE_URL ?>/finance/index.php" class="nav-btn" title="مدیریت مالی">
+                <span class="icon icon-chart"></span>
+                <span>مالی</span>
+            </a>
+
             <!-- دکمه تقویم -->
             <a href="<?= BASE_URL ?>/calendar/index.php" class="nav-btn" title="تقویم">
                 <span class="icon icon-calendar"></span>
@@ -804,6 +810,12 @@ if (!isset($page_title)) $page_title = 'Life+';
             <a href="<?= BASE_URL ?>/lifeplan/index.php">
                 <span class="icon icon-lifeplan"></span>
                 لایف‌ پلن
+            </a>
+
+            <!-- مدیریت مالی -->
+            <a href="<?= BASE_URL ?>/finance/index.php">
+                <span class="icon icon-chart"></span>
+                مدیریت مالی
             </a>
 
             <!-- پروژه‌ها -->
