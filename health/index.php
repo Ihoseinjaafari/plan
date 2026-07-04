@@ -251,6 +251,9 @@ $page_title = 'سلامت زنان';
 include_once __DIR__ . '/../includes/header.php';
 ?>
 
+<!-- ===== استایل‌های سلامت ===== -->
+<link rel="stylesheet" href="style.css">
+
 <!-- ===== محتوای اختصاصی ===== -->
 <?php include 'template.php'; ?>
 
