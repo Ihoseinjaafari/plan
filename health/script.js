@@ -266,8 +266,12 @@ function renderCycles() {
 // ============================================
 function renderSymptoms() {
     let container = document.getElementById('symptomsList');
-    let filterType = document.getElementById('symptomFilterType').value;
-    let filterDate = document.getElementById('symptomFilterDate').value;
+    if (!container) return;
+    
+    let filterTypeEl = document.getElementById('symptomFilterType');
+    let filterDateEl = document.getElementById('symptomFilterDate');
+    let filterType = filterTypeEl ? filterTypeEl.value : '';
+    let filterDate = filterDateEl ? filterDateEl.value : '';
 
     let filtered = [...symptoms];
     if (filterType) filtered = filtered.filter(s => s.type === filterType);
@@ -499,8 +503,10 @@ function deleteSymptom(id) {
 // ============================================
 // فیلتر علائم
 // ============================================
-document.getElementById('symptomFilterType').addEventListener('change', renderSymptoms);
-document.getElementById('symptomFilterDate').addEventListener('change', renderSymptoms);
+let filterTypeEl = document.getElementById('symptomFilterType');
+let filterDateEl = document.getElementById('symptomFilterDate');
+if (filterTypeEl) filterTypeEl.addEventListener('change', renderSymptoms);
+if (filterDateEl) filterDateEl.addEventListener('change', renderSymptoms);
 
 // ============================================
 // رندر همه
