@@ -1,9 +1,8 @@
 <?php
-// planner/habits.php - مدیریت عادت‌ها
+// planner/habits.php - مدیریت عادت‌ها (نسخه جدید با طراحی مدرن)
 session_start();
 date_default_timezone_set('Asia/Tehran');
 
-// ==================== بررسی احراز هویت ====================
 $usersFile = __DIR__ . '/../data/users.json';
 
 function getUserById($id) {
@@ -12,9 +11,7 @@ function getUserById($id) {
     $users = json_decode(file_get_contents($usersFile), true);
     if (!is_array($users)) return null;
     foreach ($users as $user) {
-        if ($user['id'] == $id) {
-            return $user;
-        }
+        if ($user['id'] == $id) return $user;
     }
     return null;
 }
@@ -31,14 +28,12 @@ if (!$currentUser) {
     exit;
 }
 
-// ==================== فایل‌های دیتا ====================
 $habitsFile = __DIR__ . '/../data/habits.json';
+$habitLogsFile = __DIR__ . '/../data/habit_logs.json';
 
-if (!file_exists($habitsFile)) {
-    file_put_contents($habitsFile, json_encode([]));
-}
+if (!file_exists($habitsFile)) file_put_contents($habitsFile, json_encode([]));
+if (!file_exists($habitLogsFile)) file_put_contents($habitLogsFile, json_encode([]));
 
-// ==================== توابع ====================
 function getUserHabits($userId) {
     global $habitsFile;
     $habits = json_decode(file_get_contents($habitsFile), true);
@@ -46,77 +41,120 @@ function getUserHabits($userId) {
     return array_values(array_filter($habits, fn($h) => ($h['user_id'] ?? '') == $userId));
 }
 
+function getHabitLogs($userId) {
+    global $habitLogsFile;
+    $logs = json_decode(file_get_contents($habitLogsFile), true);
+    if (!is_array($logs)) $logs = [];
+    return array_values(array_filter($logs, fn($l) => ($l['user_id'] ?? '') == $userId));
+}
+
 function saveUserHabits($userId, $habits) {
     global $habitsFile;
     $allHabits = json_decode(file_get_contents($habitsFile), true);
     if (!is_array($allHabits)) $allHabits = [];
-    
     $allHabits = array_values(array_filter($allHabits, fn($h) => ($h['user_id'] ?? '') != $userId));
-    foreach ($habits as &$habit) {
-        $habit['user_id'] = $userId;
-    }
+    foreach ($habits as &$habit) $habit['user_id'] = $userId;
     $allHabits = array_merge($allHabits, $habits);
     file_put_contents($habitsFile, json_encode($allHabits, JSON_PRETTY_PRINT));
 }
 
-// ==================== پردازش درخواست‌ها ====================
+function saveHabitLog($userId, $habitId, $date, $completed = true) {
+    global $habitLogsFile;
+    $logs = json_decode(file_get_contents($habitLogsFile), true);
+    if (!is_array($logs)) $logs = [];
+    $logs = array_values(array_filter($logs, fn($l) => !($l['user_id'] == $userId && $l['habit_id'] == $habitId && $l['date'] == $date)));
+    if ($completed) {
+        $logs[] = ['user_id' => $userId, 'habit_id' => $habitId, 'date' => $date, 'completed_at' => date('Y-m-d H:i:s')];
+    }
+    file_put_contents($habitLogsFile, json_encode($logs, JSON_PRETTY_PRINT));
+}
+
+function calculateStreak($habitId, $logs, $today) {
+    $habitLogs = array_values(array_filter($logs, fn($l) => $l['habit_id'] == $habitId));
+    usort($habitLogs, fn($a, $b) => strcmp($b['date'], $a['date']));
+    $streak = 0;
+    $checkDate = strtotime($today);
+    foreach ($habitLogs as $log) {
+        $logDate = strtotime($log['date']);
+        $diff = floor(($checkDate - $logDate) / 86400);
+        if ($diff == $streak) $streak++;
+        elseif ($diff > $streak) break;
+    }
+    return $streak;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     $action = $_POST['action'] ?? '';
     $response = ['success' => false];
     $userId = $_SESSION['user_id'];
-    
+    $today = date('Y-m-d');
+
     if ($action === 'load_habits') {
-        $response = ['success' => true, 'habits' => getUserHabits($userId)];
+        $habits = getUserHabits($userId);
+        $logs = getHabitLogs($userId);
+        foreach ($habits as &$habit) {
+            $habit['streak'] = calculateStreak($habit['id'], $logs, $today);
+            $habit['completed_today'] = false;
+            foreach ($logs as $log) {
+                if ($log['habit_id'] == $habit['id'] && $log['date'] == $today) {
+                    $habit['completed_today'] = true;
+                    break;
+                }
+            }
+        }
+        $response = ['success' => true, 'habits' => $habits];
     }
     elseif ($action === 'add_habit') {
         $habits = getUserHabits($userId);
+        $colors = ['#f5576c', '#4facfe', '#43e97b', '#fa709a', '#a18cd1', '#fbc2eb', '#667eea', '#764ba2'];
         $newId = time() . rand(100, 999);
         $newHabit = [
-            'id' => $newId,
-            'user_id' => $userId,
+            'id' => $newId, 'user_id' => $userId,
             'name' => htmlspecialchars(trim($_POST['name'] ?? '')),
             'description' => htmlspecialchars(trim($_POST['description'] ?? '')),
             'frequency' => $_POST['frequency'] ?? 'daily',
             'target' => intval($_POST['target'] ?? 1),
-            'current_streak' => 0,
-            'best_streak' => 0,
-            'last_done' => null,
-            'created_at' => date('Y-m-d H:i:s'),
-            'color' => '#' . dechex(rand(0x000000, 0xFFFFFF))
+            'color' => $colors[array_rand($colors)],
+            'icon' => $_POST['icon'] ?? 'fa-fire',
+            'created_at' => date('Y-m-d H:i:s')
         ];
         $habits[] = $newHabit;
         saveUserHabits($userId, $habits);
         $response = ['success' => true, 'habits' => getUserHabits($userId)];
     }
     elseif ($action === 'toggle_habit') {
-        $habits = getUserHabits($userId);
-        $today = date('Y-m-d');
-        foreach ($habits as &$habit) {
-            if ($habit['id'] == $_POST['id']) {
-                $lastDone = $habit['last_done'] ?? null;
-                if ($lastDone === $today) {
-                    // امروز انجام شده - برداشتن
-                    $habit['current_streak'] = max(0, $habit['current_streak'] - 1);
-                    $habit['last_done'] = null;
-                } else {
-                    // انجام امروز
-                    $habit['last_done'] = $today;
-                    $habit['current_streak'] = ($habit['current_streak'] ?? 0) + 1;
-                    if ($habit['current_streak'] > ($habit['best_streak'] ?? 0)) {
-                        $habit['best_streak'] = $habit['current_streak'];
-                    }
-                }
+        $logs = getHabitLogs($userId);
+        $habitId = $_POST['id'];
+        $alreadyCompleted = false;
+        foreach ($logs as $log) {
+            if ($log['habit_id'] == $habitId && $log['date'] == $today) {
+                $alreadyCompleted = true;
                 break;
             }
         }
-        saveUserHabits($userId, $habits);
-        $response = ['success' => true, 'habits' => getUserHabits($userId)];
+        saveHabitLog($userId, $habitId, $today, !$alreadyCompleted);
+        $habits = getUserHabits($userId);
+        $logs = getHabitLogs($userId);
+        foreach ($habits as &$habit) {
+            $habit['streak'] = calculateStreak($habit['id'], $logs, $today);
+            $habit['completed_today'] = false;
+            foreach ($logs as $log) {
+                if ($log['habit_id'] == $habit['id'] && $log['date'] == $today) {
+                    $habit['completed_today'] = true;
+                    break;
+                }
+            }
+        }
+        $response = ['success' => true, 'habits' => $habits];
     }
     elseif ($action === 'delete_habit') {
         $habits = getUserHabits($userId);
         $habits = array_values(array_filter($habits, fn($h) => $h['id'] != $_POST['id']));
         saveUserHabits($userId, $habits);
+        $logs = getHabitLogs($userId);
+        $logs = array_values(array_filter($logs, fn($l) => $l['habit_id'] != $_POST['id']));
+        file_put_contents($habitLogsFile, json_encode($logs, JSON_PRETTY_PRINT));
         $response = ['success' => true, 'habits' => getUserHabits($userId)];
     }
     elseif ($action === 'edit_habit') {
@@ -127,662 +165,182 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (isset($_POST['description'])) $habit['description'] = htmlspecialchars(trim($_POST['description']));
                 if (isset($_POST['frequency'])) $habit['frequency'] = $_POST['frequency'];
                 if (isset($_POST['target'])) $habit['target'] = intval($_POST['target']);
+                if (isset($_POST['icon'])) $habit['icon'] = $_POST['icon'];
                 break;
             }
         }
         saveUserHabits($userId, $habits);
         $response = ['success' => true, 'habits' => getUserHabits($userId)];
     }
-    
     echo json_encode($response);
     exit;
 }
 
-$userId = $_SESSION['user_id'];
+$page_title = 'عادت‌های من';
+include_once __DIR__ . '/../includes/header.php';
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدیریت عادت‌ها</title>
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <title><?= $page_title ?> | Life+</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
-            background: linear-gradient(135deg, #f59e0b, #f97316);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            background: white;
-            border-radius: 20px;
-            padding: 25px 30px;
-            margin-bottom: 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .header h1 {
-            font-size: 24px;
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .header h1 i {
-            color: #f59e0b;
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .back-btn {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 14px;
-            font-family: inherit;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .back-btn:hover {
-            background: #5a6268;
-            transform: scale(1.02);
-        }
-        
-        .home-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 14px;
-            font-family: inherit;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .home-btn:hover {
-            background: #5a6fd6;
-            transform: scale(1.02);
-        }
-        
-        .add-btn {
-            background: linear-gradient(135deg, #f59e0b, #f97316);
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: inherit;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .add-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 5px 20px rgba(245, 158, 11, 0.4);
-        }
-        
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        }
-        
-        .card h2 {
-            font-size: 18px;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .card h2 i {
-            color: #f59e0b;
-        }
-        
-        .habits-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-        
-        .habit-card {
-            background: #f8f9fa;
-            border-radius: 16px;
-            padding: 20px;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .habit-card:hover {
-            border-color: #f59e0b;
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-        
-        .habit-card .habit-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-left: 8px;
-        }
-        
-        .habit-card .habit-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-        }
-        
-        .habit-card .habit-desc {
-            font-size: 13px;
-            color: #999;
-            margin: 8px 0 12px 0;
-            min-height: 40px;
-        }
-        
-        .habit-card .habit-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin: 15px 0;
-        }
-        
-        .habit-card .stat-item {
-            text-align: center;
-            background: white;
-            padding: 10px 5px;
-            border-radius: 10px;
-        }
-        
-        .habit-card .stat-item .number {
-            font-size: 20px;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-        
-        .habit-card .stat-item .label {
-            font-size: 10px;
-            color: #999;
-            margin-top: 2px;
-        }
-        
-        .habit-card .stat-item .number.done {
-            color: #28a745;
-        }
-        
-        .habit-card .stat-item .number.streak {
-            color: #f59e0b;
-        }
-        
-        .habit-card .stat-item .number.best {
-            color: #667eea;
-        }
-        
-        .habit-card .habit-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #e9ecef;
-        }
-        
-        .habit-card .habit-actions button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            transition: all 0.3s;
-            font-family: inherit;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .habit-card .habit-actions .done-btn {
-            background: #28a745;
-            color: white;
-            flex: 1;
-            justify-content: center;
-        }
-        
-        .habit-card .habit-actions .done-btn:hover {
-            background: #218838;
-        }
-        
-        .habit-card .habit-actions .done-btn.done-today {
-            background: #dc3545;
-        }
-        
-        .habit-card .habit-actions .done-btn.done-today:hover {
-            background: #c82333;
-        }
-        
-        .habit-card .habit-actions .edit-btn {
-            background: #667eea;
-            color: white;
-        }
-        
-        .habit-card .habit-actions .edit-btn:hover {
-            background: #5a6fd6;
-        }
-        
-        .habit-card .habit-actions .delete-btn {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .habit-card .habit-actions .delete-btn:hover {
-            background: #c82333;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-            grid-column: 1 / -1;
-        }
-        
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            color: #ddd;
-        }
-        
-        /* مودال */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        
-        .modal-content {
-            background: white;
-            margin: 5% auto;
-            width: 90%;
-            max-width: 500px;
-            border-radius: 25px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            background: linear-gradient(135deg, #f59e0b, #f97316);
-            color: white;
-            padding: 20px 25px;
-            font-weight: 600;
-            font-size: 18px;
-            border-radius: 25px 25px 0 0;
-        }
-        
-        .modal-body { padding: 25px; }
-        
-        .modal-body input, .modal-body select, .modal-body textarea {
-            width: 100%;
-            padding: 12px 15px;
-            margin-bottom: 18px;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: all 0.3s;
-        }
-        
-        .modal-body input:focus, .modal-body select:focus, .modal-body textarea:focus {
-            outline: none;
-            border-color: #f59e0b;
-        }
-        
-        .modal-body textarea { resize: vertical; min-height: 80px; }
-        
-        .modal-footer {
-            padding: 20px 25px 25px;
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-        }
-        
-        .btn-cancel {
-            background: #e9ecef;
-            color: #2c3e50;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            flex: 1;
-            font-family: inherit;
-            font-size: 14px;
-        }
-        
-        .btn-save {
-            background: linear-gradient(135deg, #f59e0b, #f97316);
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            flex: 1;
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .btn-save:hover {
-            transform: scale(1.02);
-        }
-        
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #1a1a2e;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 12px;
-            font-size: 14px;
-            z-index: 9999;
-            opacity: 0;
-            transform: translateY(100px);
-            transition: all 0.3s ease;
-            font-family: 'Vazirmatn', sans-serif;
-        }
-        
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .toast.success { background: #28a745; }
-        .toast.error { background: #dc3545; }
-        
-        @media (max-width: 768px) {
-            .header { flex-direction: column; align-items: stretch; }
-            .header-actions { flex-direction: column; }
-            .habits-grid { grid-template-columns: 1fr; }
-            .habit-card .habit-stats { grid-template-columns: 1fr 1fr 1fr; }
-            .habit-card .habit-actions { flex-wrap: wrap; }
-            .habit-card .habit-actions .done-btn { flex: 1 1 100%; }
-        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Vazirmatn',sans-serif!important;background:linear-gradient(135deg,#0f0c29,#302b63);min-height:100vh;padding:20px;color:#fff}
+        .container{max-width:1200px;margin:0 auto}
+        .habits-header{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border-radius:20px;padding:25px 30px;margin-bottom:25px;border:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;box-shadow:0 8px 25px rgba(0,0,0,0.2)}
+        .habits-header h1{font-size:24px;color:#fff;display:flex;align-items:center;gap:12px}
+        .habits-header h1 i{color:#f5576c}
+        .header-actions{display:flex;gap:10px;flex-wrap:wrap}
+        .btn{padding:10px 20px;border-radius:12px;cursor:pointer;font-size:14px;font-family:inherit;transition:all 0.3s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;border:none}
+        .btn-primary{background:linear-gradient(135deg,#f5576c,#4facfe);color:#fff}
+        .btn-primary:hover{transform:scale(1.02);box-shadow:0 5px 20px rgba(245,87,108,0.4)}
+        .btn-secondary{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2)}
+        .btn-secondary:hover{background:rgba(255,255,255,0.15);border-color:#667eea}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:25px}
+        .stat-card{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border-radius:16px;padding:20px;border:1px solid rgba(255,255,255,0.1);text-align:center;transition:all 0.3s}
+        .stat-card:hover{transform:translateY(-3px);border-color:#667eea;box-shadow:0 8px 25px rgba(0,0,0,0.2)}
+        .stat-card .icon{font-size:32px;margin-bottom:10px}
+        .stat-card .number{font-size:32px;font-weight:700;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .stat-card .label{font-size:13px;color:rgba(255,255,255,0.6);margin-top:5px}
+        .habits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-bottom:25px}
+        .habit-card{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border-radius:20px;padding:25px;border:1px solid rgba(255,255,255,0.1);transition:all 0.3s;position:relative;overflow:hidden}
+        .habit-card::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--habit-color,#f5576c)}
+        .habit-card:hover{transform:translateY(-5px);border-color:rgba(255,255,255,0.2);box-shadow:0 10px 30px rgba(0,0,0,0.3)}
+        .habit-card.completed{background:rgba(40,167,69,0.1);border-color:rgba(40,167,69,0.3)}
+        .habit-header{display:flex;align-items:flex-start;gap:15px;margin-bottom:15px}
+        .habit-icon{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;flex-shrink:0}
+        .habit-info{flex:1}
+        .habit-name{font-size:18px;font-weight:600;color:#fff;margin-bottom:5px}
+        .habit-desc{font-size:13px;color:rgba(255,255,255,0.6)}
+        .habit-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}
+        .habit-stat{background:rgba(255,255,255,0.05);padding:12px;border-radius:12px;text-align:center}
+        .habit-stat .value{font-size:20px;font-weight:700;color:#667eea}
+        .habit-stat .label{font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px}
+        .habit-actions{display:flex;gap:10px;margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.1)}
+        .habit-actions .btn{flex:1;justify-content:center;padding:10px;font-size:13px}
+        .btn-check{background:linear-gradient(135deg,#28a745,#20c997);color:#fff}
+        .btn-check.completed{background:linear-gradient(135deg,#dc3545,#c82333)}
+        .btn-edit{background:rgba(102,126,234,0.2);color:#667eea}
+        .btn-delete{background:rgba(220,53,69,0.2);color:#dc3545}
+        .weekly-progress{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border-radius:20px;padding:25px;border:1px solid rgba(255,255,255,0.1);margin-bottom:25px}
+        .weekly-progress h2{font-size:18px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+        .week-days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:15px}
+        .day-cell{background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 5px;text-align:center;border:1px solid rgba(255,255,255,0.1)}
+        .day-cell.today{border-color:#f5576c;background:rgba(245,87,108,0.1)}
+        .day-cell .day-name{font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:5px}
+        .day-cell .day-number{font-size:18px;font-weight:600}
+        .habit-week-row{display:grid;grid-template-columns:1fr repeat(7,1fr);gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+        .habit-week-row:last-child{border-bottom:none}
+        .habit-week-name{font-size:13px;color:rgba(255,255,255,0.8);display:flex;align-items:center;gap:8px}
+        .week-check{aspect-ratio:1;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s}
+        .week-check.completed{background:rgba(40,167,69,0.3);border-color:#28a745;color:#28a745}
+        .week-check:hover{border-color:#667eea}
+        .modal{display:none;position:fixed;z-index:10000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.7);backdrop-filter:blur(5px)}
+        .modal.active{display:flex;align-items:center;justify-content:center}
+        .modal-content{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:25px;width:90%;max-width:500px;border:1px solid rgba(255,255,255,0.1);box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+        .modal-header{background:linear-gradient(135deg,#f5576c,#4facfe);padding:20px 25px;border-radius:25px 25px 0 0;font-weight:600;font-size:18px}
+        .modal-body{padding:25px}
+        .form-group{margin-bottom:18px}
+        .form-group label{display:block;margin-bottom:8px;font-size:14px;color:rgba(255,255,255,0.8)}
+        .form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 15px;border:1px solid rgba(255,255,255,0.1);border-radius:12px;background:rgba(255,255,255,0.05);color:#fff;font-size:14px;font-family:inherit;transition:all 0.3s}
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,0.1)}
+        .form-group textarea{resize:vertical;min-height:80px}
+        .icon-selector{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:10px}
+        .icon-option{aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:all 0.3s}
+        .icon-option:hover{border-color:#667eea;background:rgba(102,126,234,0.2)}
+        .icon-option.selected{border-color:#f5576c;background:rgba(245,87,108,0.2)}
+        .modal-footer{padding:20px 25px 25px;display:flex;gap:12px;justify-content:flex-end}
+        .modal-footer .btn{flex:1}
+        .btn-cancel{background:rgba(255,255,255,0.1);color:#fff}
+        .toast{position:fixed;bottom:30px;right:30px;background:#1a1a2e;color:#fff;padding:15px 25px;border-radius:12px;font-size:14px;z-index:9999;opacity:0;transform:translateY(100px);transition:all 0.3s ease;border:1px solid rgba(255,255,255,0.1)}
+        .toast.show{opacity:1;transform:translateY(0)}
+        .toast.success{background:rgba(40,167,69,0.9);border-color:#28a745}
+        .toast.error{background:rgba(220,53,69,0.9);border-color:#dc3545}
+        .empty-state{text-align:center;padding:60px 20px;color:rgba(255,255,255,0.5);grid-column:1/-1}
+        .empty-state i{font-size:64px;margin-bottom:20px;opacity:0.3}
+        .empty-state p{font-size:16px;margin-bottom:10px}
+        .empty-state .hint{font-size:13px;opacity:0.6}
+        @media(max-width:768px){.habits-header{flex-direction:column;align-items:stretch}.header-actions{flex-direction:column}.habits-grid{grid-template-columns:1fr}.week-days{grid-template-columns:repeat(7,1fr);gap:4px}.day-cell{padding:8px 2px}.day-cell .day-name{font-size:10px}.day-cell .day-number{font-size:14px}.habit-week-row{grid-template-columns:1fr repeat(7,1fr);gap:4px}.habit-week-name{font-size:11px}.week-check{border-radius:6px}}
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-fire"></i> مدیریت عادت‌ها</h1>
+        <div class="habits-header">
+            <h1><i class="fas fa-fire"></i> عادت‌های من</h1>
             <div class="header-actions">
-                <button class="add-btn" onclick="openAddModal()">
-                    <i class="fas fa-plus"></i> افزودن عادت جدید
-                </button>
-                <a href="index.php" class="back-btn"><i class="fas fa-arrow-right"></i> بازگشت</a>
-                <a href="../index.php" class="home-btn"><i class="fas fa-home"></i> صفحه اصلی</a>
+                <button class="btn btn-primary" onclick="openAddModal()"><i class="fas fa-plus"></i> عادت جدید</button>
+                <a href="index.php" class="btn btn-secondary"><i class="fas fa-arrow-right"></i> بازگشت به پلنر</a>
             </div>
         </div>
-        
-        <div class="card">
-            <h2><i class="fas fa-chart-line"></i> عادت‌های من</h2>
-            <div class="habits-grid" id="habitsContainer">
-                <div class="empty-state">
-                    <i class="fas fa-fire"></i>
-                    <div>هیچ عادتی تعریف نشده است</div>
-                    <div style="font-size: 12px; margin-top: 10px;">با کلیک روی دکمه "افزودن عادت جدید" شروع کنید</div>
-                </div>
-            </div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="icon" style="color:#f5576c"><i class="fas fa-fire"></i></div><div class="number" id="totalHabits">0</div><div class="label">کل عادت‌ها</div></div>
+            <div class="stat-card"><div class="icon" style="color:#28a745"><i class="fas fa-check-circle"></i></div><div class="number" id="completedToday">0</div><div class="label">انجام شده امروز</div></div>
+            <div class="stat-card"><div class="icon" style="color:#667eea"><i class="fas fa-trophy"></i></div><div class="number" id="bestStreak">0</div><div class="label">بهترین رکورد</div></div>
+            <div class="stat-card"><div class="icon" style="color:#f093fb"><i class="fas fa-chart-line"></i></div><div class="number" id="completionRate">0%</div><div class="label">نرخ تکمیل</div></div>
+        </div>
+        <div class="weekly-progress">
+            <h2><i class="fas fa-calendar-week"></i> پیشرفت این هفته</h2>
+            <div class="week-days" id="weekDays"></div>
+            <div id="weeklyData"></div>
+        </div>
+        <div class="habits-grid" id="habitsContainer">
+            <div class="empty-state"><i class="fas fa-seedling"></i><p>هیچ عادتی تعریف نشده است</p><p class="hint">با کلیک روی دکمه "عادت جدید" شروع کنید</p></div>
         </div>
     </div>
-    
-    <!-- مودال افزودن/ویرایش -->
-    <div id="habitModal" class="modal">
+    <div class="modal" id="habitModal">
         <div class="modal-content">
             <div class="modal-header" id="modalTitle"><i class="fas fa-plus"></i> افزودن عادت جدید</div>
             <div class="modal-body">
                 <input type="hidden" id="editId">
-                <input type="text" id="habitName" placeholder="نام عادت (مثلاً: مطالعه)" required>
-                <textarea id="habitDescription" placeholder="توضیحات (اختیاری)" rows="2"></textarea>
-                <select id="habitFrequency">
-                    <option value="daily">روزانه</option>
-                    <option value="weekly">هفتگی</option>
-                    <option value="monthly">ماهانه</option>
-                </select>
-                <input type="number" id="habitTarget" placeholder="هدف روزانه (تعداد)" value="1" min="1">
+                <div class="form-group"><label>نام عادت *</label><input type="text" id="habitName" placeholder="مثلاً: مطالعه روزانه" required></div>
+                <div class="form-group"><label>توضیحات</label><textarea id="habitDescription" placeholder="توضیحات اختیاری..."></textarea></div>
+                <div class="form-group"><label>تکرار</label><select id="habitFrequency"><option value="daily">روزانه</option><option value="weekly">هفتگی</option><option value="monthly">ماهانه</option></select></div>
+                <div class="form-group"><label>هدف روزانه</label><input type="number" id="habitTarget" value="1" min="1"></div>
+                <div class="form-group"><label>آیکون</label><div class="icon-selector" id="iconSelector">
+                    <div class="icon-option selected" data-icon="fa-fire"><i class="fas fa-fire"></i></div>
+                    <div class="icon-option" data-icon="fa-book"><i class="fas fa-book"></i></div>
+                    <div class="icon-option" data-icon="fa-running"><i class="fas fa-running"></i></div>
+                    <div class="icon-option" data-icon="fa-heart"><i class="fas fa-heart"></i></div>
+                    <div class="icon-option" data-icon="fa-tint"><i class="fas fa-tint"></i></div>
+                    <div class="icon-option" data-icon="fa-bed"><i class="fas fa-bed"></i></div>
+                    <div class="icon-option" data-icon="fa-brain"><i class="fas fa-brain"></i></div>
+                    <div class="icon-option" data-icon="fa-smile"><i class="fas fa-smile"></i></div>
+                    <div class="icon-option" data-icon="fa-carrot"><i class="fas fa-carrot"></i></div>
+                    <div class="icon-option" data-icon="fa-walking"><i class="fas fa-walking"></i></div>
+                    <div class="icon-option" data-icon="fa-bicycle"><i class="fas fa-bicycle"></i></div>
+                    <div class="icon-option" data-icon="fa-yin-yang"><i class="fas fa-yin-yang"></i></div>
+                </div></div>
             </div>
             <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeModal()">انصراف</button>
-                <button class="btn-save" id="saveBtn" onclick="saveHabit()">ذخیره</button>
+                <button class="btn btn-cancel" onclick="closeModal()">انصراف</button>
+                <button class="btn btn-primary" id="saveBtn" onclick="saveHabit()">ذخیره</button>
             </div>
         </div>
     </div>
-    
     <div class="toast" id="toast"></div>
-    
     <script>
-        let habits = [];
-        let currentEditId = null;
-        
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = 'toast ' + type + ' show';
-            setTimeout(() => { toast.classList.remove('show'); }, 3000);
-        }
-        
-        async function loadHabits() {
-            let formData = new FormData();
-            formData.append('action', 'load_habits');
-            let response = await fetch(window.location.href, { method: 'POST', body: formData });
-            let result = await response.json();
-            if (result.success) {
-                habits = result.habits;
-                renderHabits();
-            }
-        }
-        
-        function renderHabits() {
-            const container = document.getElementById('habitsContainer');
-            if (!habits || habits.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-fire"></i>
-                        <div>هیچ عادتی تعریف نشده است</div>
-                        <div style="font-size: 12px; margin-top: 10px;">با کلیک روی دکمه "افزودن عادت جدید" شروع کنید</div>
-                    </div>
-                `;
-                return;
-            }
-            
-            const today = new Date().toISOString().split('T')[0];
-            
-            container.innerHTML = habits.map(habit => {
-                const isDoneToday = habit.last_done === today;
-                const color = habit.color || '#f59e0b';
-                
-                return `
-                    <div class="habit-card">
-                        <div class="habit-name">
-                            <span class="habit-color" style="background: ${color};"></span>
-                            ${escapeHtml(habit.name)}
-                        </div>
-                        ${habit.description ? `<div class="habit-desc">${escapeHtml(habit.description)}</div>` : ''}
-                        <div class="habit-stats">
-                            <div class="stat-item">
-                                <div class="number done">${habit.target || 1}</div>
-                                <div class="label">هدف روزانه</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="number streak">${habit.current_streak || 0}</div>
-                                <div class="label">رکورد فعلی</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="number best">${habit.best_streak || 0}</div>
-                                <div class="label">بهترین رکورد</div>
-                            </div>
-                        </div>
-                        <div class="habit-actions">
-                            <button class="done-btn ${isDoneToday ? 'done-today' : ''}" onclick="toggleHabit('${habit.id}')">
-                                <i class="fas ${isDoneToday ? 'fa-times' : 'fa-check'}"></i>
-                                ${isDoneToday ? 'امروز انجام شد' : 'انجام امروز'}
-                            </button>
-                            <button class="edit-btn" onclick="openEditModal('${habit.id}')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="delete-btn" onclick="deleteHabit('${habit.id}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            let div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        async function toggleHabit(id) {
-            let formData = new FormData();
-            formData.append('action', 'toggle_habit');
-            formData.append('id', id);
-            let response = await fetch(window.location.href, { method: 'POST', body: formData });
-            let result = await response.json();
-            if (result.success) {
-                habits = result.habits;
-                renderHabits();
-                showToast('وضعیت عادت تغییر کرد', 'success');
-            }
-        }
-        
-        async function deleteHabit(id) {
-            if (!confirm('آیا از حذف این عادت مطمئن هستید؟')) return;
-            let formData = new FormData();
-            formData.append('action', 'delete_habit');
-            formData.append('id', id);
-            let response = await fetch(window.location.href, { method: 'POST', body: formData });
-            let result = await response.json();
-            if (result.success) {
-                habits = result.habits;
-                renderHabits();
-                showToast('عادت با موفقیت حذف شد', 'success');
-            }
-        }
-        
-        function openAddModal() {
-            currentEditId = null;
-            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> افزودن عادت جدید';
-            document.getElementById('editId').value = '';
-            document.getElementById('habitName').value = '';
-            document.getElementById('habitDescription').value = '';
-            document.getElementById('habitFrequency').value = 'daily';
-            document.getElementById('habitTarget').value = '1';
-            document.getElementById('saveBtn').textContent = 'افزودن';
-            document.getElementById('habitModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function openEditModal(id) {
-            const habit = habits.find(h => h.id == id);
-            if (!habit) return;
-            currentEditId = id;
-            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> ویرایش عادت';
-            document.getElementById('editId').value = id;
-            document.getElementById('habitName').value = habit.name;
-            document.getElementById('habitDescription').value = habit.description || '';
-            document.getElementById('habitFrequency').value = habit.frequency || 'daily';
-            document.getElementById('habitTarget').value = habit.target || 1;
-            document.getElementById('saveBtn').textContent = 'ذخیره تغییرات';
-            document.getElementById('habitModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function closeModal() {
-            document.getElementById('habitModal').style.display = 'none';
-            document.body.style.overflow = '';
-        }
-        
-        async function saveHabit() {
-            const name = document.getElementById('habitName').value.trim();
-            if (!name) {
-                showToast('لطفاً نام عادت را وارد کنید', 'error');
-                return;
-            }
-            
-            const editId = document.getElementById('editId').value;
-            const action = editId ? 'edit_habit' : 'add_habit';
-            
-            let formData = new FormData();
-            formData.append('action', action);
-            if (editId) formData.append('id', editId);
-            formData.append('name', name);
-            formData.append('description', document.getElementById('habitDescription').value);
-            formData.append('frequency', document.getElementById('habitFrequency').value);
-            formData.append('target', document.getElementById('habitTarget').value);
-            
-            let response = await fetch(window.location.href, { method: 'POST', body: formData });
-            let result = await response.json();
-            if (result.success) {
-                habits = result.habits;
-                renderHabits();
-                closeModal();
-                showToast(editId ? 'عادت با موفقیت ویرایش شد' : 'عادت با موفقیت افزوده شد', 'success');
-            } else {
-                showToast('خطا در ذخیره عادت', 'error');
-            }
-        }
-        
-        document.getElementById('habitModal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-        
+        let habits=[],weeklyData={},weekDates=[],selectedIcon='fa-fire';
+        function showToast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),3000)}
+        async function loadHabits(){let fd=new FormData();fd.append('action','load_habits');let r=await fetch(window.location.href,{method:'POST',body:fd});let res=await r.json();if(res.success){habits=res.habits;renderHabits();updateStats();loadWeeklyData()}}
+        async function loadWeeklyData(){let fd=new FormData();fd.append('action','get_weekly_data');let r=await fetch(window.location.href,{method:'POST',body:fd});let res=await r.json();if(res.success){weeklyData=res.weeklyData||{};weekDates=res.weekDates||[];renderWeekDays();renderWeeklyData()}}
+        function renderWeekDays(){const c=document.getElementById('weekDays'),today=new Date().toISOString().split('T')[0],dn=['ی','د','س','چ','پ','ج','ش'];c.innerHTML=weekDates.map((d,i)=>{const dt=new Date(d),n=dt.getDate(),ist=d===today;return `<div class="day-cell ${ist?'today':''}"><div class="day-name">${dn[i]}</div><div class="day-number">${n}</div></div>`}).join('')}
+        function renderWeeklyData(){const c=document.getElementById('weeklyData');if(habits.length===0){c.innerHTML='<p style="text-align:center;color:rgba(255,255,255,0.5);padding:20px;">هنوز عادت‌ای اضافه نشده است</p>';return}c.innerHTML=habits.map(h=>{const hd=weeklyData[h.id]||{};return `<div class="habit-week-row"><div class="habit-week-name"><i class="fas ${h.icon}" style="color:${h.color}"></i>${escapeHtml(h.name)}</div>${weekDates.map(d=>{const cp=hd[d]||false;return `<div class="week-check ${cp?'completed':''}" onclick="toggleHabitOnDate('${h.id}','${d}')">${cp?'<i class="fas fa-check"></i>':''}</div>`}).join('')}</div>`}).join('')}
+        function renderHabits(){const c=document.getElementById('habitsContainer');if(!habits||habits.length===0){c.innerHTML=`<div class="empty-state"><i class="fas fa-seedling"></i><p>هیچ عادتی تعریف نشده است</p><p class="hint">با کلیک روی دکمه "عادت جدید" شروع کنید</p></div>`;return}c.innerHTML=habits.map(h=>{const ct=h.completed_today;return `<div class="habit-card ${ct?'completed':''}" style="--habit-color:${h.color}"><div class="habit-header"><div class="habit-icon" style="background:${h.color}"><i class="fas ${h.icon}"></i></div><div class="habit-info"><div class="habit-name">${escapeHtml(h.name)}</div>${h.description?`<div class="habit-desc">${escapeHtml(h.description)}</div>`:''}</div></div><div class="habit-stats"><div class="habit-stat"><div class="value">${h.target||1}</div><div class="label">هدف روزانه</div></div><div class="habit-stat"><div class="value">${h.streak||0}</div><div class="label">رکورد فعلی</div></div><div class="habit-stat"><div class="value">${h.frequency==='daily'?'روزانه':h.frequency==='weekly'?'هفتگی':'ماهانه'}</div><div class="label">تکرار</div></div></div><div class="habit-actions"><button class="btn btn-check ${ct?'completed':''}" onclick="toggleHabit('${h.id}')"><i class="fas ${ct?'fa-times':'fa-check'}"></i>${ct?'انجام شد':'ثبت انجام'}</button><button class="btn btn-edit" onclick="openEditModal('${h.id}')"><i class="fas fa-edit"></i></button><button class="btn btn-delete" onclick="deleteHabit('${h.id}')"><i class="fas fa-trash"></i></button></div></div>`}).join('')}
+        function updateStats(){const t=habits.length,c=habits.filter(h=>h.completed_today).length,b=Math.max(...habits.map(h=>h.streak||0),0),r=t>0?Math.round((c/t)*100):0;document.getElementById('totalHabits').textContent=t;document.getElementById('completedToday').textContent=c;document.getElementById('bestStreak').textContent=b;document.getElementById('completionRate').textContent=r+'%'}
+        async function toggleHabitOnDate(id,date){const today=new Date().toISOString().split('T')[0];if(date!==today){showToast('فقط ثبت برای امروز امکان‌پذیر است','error');return}await toggleHabit(id)}
+        async function toggleHabit(id){let fd=new FormData();fd.append('action','toggle_habit');fd.append('id',id);let r=await fetch(window.location.href,{method:'POST',body:fd});let res=await r.json();if(res.success){habits=res.habits;renderHabits();updateStats();loadWeeklyData();const h=habits.find(x=>x.id==id);showToast(h&&h.completed_today?'عالیه! عادت امروز ثبت شد 🎉':'عادت از حالت انجام خارج شد',h&&h.completed_today?'success':'error')}}
+        async function deleteHabit(id){if(!confirm('آیا از حذف این عادت مطمئن هستید؟'))return;let fd=new FormData();fd.append('action','delete_habit');fd.append('id',id);let r=await fetch(window.location.href,{method:'POST',body:fd});let res=await r.json();if(res.success){habits=res.habits;renderHabits();updateStats();loadWeeklyData();showToast('عادت با موفقیت حذف شد','success')}}
+        function openAddModal(){selectedIcon='fa-fire';document.querySelectorAll('.icon-option').forEach(o=>o.classList.remove('selected'));document.querySelector('.icon-option[data-icon="fa-fire"]').classList.add('selected');document.getElementById('modalTitle').innerHTML='<i class="fas fa-plus"></i> افزودن عادت جدید';document.getElementById('editId').value='';document.getElementById('habitName').value='';document.getElementById('habitDescription').value='';document.getElementById('habitFrequency').value='daily';document.getElementById('habitTarget').value='1';document.getElementById('saveBtn').textContent='افزودن';document.getElementById('habitModal').classList.add('active')}
+        function openEditModal(id){const h=habits.find(x=>x.id==id);if(!h)return;selectedIcon=h.icon||'fa-fire';document.querySelectorAll('.icon-option').forEach(o=>o.classList.toggle('selected',o.dataset.icon===selectedIcon));document.getElementById('modalTitle').innerHTML='<i class="fas fa-edit"></i> ویرایش عادت';document.getElementById('editId').value=id;document.getElementById('habitName').value=h.name;document.getElementById('habitDescription').value=h.description||'';document.getElementById('habitFrequency').value=h.frequency||'daily';document.getElementById('habitTarget').value=h.target||1;document.getElementById('saveBtn').textContent='ذخیره تغییرات';document.getElementById('habitModal').classList.add('active')}
+        function closeModal(){document.getElementById('habitModal').classList.remove('active')}
+        async function saveHabit(){const name=document.getElementById('habitName').value.trim();if(!name){showToast('لطفاً نام عادت را وارد کنید','error');return}const eid=document.getElementById('editId').value,act=eid?'edit_habit':'add_habit';let fd=new FormData();fd.append('action',act);if(eid)fd.append('id',eid);fd.append('name',name);fd.append('description',document.getElementById('habitDescription').value);fd.append('frequency',document.getElementById('habitFrequency').value);fd.append('target',document.getElementById('habitTarget').value);fd.append('icon',selectedIcon);let r=await fetch(window.location.href,{method:'POST',body:fd});let res=await r.json();if(res.success){habits=res.habits;renderHabits();updateStats();loadWeeklyData();closeModal();showToast(eid?'عادت با موفقیت ویرایش شد':'عادت با موفقیت افزوده شد','success')}else showToast('خطا در ذخیره عادت','error')}
+        document.getElementById('iconSelector').addEventListener('click',function(e){const o=e.target.closest('.icon-option');if(o){document.querySelectorAll('.icon-option').forEach(x=>x.classList.remove('selected'));o.classList.add('selected');selectedIcon=o.dataset.icon}});
+        document.getElementById('habitModal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+        function escapeHtml(t){if(!t)return'';let d=document.createElement('div');d.textContent=t;return d.innerHTML}
         loadHabits();
     </script>
 </body>
