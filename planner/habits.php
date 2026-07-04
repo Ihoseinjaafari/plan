@@ -302,6 +302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         saveUserHabits($userId, $habits);
         $response = ['success' => true, 'habits' => getUserHabits($userId)];
     }
+    
     echo json_encode($response);
     exit;
 }
