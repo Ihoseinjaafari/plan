@@ -8,6 +8,52 @@ let editCycleId = null;
 let editSymptomId = null;
 
 // ============================================
+// محاسبه فاز چرخه برای یک تاریخ خاص
+// ============================================
+function getPhaseForDate(targetDate, cycles) {
+    if (!cycles || cycles.length === 0) return null;
+    
+    // مرتب‌سازی سیکل‌ها بر اساس تاریخ
+    const sorted = [...cycles].sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+    
+    // پیدا کردن آخرین سیکلی که قبل از تاریخ هدف شروع شده
+    let relevantCycle = null;
+    for (const cycle of sorted) {
+        const startDate = new Date(cycle.start_date);
+        if (startDate <= new Date(targetDate)) {
+            relevantCycle = cycle;
+            break;
+        }
+    }
+    
+    if (!relevantCycle) return null;
+    
+    const startDate = new Date(relevantCycle.start_date);
+    const target = new Date(targetDate);
+    const daysSinceStart = Math.floor((target - startDate) / (1000 * 60 * 60 * 24));
+    
+    // اگر در دوران خونریزی باشد
+    const endDate = relevantCycle.end_date ? new Date(relevantCycle.end_date) : null;
+    if (endDate && target <= endDate) {
+        return 'menstruation';
+    }
+    
+    // محاسبه فاز بر اساس روز چرخه
+    if (daysSinceStart >= 0 && daysSinceStart <= 5) {
+        return 'menstruation';
+    } else if (daysSinceStart >= 6 && daysSinceStart <= 14) {
+        return 'follicular';
+    } else if (daysSinceStart >= 15 && daysSinceStart <= 17) {
+        return 'ovulation';
+    } else if (daysSinceStart >= 18 && daysSinceStart <= 28) {
+        return 'luteal';
+    } else {
+        // بعد از روز 28 - ممکن است سیکل جدیدی شروع شود
+        return 'pre_menstrual';
+    }
+}
+
+// ============================================
 // توابع تبدیل تاریخ شمسی
 // ============================================
 function gregorianToJalali(gy, gm, gd) {
@@ -143,6 +189,18 @@ class JalaliDatePicker {
     
     goToMonth(year, month) {
         event.stopPropagation();
+        // مدیریت چرخش بین ماه‌ها و سال‌ها
+        if (month < 1) {
+            month = 12;
+            year--;
+        } else if (month > 12) {
+            month = 1;
+            year++;
+        }
+        // محدودیت سال (اختیاری - می‌توانید حذف کنید)
+        if (year < 1300) year = 1300;
+        if (year > 1450) year = 1450;
+        
         this.currentYear = year;
         this.currentMonth = month;
         this.render();
@@ -341,7 +399,24 @@ function selectDate(dateStr) {
         return current >= start && current <= end;
     });
     
+    // محاسبه فاز چرخه برای این تاریخ
+    const phase = getPhaseForDate(dateStr, cycles);
+    const phaseNames = {
+        'menstruation': 'قاعدگی',
+        'follicular': 'فولیکولی',
+        'ovulation': 'تخمک‌گذاری',
+        'luteal': 'لوتئال',
+        'pre_menstrual': 'پیش‌قاعدگی'
+    };
+    
     let html = '';
+    
+    // نمایش فاز چرخه
+    if (phase) {
+        html += '<div class="day-item phase-item" style="border-right-color: ' + getPhaseColor(phase) + ';">';
+        html += '🔄 <strong>فاز چرخه:</strong> ' + (phaseNames[phase] || phase);
+        html += '</div>';
+    }
     
     // نمایش سیکل ثبت‌شده
     if (hasCycle) {
@@ -386,12 +461,24 @@ function selectDate(dateStr) {
     
     const dayDetails = document.getElementById('dayDetails');
     if (dayDetails) {
-        if (!hasCycle && !hasPredicted && daySymptoms.length === 0) {
+        if (!hasCycle && !hasPredicted && daySymptoms.length === 0 && !phase) {
             dayDetails.innerHTML = '<p class="empty">هیچ رویدادی برای این روز ثبت نشده است</p>';
         } else {
             dayDetails.innerHTML = html;
         }
     }
+}
+
+// تابع کمکی برای دریافت رنگ فاز
+function getPhaseColor(phase) {
+    const colors = {
+        'menstruation': '#E74C3C',
+        'follicular': '#3498DB',
+        'ovulation': '#9B59B6',
+        'luteal': '#1ABC9C',
+        'pre_menstrual': '#ff6b6b'
+    };
+    return colors[phase] || '#667eea';
 }
 
 // ============================================

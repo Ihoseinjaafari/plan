@@ -294,64 +294,57 @@
     font-weight: 700;
 }
 
-/* ===== رنگ‌های سیکل بر اساس شدت خونریزی ===== */
-.calendar-grid .cal-day.period {
+/* ===== رنگ‌بندی فازهای چرخه قاعدگی ===== */
+/* فاز قاعدگی (خونریزی) - قرمز */
+.calendar-grid .cal-day.phase-menstruation,
+.calendar-grid .cal-day.phase-menstruation.predicted {
+    background: rgba(231, 76, 60, 0.85) !important;
+    border: none;
     color: #ffffff;
     font-weight: 600;
 }
-.calendar-grid .cal-day.period .day-number {
+
+/* فاز فولیکولی - آبی */
+.calendar-grid .cal-day.phase-follicular,
+.calendar-grid .cal-day.phase-follicular.predicted {
+    background: rgba(52, 152, 219, 0.85) !important;
+    border: none;
+    color: #ffffff;
     font-weight: 600;
 }
 
-.calendar-grid .cal-day.period-light,
-.calendar-grid .cal-day.predicted.predicted-light {
-    background: rgba(40,167,69,0.85) !important;
+/* فاز تخمک‌گذاری - بنفش */
+.calendar-grid .cal-day.phase-ovulation,
+.calendar-grid .cal-day.phase-ovulation.predicted {
+    background: rgba(155, 89, 182, 0.85) !important;
     border: none;
-}
-.calendar-grid .cal-day.period-medium,
-.calendar-grid .cal-day.predicted.predicted-medium {
-    background: rgba(255,193,7,0.9) !important;
-    border: none;
-}
-.calendar-grid .cal-day.period-heavy,
-.calendar-grid .cal-day.predicted.predicted-heavy {
-    background: rgba(220,53,69,0.9) !important;
-    border: none;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 0 8px rgba(155, 89, 182, 0.6);
 }
 
-/* ===== آیتم‌های پیش‌بینی شده در تقویم ===== */
+/* فاز لوتئال - فیروزه‌ای */
+.calendar-grid .cal-day.phase-luteal,
+.calendar-grid .cal-day.phase-luteal.predicted {
+    background: rgba(26, 188, 156, 0.85) !important;
+    border: none;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* ===== حالت‌های پیش‌بینی شده (کمرنگ‌تر) ===== */
 .calendar-grid .cal-day.predicted {
+    opacity: 0.6;
     position: relative;
-    opacity: 0.85;
-}
-.calendar-grid .cal-day.predicted .day-number {
-    font-weight: 500;
-}
-.calendar-grid .cal-day.predicted .predicted-dot {
-    display: block;
-    font-size: 10px;
-    color: #ffffff;
-    margin-top: 2px;
-    text-shadow: 0 0 4px rgba(0,0,0,0.3);
 }
 
-/* ===== نقاط پایین روز ===== */
-.calendar-grid .cal-day .period-dot {
+/* ===== نقاط نشانگر پایین روز ===== */
+.calendar-grid .cal-day .phase-dot {
     display: block;
     font-size: 8px;
     color: #ffffff;
     margin-top: 2px;
     text-shadow: 0 0 4px rgba(0,0,0,0.3);
-}
-
-.calendar-grid .cal-day.period-light .period-dot {
-    color: #28a745;
-}
-.calendar-grid .cal-day.period-medium .period-dot {
-    color: #ffc107;
-}
-.calendar-grid .cal-day.period-heavy .period-dot {
-    color: #dc3545;
 }
 
 /* ===== علامت دارای علائم ===== */
@@ -405,17 +398,18 @@
     color: var(--today-bg, #f1c40f);
 }
 
-/* راهنمای رنگ‌های شدت خونریزی */
-.calendar-legend .flow-indicator {
+/* راهنمای رنگ‌های فازهای چرخه */
+.calendar-legend .phase-indicator {
     display: inline-block;
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     margin: 0 2px;
 }
-.calendar-legend .flow-light { background: rgba(40,167,69,0.85); }
-.calendar-legend .flow-medium { background: rgba(255,193,7,0.9); }
-.calendar-legend .flow-heavy { background: rgba(220,53,69,0.9); }
+.calendar-legend .phase-menstruation { background: rgba(231, 76, 60, 0.85); }
+.calendar-legend .phase-follicular { background: rgba(52, 152, 219, 0.85); }
+.calendar-legend .phase-ovulation { background: rgba(155, 89, 182, 0.85); }
+.calendar-legend .phase-luteal { background: rgba(26, 188, 156, 0.85); }
 
 /* ===== سایدبار اطلاعات روز ===== */
 .day-info {
@@ -496,6 +490,11 @@
 #dayDetails .day-item.predicted-item {
     border-right: 3px solid #667eea;
     background: rgba(102,126,234,0.1);
+}
+
+#dayDetails .day-item.phase-item {
+    border-right: 3px solid #E74C3C;
+    background: rgba(231, 76, 60, 0.1);
 }
 
 /* ===== لیست آیتم‌ها ===== */
