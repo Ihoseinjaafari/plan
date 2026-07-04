@@ -805,6 +805,39 @@ include __DIR__ . '/../includes/header.php';
         gap: 8px;
     }
 
+    .countdown-title span#countdownTitleSpan {
+        cursor: text;
+        border-bottom: 1px dashed transparent;
+        transition: border-color 0.2s;
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+
+    .countdown-title span#countdownTitleSpan:hover,
+    .countdown-title span#countdownTitleSpan:focus {
+        border-bottom-color: var(--primary-color);
+        background-color: rgba(0, 0, 0, 0.02);
+        outline: none;
+    }
+
+    .btn-edit-title {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 4px;
+        font-size: 14px;
+        opacity: 0.6;
+        transition: all 0.2s;
+    }
+
+    .btn-edit-title:hover {
+        opacity: 1;
+        color: var(--primary-color);
+        transform: scale(1.1);
+    }
+
+
     .countdown-grid {
         display: grid;
         grid-template-columns: repeat(6, 1fr);
@@ -1173,7 +1206,10 @@ include __DIR__ . '/../includes/header.php';
             <div class="countdown-card">
                 <div class="countdown-title">
                     <i class="fas fa-hourglass-half"></i>
-                    <span>روزشمار هدف</span>
+                    <span id="countdownTitleSpan" contenteditable="true" onblur="saveCountdownTitle()">روزشمار هدف</span>
+                    <button class="btn-edit-title" onclick="editCountdownTitle()" title="ویرایش عنوان">
+                        <i class="fas fa-pen"></i>
+                    </button>
                 </div>
                 <div class="countdown-grid" id="countdownGrid">
                     <div class="countdown-item">
@@ -1610,6 +1646,36 @@ include __DIR__ . '/../includes/header.php';
             selectedTargetDate = JSON.parse(saved);
             updateCountdownDisplay();
         }
+        // بارگذاری عنوان روزشمار
+        loadCountdownTitle();
+    }
+
+    function loadCountdownTitle() {
+        const savedTitle = localStorage.getItem('countdownTitle');
+        if (savedTitle) {
+            document.getElementById('countdownTitleSpan').textContent = savedTitle;
+        }
+    }
+
+    function saveCountdownTitle() {
+        const title = document.getElementById('countdownTitleSpan').textContent.trim();
+        if (title) {
+            localStorage.setItem('countdownTitle', title);
+            showToast('عنوان روزشمار ذخیره شد.', 'success');
+        } else {
+            document.getElementById('countdownTitleSpan').textContent = 'روزشمار هدف';
+        }
+    }
+
+    function editCountdownTitle() {
+        const span = document.getElementById('countdownTitleSpan');
+        span.focus();
+        // انتخاب متن برای ویرایش آسان‌تر
+        const range = document.createRange();
+        range.selectNodeContents(span);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
     }
 
     function saveTargetDate() {
