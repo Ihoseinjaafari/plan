@@ -264,6 +264,14 @@ const initialCycles = <?php echo json_encode($cycles); ?>;
 const initialSymptoms = <?php echo json_encode($symptoms); ?>;
 const prediction = <?php echo json_encode($prediction); ?>;
 const currentPhase = '<?php echo $phase; ?>';
+
+// اطمینان از لود شدن کامل DOM قبل از اجرای کد
+document.addEventListener('DOMContentLoaded', function() {
+    // شروع برنامه بعد از لود کامل صفحه
+    if (typeof initHealthApp === 'function') {
+        initHealthApp();
+    }
+});
 </script>
 
 <script src="script.js"></script>
