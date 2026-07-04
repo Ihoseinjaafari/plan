@@ -499,7 +499,8 @@ include_once __DIR__ . '/../includes/header.php';
                             $startDate = new DateTime($relevantCycle['start_date']);
                             $endDate = $relevantCycle['end_date'] ? new DateTime($relevantCycle['end_date']) : null;
                             $current = new DateTime($gregDateStr);
-                            $daysSinceStart = floor(($current - $startDate)->days);
+                            $interval = $current->diff($startDate);
+                            $daysSinceStart = $interval->days;
                             
                             // اگر در دوران خونریزی باشد
                             if ($endDate && $current <= $endDate) {
