@@ -150,6 +150,7 @@ function calculateStreak($habitId, $logs, $todayJalali) {
         } elseif ($logDate < $checkDate) {
             break;
         }
+
     }
     return $streak;
 }
@@ -202,6 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $habit['completed_today'] = false;
             foreach ($logs as $log) {
                 if ($log['habit_id'] == $habit['id'] && $log['date'] == $todayJalali) {
+
                     $habit['completed_today'] = true;
                     break;
                 }
@@ -221,6 +223,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         $response = ['success' => true, 'habits' => $habits, 'weekDates' => $weekDates, 'weeklyData' => $weeklyData];
+
     }
     elseif ($action === 'add_habit') {
         $habits = getUserHabits($userId);
@@ -246,6 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $alreadyCompleted = false;
         foreach ($logs as $log) {
             if ($log['habit_id'] == $habitId && $log['date'] == $todayJalali) {
+
                 $alreadyCompleted = true;
                 break;
             }
@@ -258,6 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $habit['completed_today'] = false;
             foreach ($logs as $log) {
                 if ($log['habit_id'] == $habit['id'] && $log['date'] == $todayJalali) {
+
                     $habit['completed_today'] = true;
                     break;
                 }
