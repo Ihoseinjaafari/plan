@@ -1,81 +1,54 @@
+```
 # Compiled and build artifacts
 *.pyc
 __pycache__/
+*.o
+*.obj
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
 
 # Dependencies
-.venv/
-venv/
 node_modules/
-dist/
-build/
+venv/
+.venv/
+.env
+.env.local
+*.env.*
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
-
-# Environment
-.env
-.env.local
-*.env.*
+*.swo
 
 # Editors
 .vscode/
 .idea/
 
-# Coverage reports
+# System files
+.DS_Store
+Thumbs.db
+
+# Coverage
 coverage/
 htmlcov/
 .coverage
 
-# Python specific
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.so
-*.egg-info/
-.eggs/
-
-# JavaScript/Node specific
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Backup files
-*.bak
-*.backup
-*~
-
-# Local configuration files
-config.local.*
-settings.local.*
-
-# IDE specific
-*.iml
-*.ipr
-*.iws
-.idea/
-.vscode/
-
-# Build outputs
+# Build directories
+dist/
+build/
 target/
-*.class
-*.jar
-*.war
-*.ear
-*.o
-*.obj
-*.out
-*.dll
-*.so
-*.a
+.gradle/
 
-# Compression archives
+# Python specific
+.mypy_cache/
+.pytest_cache/
+
+# Compressed files
 *.zip
 *.gz
 *.tar
@@ -98,369 +71,4 @@ target/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-
-# Cache directories
-.cache/
-.mypy_cache/
-.pytest_cache/
-.gradle/
-.npm/
-.yarn/
-
-# Test coverage
-coverage.xml
-coverage-final.json
-
-# Distribution / packaging
-*.egg
-*.whl
-dist/
-build/
-*.spec
-
-# PyInstaller
-*.manifest
-*.spec
-
-# Sphinx documentation
-docs/_build/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# Django
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask
-instance/
-.webassets-cache
-
-# Scrapy
-.scrapy
-
-# Sphinx
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# PEP 582
-__pypackages__/
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# Sage
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre
-.pyre/
-
-# FastAPI
-*.db
-*.db-journal
-
-# Docker
-.dockerenv
-
-# Vagrant
-.vagrant/
-
-# Ansible
-.retry
-
-# Terraform
-*.tfstate
-*.tfstate.backup
-.terraform/
-
-# Kubernetes
-.kube/
-
-# Heroku
-.heroku/
-
-# AWS
-.aws/
-
-# Azure
-.azure/
-
-# Google Cloud
-.gcloud/
-
-# Database
-*.db
-*.db-journal
-*.sqlite
-*.sqlite-journal
-
-# Temporary files
-*.tmp
-*.temp
-*.log
-*.swp
-*.swo
-
-# Sensitive files
-.secret
-.secrets
-.credentials
-.key
-.pem
-.crt
-.csr
-.jks
-.p12
-.pfx
-.ppk
-.ssh/
-
-# Local development
-local/
-dev/
-development/
-debug/
-debug.log
-
-# IDE and editor backups
-*~
-*.bak
-*.orig
-*.rej
-*.swp
-*.swo
-
-# System files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
-
-# Version control
-.git/
-.hg/
-.svn/
-.cvs/
-
-# Archive
-*.zip
-*.rar
-*.7z
-*.gz
-*.tar
-*.bz2
-*.xz
-*.tgz
-*.tbz2
-*.txz
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-
-# Image optimization tools
-*.min.js
-*.min.css
-*.bundle.js
-*.bundle.css
-
-# Package managers
-node_modules/
-jspm_packages/
-bower_components/
-vendor/
-libs/
-lib/
-dist/
-build/
-target/
-out/
-bin/
-obj/
-release/
-debug/
-*.dll
-*.so
-*.dylib
-
-# Virtual environments
-venv/
-env/
-ENV/
-.venv/
-.env/
-pyenv/
-.pyenv/
-
-# Testing
-tests/
-test/
-spec/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.so
-*.egg-info/
-.eggs/
-.coverage
-coverage.xml
-htmlcov/
-.tox/
-.nox/
-pytestdebug.log
-.hypothesis/
-
-# Documentation
-docs/_build/
-*.rst~
-
-# Configuration
-config/
-settings/
-.local/
-config.json
-.env.json
-
-# Logs
-*.log
-logs/
-log/
-*.out
-*.pid
-
-# Caches
-.cache/
-.cached/
-.tmp/
-.temp/
-__pycache__/
-*.pyc
-*.pyo
-.Python
-*$py.class
-*$py.o
-*$py.d
-*.so
-*.egg-info/
-.eggs/
-.venv/
-venv/
-.env
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git/
-*.sublime-workspace
-.project
-.pydevproject
-.idea/
-*.tmproj
-nbproject/
-.settings/
-*.swp
-*.swo
-*~
-*.tmp
-*.bak
-*.orig
-*.rej
-*.swp
-*.swo
-*~
-.DS_Store
-Thumbs.db
-ehthumbs.db
-Icon?
-.directory
-*.nib
-*~
-.Python
-*.so
-*.pyc
-*.pyo
-*.pyd
-*$py.class
-*$py.o
-*$py.d
-*.egg-info/
-.eggs/
-.venv/
-venv/
-.env
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git/
-*.sublime-workspace
-.project
-.pydevproject
-.idea/
-*.tmproj
-nbproject/
-.settings/
-*.swp
-*.swo
-*~
-.DS_Store
-Thumbs.db
-ehthumbs.db
-Icon?
-.directory
-*.nib
-*~
+```

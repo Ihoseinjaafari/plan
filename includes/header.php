@@ -83,6 +83,11 @@ if (!isset($page_title)) $page_title = 'Life+';
         .icon-clock::before { content: "⏰"; }
         .icon-align-left::before { content: "📄"; }
         .icon-grip-vertical::before { content: "⋮⋮"; }
+        .icon-heart-pulse::before { content: "💓"; }
+        .icon-plus::before { content: "➕"; }
+        .icon-save::before { content: "💾"; }
+        .icon-chart-line::before { content: "📈"; }
+        .icon-info-circle::before { content: "ℹ️"; }
         .icon-sitemap::before { content: "🌳"; }
         
         /* کلاس‌های آیکون */

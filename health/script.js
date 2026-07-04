@@ -28,8 +28,78 @@ function initHealthApp() {
 }
 
 // ============================================
-// توابع کمکی
+// توابع کمکی - شامل تبدیل تاریخ میلادی به شمسی
 // ============================================
+
+// توابع تبدیل تاریخ میلادی به شمسی (از تقویم پروژه)
+function gregorianToJalali(gy, gm, gd) {
+    var g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    var gy2 = (gm > 2) ? (gy + 1) : gy;
+    var days = 355666 + (365 * gy) + parseInt((gy2 + 3) / 4) - parseInt((gy2 + 99) / 100) + parseInt((gy2 + 399) / 400) + gd + g_d_m[gm - 1];
+    var jy = -1595 + (33 * parseInt(days / 12053));
+    days %= 12053;
+    jy += 4 * parseInt(days / 1461);
+    days %= 1461;
+    if (days > 365) {
+        jy += parseInt((days - 1) / 365);
+        days = (days - 1) % 365;
+    }
+    var jm, jd;
+    if (days < 186) {
+        jm = 1 + parseInt(days / 31);
+        jd = 1 + (days % 31);
+    } else {
+        jm = 7 + parseInt((days - 186) / 30);
+        jd = 1 + ((days - 186) % 30);
+    }
+    return [jy, jm, jd];
+}
+
+function jalaliToGregorian(jy, jm, jd) {
+    jy += 1595;
+    var days = -355668 + (365 * jy) + (parseInt(jy / 33) * 8) + parseInt(((jy % 33) + 3) / 4) + jd + ((jm < 7) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
+    var gy = 400 * parseInt(days / 146097);
+    days %= 146097;
+    if (days > 36524) {
+        gy += 100 * parseInt(--days / 36524);
+        days %= 36524;
+        if (days >= 365) days++;
+    }
+    gy += 4 * parseInt(days / 1461);
+    days %= 1461;
+    if (days > 365) {
+        gy += parseInt((days - 1) / 365);
+        days = (days - 1) % 365;
+    }
+    var gd = days + 1;
+    var sal_a = [0, 31, ((gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0)) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    var gm = 0;
+    for (gm = 1; gm < 13 && gd > sal_a[gm]; gm++) {
+        gd -= sal_a[gm];
+    }
+    return [gy, gm, gd];
+}
+
+function toJalaliDate(dateStr) {
+    if (!dateStr) return '';
+    var parts = dateStr.split('-');
+    var gy = parseInt(parts[0]);
+    var gm = parseInt(parts[1]);
+    var gd = parseInt(parts[2]);
+    var jalali = gregorianToJalali(gy, gm, gd);
+    return jalali[0] + '/' + jalali[1] + '/' + jalali[2];
+}
+
+function toGregorianDate(jalaliStr) {
+    if (!jalaliStr) return '';
+    var parts = jalaliStr.split('/');
+    var jy = parseInt(parts[0]);
+    var jm = parseInt(parts[1]);
+    var jd = parseInt(parts[2]);
+    var gregorian = jalaliToGregorian(jy, jm, jd);
+    return gregorian[0] + '-' + String(gregorian[1]).padStart(2, '0') + '-' + String(gregorian[2]).padStart(2, '0');
+}
+
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     toast.textContent = message;
@@ -47,9 +117,8 @@ function escapeHtml(text) {
 
 function formatDate(dateStr) {
     if (!dateStr) return '';
-    let d = new Date(dateStr);
-    let options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return d.toLocaleDateString('fa-IR', options);
+    // تبدیل تاریخ میلادی به شمسی و نمایش به فارسی
+    return toJalaliDate(dateStr);
 }
 
 function toPersianNumbers(str) {
@@ -94,34 +163,45 @@ function renderCurrentStatus() {
     };
 
     let phase = phaseMap[currentPhase] || phaseMap['not_started'];
-    document.getElementById('phaseIcon').textContent = phase.icon;
-    document.getElementById('phaseText').textContent = phase.text;
-    document.getElementById('phaseText').style.color = phase.color;
+    
+    const phaseIconEl = document.getElementById('phaseIcon');
+    const phaseTextEl = document.getElementById('phaseText');
+    if (phaseIconEl) phaseIconEl.textContent = phase.icon;
+    if (phaseTextEl) {
+        phaseTextEl.textContent = phase.text;
+        phaseTextEl.style.color = phase.color;
+    }
 
-    let cyclesList = cycles.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+    let cyclesList = [...cycles].sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
 
+    const cycleDayEl = document.getElementById('cycleDay');
     if (cyclesList.length > 0) {
         let lastCycle = cyclesList[0];
         let lastStart = new Date(lastCycle.start_date);
         let today = new Date();
         let daysSinceStart = Math.floor((today - lastStart) / (1000 * 60 * 60 * 24)) + 1;
-        document.getElementById('cycleDay').textContent = toPersianNumbers(daysSinceStart);
+        if (cycleDayEl) cycleDayEl.textContent = toPersianNumbers(daysSinceStart);
     } else {
-        document.getElementById('cycleDay').textContent = '-';
+        if (cycleDayEl) cycleDayEl.textContent = '-';
     }
 
+    const daysRemainingEl = document.getElementById('daysRemaining');
+    const nextPeriodEl = document.getElementById('nextPeriod');
     if (predictionData) {
-        document.getElementById('daysRemaining').textContent = toPersianNumbers(predictionData.days_until_next) + ' روز';
-        document.getElementById('nextPeriod').textContent = formatDate(predictionData.next_period_start);
+        if (daysRemainingEl) daysRemainingEl.textContent = toPersianNumbers(predictionData.days_until_next) + ' روز';
+        if (nextPeriodEl) nextPeriodEl.textContent = formatDate(predictionData.next_period_start);
     } else {
-        document.getElementById('daysRemaining').textContent = '-';
-        document.getElementById('nextPeriod').textContent = '-';
+        if (daysRemainingEl) daysRemainingEl.textContent = '-';
+        if (nextPeriodEl) nextPeriodEl.textContent = '-';
     }
 
     // آمار
-    document.getElementById('statCycles').textContent = toPersianNumbers(cycles.length);
-    document.getElementById('statSymptoms').textContent = toPersianNumbers(symptoms.length);
-    document.getElementById('statAvgCycle').textContent = predictionData ? toPersianNumbers(predictionData.avg_cycle_length) + ' روز' : '-';
+    const statCyclesEl = document.getElementById('statCycles');
+    const statSymptomsEl = document.getElementById('statSymptoms');
+    const statAvgCycleEl = document.getElementById('statAvgCycle');
+    if (statCyclesEl) statCyclesEl.textContent = toPersianNumbers(cycles.length);
+    if (statSymptomsEl) statSymptomsEl.textContent = toPersianNumbers(symptoms.length);
+    if (statAvgCycleEl) statAvgCycleEl.textContent = predictionData ? toPersianNumbers(predictionData.avg_cycle_length) + ' روز' : '-';
 }
 
 // ============================================
@@ -139,44 +219,70 @@ function renderMiniCalendar() {
     
     // استفاده از تاریخ شمسی برای نمایش تقویم
     let today = new Date();
-    let year = today.getFullYear();
-    let month = today.getMonth();
-    let firstDay = new Date(year, month, 1);
-    let lastDay = new Date(year, month + 1, 0);
-    let daysInMonth = lastDay.getDate();
-    let startDay = (firstDay.getDay() + 1) % 7; // تنظیم برای شروع از شنبه
+    let gy = today.getFullYear();
+    let gm = today.getMonth() + 1;
+    let gd = today.getDate();
+    
+    // تبدیل به شمسی
+    let jalali = gregorianToJalali(gy, gm, gd);
+    let jy = jalali[0];
+    let jm = jalali[1];
+    
+    // محاسبه روزهای ماه شمسی جاری
+    let daysInMonth = (jm <= 6) ? 31 : (jm <= 11) ? 30 : 31;
+    
+    // تبدیل اول ماه شمسی به میلادی برای پیدا کردن روز شروع
+    let gFirst = jalaliToGregorian(jy, jm, 1);
+    let firstDayDate = new Date(gFirst[0], gFirst[1] - 1, gFirst[2]);
+    let startDay = (firstDayDate.getDay() + 1) % 7; // تنظیم برای شروع از شنبه
     
     let periodDays = [];
+    let fertileDays = [];
+    let ovulationDay = null;
+    
+    // محاسبه روزهای قاعدگی، باروری و تخمک‌گذاری بر اساس تاریخ شمسی
     cycles.forEach(cycle => {
-        let start = new Date(cycle.start_date);
-        let end = cycle.end_date ? new Date(cycle.end_date) : new Date(start.getTime() + 5 * 24 * 60 * 60 * 1000);
-        let current = new Date(start);
-        while (current <= end) {
-            if (current.getMonth() === month && current.getFullYear() === year) {
-                periodDays.push(current.getDate());
+        let startDate = cycle.start_date;
+        let endDate = cycle.end_date || '';
+        
+        // تبدیل تاریخ شروع به شمسی
+        let sParts = startDate.split('-');
+        let sJalali = gregorianToJalali(parseInt(sParts[0]), parseInt(sParts[1]), parseInt(sParts[2]));
+        
+        // اگر پایان ندارد، 5 روز اضافه کن
+        let jEndDay = sJalali[2] + 4;
+        if (endDate) {
+            let eParts = endDate.split('-');
+            let eJalali = gregorianToJalali(parseInt(eParts[0]), parseInt(eParts[1]), parseInt(eParts[2]));
+            jEndDay = eJalali[2];
+        }
+        
+        // اگر این سیکل در ماه جاری است
+        if (sJalali[0] === jy && sJalali[1] === jm) {
+            for (let d = sJalali[2]; d <= jEndDay; d++) {
+                periodDays.push(d);
             }
-            current.setDate(current.getDate() + 1);
         }
     });
     
-    let fertileDays = [];
     if (predictionData && predictionData.fertile_window_start && predictionData.fertile_window_end) {
-        let start = new Date(predictionData.fertile_window_start);
-        let end = new Date(predictionData.fertile_window_end);
-        let current = new Date(start);
-        while (current <= end) {
-            if (current.getMonth() === month && current.getFullYear() === year) {
-                fertileDays.push(current.getDate());
+        let fsParts = predictionData.fertile_window_start.split('-');
+        let feParts = predictionData.fertile_window_end.split('-');
+        let fsJalali = gregorianToJalali(parseInt(fsParts[0]), parseInt(fsParts[1]), parseInt(fsParts[2]));
+        let feJalali = gregorianToJalali(parseInt(feParts[0]), parseInt(feParts[1]), parseInt(feParts[2]));
+        
+        if (fsJalali[0] === jy && fsJalali[1] === jm) {
+            for (let d = fsJalali[2]; d <= feJalali[2]; d++) {
+                fertileDays.push(d);
             }
-            current.setDate(current.getDate() + 1);
         }
     }
     
-    let ovulationDay = null;
     if (predictionData && predictionData.ovulation_date) {
-        let ov = new Date(predictionData.ovulation_date);
-        if (ov.getMonth() === month && ov.getFullYear() === year) {
-            ovulationDay = ov.getDate();
+        let ovParts = predictionData.ovulation_date.split('-');
+        let ovJalali = gregorianToJalali(parseInt(ovParts[0]), parseInt(ovParts[1]), parseInt(ovParts[2]));
+        if (ovJalali[0] === jy && ovJalali[1] === jm) {
+            ovulationDay = ovJalali[2];
         }
     }
     
@@ -193,10 +299,9 @@ function renderMiniCalendar() {
     }
     
     // روزهای ماه
-    let todayDate = today.getDate();
     for (let d = 1; d <= daysInMonth; d++) {
         let cls = 'cal-day';
-        if (d === todayDate) cls += ' today';
+        if (d === gd && jm === jalali[1] && jy === jalali[0]) cls += ' today';
         if (periodDays.includes(d)) cls += ' period';
         if (fertileDays.includes(d)) cls += ' fertile';
         if (ovulationDay && d === ovulationDay) cls += ' ovulation';
