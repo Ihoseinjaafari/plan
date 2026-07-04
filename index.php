@@ -378,6 +378,7 @@ $registrationEnabled = getSettings()['registration_enabled'] ?? true;
         /* ===== رنگ‌های خاص کارت‌ها ===== */
         .menu-card.planner .card-icon { color: #f5576c; }
         .menu-card.lifeplan .card-icon { color: #4facfe; }
+        .menu-card.finance .card-icon { color: #10b981; }
         .menu-card.projects .card-icon { color: #43e97b; }
         .menu-card.calendar .card-icon { color: #fa709a; }
         .menu-card.settings .card-icon { color: #a18cd1; }
@@ -673,6 +674,14 @@ $registrationEnabled = getSettings()['registration_enabled'] ?? true;
                 <div class="card-icon"><i class="fas fa-compass"></i></div>
                 <h3>🧭 LifePlan</h3>
                 <p>برنامه‌ریزی بلندمدت، اهداف و چشم‌انداز زندگی</p>
+                <span class="card-arrow"><i class="fas fa-arrow-left"></i> ورود</span>
+            </a>
+
+            <!-- مدیریت مالی -->
+            <a href="finance/index.php" class="menu-card finance">
+                <div class="card-icon"><i class="fas fa-wallet"></i></div>
+                <h3>💰 مدیریت مالی</h3>
+                <p>حسابداری شخصی، مدیریت هزینه و درآمد</p>
                 <span class="card-arrow"><i class="fas fa-arrow-left"></i> ورود</span>
             </a>
 
