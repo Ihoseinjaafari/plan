@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پخش همزمان ویدیو</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .login-section, .room-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .video-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #000;
+            margin-bottom: 20px;
+        }
+
+        .video-wrapper iframe,
+        .video-wrapper video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .users-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .users-list h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .user-item {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 14px;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .room-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .room-id-display {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 18px;
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .room-info {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 پخش همزمان ویدیو</h1>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="login-section">
+            <div class="form-group">
+                <label for="username">نام کاربری:</label>
+                <input type="text" id="username" placeholder="نام خود را وارد کنید">
+            </div>
+            <div class="form-group">
+                <label for="roomId">شناسه اتاق (اختیاری):</label>
+                <input type="text" id="roomId" placeholder="خالی بگذارید تا اتاق جدید ساخته شود">
+            </div>
+            <button onclick="joinRoom()">ورود به اتاق</button>
+        </div>
+
+        <!-- Room Section -->
+        <div id="roomSection" class="room-section hidden">
+            <div class="room-info">
+                <div class="room-id-display">اتاق: <span id="currentRoomId"></span></div>
+                <div style="color: #666;">کاربر: <span id="currentUsername" style="color: #667eea; font-weight: bold;"></span></div>
+            </div>
+
+            <div class="form-group">
+                <label for="videoUrl">لینک پخش مستقیم ویدیو:</label>
+                <input type="url" id="videoUrl" placeholder="https://example.com/video.mp4">
+            </div>
+            <button onclick="setVideo()" id="setVideoBtn">تنظیم ویدیو</button>
+
+            <div id="statusMessage" class="status-message hidden"></div>
+
+            <div class="video-container" id="videoContainer" style="margin-top: 20px;">
+                <div class="video-wrapper" id="videoWrapper">
+                    <p style="text-align: center; color: #999; padding: 50px;">هنوز ویدیویی تنظیم نشده است</p>
+                </div>
+            </div>
+
+            <div class="users-list">
+                <h3>👥 کاربران حاضر در اتاق:</h3>
+                <div id="usersList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let currentRoomId = null;
+        let currentUsername = null;
+        let isRemoteUpdate = false;
+
+        // Generate random room ID
+        function generateRoomId() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        // Join room
+        function joinRoom() {
+            const username = document.getElementById('username').value.trim();
+            let roomId = document.getElementById('roomId').value.trim();
+
+            if (!username) {
+                showStatus('لطفاً نام کاربری را وارد کنید', 'error');
+                return;
+            }
+
+            if (!roomId) {
+                roomId = generateRoomId();
+            }
+
+            currentUsername = username;
+            currentRoomId = roomId;
+
+            socket.emit('joinRoom', { roomId, username });
+
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('roomSection').classList.remove('hidden');
+            document.getElementById('currentRoomId').textContent = roomId;
+            document.getElementById('currentUsername').textContent = username;
+
+            showStatus(`به اتاق ${roomId} پیوستید`, 'success');
+        }
+
+        // Set video URL
+        function setVideo() {
+            const videoUrl = document.getElementById('videoUrl').value.trim();
+            
+            if (!videoUrl) {
+                showStatus('لطفاً لینک ویدیو را وارد کنید', 'error');
+                return;
+            }
+
+            socket.emit('setVideoUrl', { roomId: currentRoomId, videoUrl });
+            showStatus('لینک ویدیو برای همه ارسال شد', 'success');
+        }
+
+        // Load video
+        function loadVideo(url) {
+            const videoWrapper = document.getElementById('videoWrapper');
+            
+            // Check if it's a direct video file
+            if (url.match(/\.(mp4|webm|ogg|mov)$/i)) {
+                videoWrapper.innerHTML = `
+                    <video id="videoPlayer" controls crossorigin="anonymous">
+                        <source src="${url}" type="video/mp4">
+                        مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+                    </video>
+                `;
+                setupVideoPlayer();
+            } else {
+                // Assume it's an embeddable URL (YouTube, etc.)
+                videoWrapper.innerHTML = `
+                    <iframe id="videoPlayer" src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+                `;
+            }
+        }
+
+        // Setup video player event listeners
+        function setupVideoPlayer() {
+            const video = document.getElementById('videoPlayer');
+            if (!video) return;
+
+            video.addEventListener('play', () => {
+                if (!isRemoteUpdate && currentRoomId) {
+                    socket.emit('playVideo', { roomId: currentRoomId, time: video.currentTime });
+                }
+            });
+
+            video.addEventListener('pause', () => {
+                if (!isRemoteUpdate && currentRoomId) {
+                    socket.emit('pauseVideo', { roomId: currentRoomId, time: video.currentTime });
+                }
+            });
+
+            video.addEventListener('seeked', () => {
+                if (!isRemoteUpdate && currentRoomId) {
+                    socket.emit('seekVideo', { roomId: currentRoomId, time: video.currentTime });
+                }
+            });
+        }
+
+        // Socket events
+        socket.on('roomState', (state) => {
+            if (state.videoUrl) {
+                loadVideo(state.videoUrl);
+                if (state.isPlaying && document.getElementById('videoPlayer')) {
+                    const video = document.getElementById('videoPlayer');
+                    isRemoteUpdate = true;
+                    video.currentTime = state.currentTime;
+                    video.play();
+                    setTimeout(() => { isRemoteUpdate = false; }, 100);
+                }
+            }
+            
+            updateUsersList(state.users);
+        });
+
+        socket.on('videoUrlChanged', ({ videoUrl }) => {
+            loadVideo(videoUrl);
+            showStatus('لینک ویدیو تغییر کرد', 'info');
+        });
+
+        socket.on('videoPlay', ({ time }) => {
+            const video = document.getElementById('videoPlayer');
+            if (video) {
+                isRemoteUpdate = true;
+                video.currentTime = time;
+                video.play();
+                setTimeout(() => { isRemoteUpdate = false; }, 100);
+            }
+        });
+
+        socket.on('videoPause', ({ time }) => {
+            const video = document.getElementById('videoPlayer');
+            if (video) {
+                isRemoteUpdate = true;
+                video.currentTime = time;
+                video.pause();
+                setTimeout(() => { isRemoteUpdate = false; }, 100);
+            }
+        });
+
+        socket.on('videoSeek', ({ time }) => {
+            const video = document.getElementById('videoPlayer');
+            if (video) {
+                isRemoteUpdate = true;
+                video.currentTime = time;
+                setTimeout(() => { isRemoteUpdate = false; }, 100);
+            }
+        });
+
+        socket.on('userJoined', ({ userId, username }) => {
+            showStatus(`${username} به اتاق پیوست`, 'info');
+            // Reload users list will be handled by roomState update
+        });
+
+        socket.on('userLeft', ({ userId, username }) => {
+            showStatus(`${username} از اتاق خارج شد`, 'info');
+        });
+
+        // Update users list
+        function updateUsersList(users) {
+            const usersListDiv = document.getElementById('usersList');
+            usersListDiv.innerHTML = '';
+            
+            users.forEach(user => {
+                const userItem = document.createElement('span');
+                userItem.className = 'user-item';
+                userItem.textContent = user.username + (user.id === socket.id ? ' (شما)' : '');
+                usersListDiv.appendChild(userItem);
+            });
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type}`;
+            statusDiv.classList.remove('hidden');
+            
+            setTimeout(() => {
+                statusDiv.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('username').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') joinRoom();
+        });
+
+        document.getElementById('roomId').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') joinRoom();
+        });
+
+        document.getElementById('videoUrl').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') setVideo();
+        });
+    </script>
+</body>
+</html>
