@@ -1,5 +1,5 @@
 <?php
-// planner/habits.php - مدیریت عادت‌ها (نسخه جدید با طراحی مدرن)
+// planner/habits.php - هبیت ترکر حرفه‌ای با تقویم شمسی
 session_start();
 date_default_timezone_set('Asia/Tehran');
 
@@ -26,6 +26,62 @@ if (!$currentUser) {
     session_destroy();
     header('Location: ../index.php');
     exit;
+}
+
+// ==================== توابع تبدیل تاریخ (همانند calendar/index.php) ====================
+function gregorian_to_jalali($gy, $gm, $gd, $mod = '') {
+    $g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+    $gy2 = ($gm > 2) ? ($gy + 1) : $gy;
+    $days = 355666 + (365 * $gy) + ((int)(($gy2 + 3) / 4)) - ((int)(($gy2 + 99) / 100)) + ((int)(($gy2 + 399) / 400)) + $gd + $g_d_m[$gm - 1];
+    $jy = -1595 + (33 * ((int)($days / 12053)));
+    $days %= 12053;
+    $jy += 4 * ((int)($days / 1461));
+    $days %= 1461;
+    if ($days > 365) {
+        $jy += (int)(($days - 1) / 365);
+        $days = ($days - 1) % 365;
+    }
+    if ($days < 186) {
+        $jm = 1 + (int)($days / 31);
+        $jd = 1 + ($days % 31);
+    } else {
+        $jm = 7 + (int)(($days - 186) / 30);
+        $jd = 1 + (($days - 186) % 30);
+    }
+    return ($mod == '') ? [$jy, $jm, $jd] : $jy . $mod . $jm . $mod . $jd;
+}
+
+function jalali_to_gregorian($jy, $jm, $jd, $mod = '') {
+    $jy += 1595;
+    $days = -355668 + (365 * $jy) + (((int)($jy / 33)) * 8) + ((int)((($jy % 33) + 3) / 4)) + $jd + (($jm < 7) ? ($jm - 1) * 31 : (($jm - 7) * 30) + 186);
+    $gy = 400 * ((int)($days / 146097));
+    $days %= 146097;
+    if ($days > 36524) {
+        $gy += 100 * ((int)(--$days / 36524));
+        $days %= 36524;
+        if ($days >= 365) $days++;
+    }
+    $gy += 4 * ((int)($days / 1461));
+    $days %= 1461;
+    if ($days > 365) {
+        $gy += (int)(($days - 1) / 365);
+        $days = ($days - 1) % 365;
+    }
+    $gd = $days + 1;
+    $sal_a = [0,31,(($gy % 4 == 0 && $gy % 100 != 0) || ($gy % 400 == 0)) ? 29 : 28,31,30,31,30,31,31,30,31,30,31];
+    for ($gm = 0; $gm < 13 && $gd > $sal_a[$gm]; $gm++) $gd -= $sal_a[$gm];
+    return ($mod == '') ? [$gy, $gm, $gd] : $gy . $mod . $gm . $mod . $gd;
+}
+
+function getJalaliToday() {
+    list($gy, $gm, $gd) = explode('-', date('Y-m-d'));
+    list($jy, $jm, $jd) = gregorian_to_jalali($gy, $gm, $gd);
+    return sprintf("%04d-%02d-%02d", $jy, $jm, $jd);
+}
+
+function getGregorianFromJalali($jy, $jm, $jd) {
+    list($gy, $gm, $gd) = jalali_to_gregorian($jy, $jm, $jd);
+    return sprintf("%04d-%02d-%02d", $gy, $gm, $gd);
 }
 
 $habitsFile = __DIR__ . '/../data/habits.json';
@@ -69,18 +125,65 @@ function saveHabitLog($userId, $habitId, $date, $completed = true) {
     file_put_contents($habitLogsFile, json_encode($logs, JSON_PRETTY_PRINT));
 }
 
-function calculateStreak($habitId, $logs, $today) {
+function calculateStreak($habitId, $logs, $todayJalali) {
     $habitLogs = array_values(array_filter($logs, fn($l) => $l['habit_id'] == $habitId));
     usort($habitLogs, fn($a, $b) => strcmp($b['date'], $a['date']));
     $streak = 0;
-    $checkDate = strtotime($today);
+    $checkDate = $todayJalali;
     foreach ($habitLogs as $log) {
-        $logDate = strtotime($log['date']);
-        $diff = floor(($checkDate - $logDate) / 86400);
-        if ($diff == $streak) $streak++;
-        elseif ($diff > $streak) break;
+        $logDate = $log['date'];
+        if ($logDate == $checkDate) {
+            $streak++;
+            // محاسبه روز قبل
+            list($jy, $jm, $jd) = explode('-', $checkDate);
+            $jd--;
+            if ($jd < 1) {
+                $jm--;
+                if ($jm < 1) {
+                    $jm = 12;
+                    $jy--;
+                }
+                $daysInMonth = ($jm <= 6) ? 31 : (($jm <= 11) ? 30 : ($jy % 4 == 3 ? 30 : 29));
+                $jd = $daysInMonth;
+            }
+            $checkDate = sprintf("%04d-%02d-%02d", $jy, $jm, $jd);
+        } elseif ($logDate < $checkDate) {
+            break;
+        }
     }
     return $streak;
+}
+
+function getWeekDates() {
+    // دریافت 7 روز اخیر به تاریخ شمسی
+    $dates = [];
+    list($gy, $gm, $gd) = explode('-', date('Y-m-d'));
+    for ($i = 6; $i >= 0; $i--) {
+        $timestamp = strtotime("-{$i} days", strtotime(date('Y-m-d')));
+        list($jy, $jm, $jd) = gregorian_to_jalali(
+            date('Y', $timestamp),
+            date('m', $timestamp),
+            date('d', $timestamp)
+        );
+        $dates[] = sprintf("%04d-%02d-%02d", $jy, $jm, $jd);
+    }
+    return $dates;
+}
+
+function getDayName($jalaliDate) {
+    list($jy, $jm, $jd) = explode('-', $jalaliDate);
+    $gregorian = getGregorianFromJalali($jy, $jm, $jd);
+    $dayOfWeek = date('w', strtotime($gregorian));
+    $names = ['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه'];
+    return $names[$dayOfWeek];
+}
+
+function getShortDayName($jalaliDate) {
+    list($jy, $jm, $jd) = explode('-', $jalaliDate);
+    $gregorian = getGregorianFromJalali($jy, $jm, $jd);
+    $dayOfWeek = date('w', strtotime($gregorian));
+    $names = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
+    return $names[$dayOfWeek];
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -88,22 +191,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $response = ['success' => false];
     $userId = $_SESSION['user_id'];
-    $today = date('Y-m-d');
+    $todayJalali = getJalaliToday();
+    $todayGregorian = date('Y-m-d');
 
     if ($action === 'load_habits') {
         $habits = getUserHabits($userId);
         $logs = getHabitLogs($userId);
         foreach ($habits as &$habit) {
-            $habit['streak'] = calculateStreak($habit['id'], $logs, $today);
+            $habit['streak'] = calculateStreak($habit['id'], $logs, $todayJalali);
             $habit['completed_today'] = false;
             foreach ($logs as $log) {
-                if ($log['habit_id'] == $habit['id'] && $log['date'] == $today) {
+                if ($log['habit_id'] == $habit['id'] && $log['date'] == $todayJalali) {
                     $habit['completed_today'] = true;
                     break;
                 }
             }
         }
-        $response = ['success' => true, 'habits' => $habits];
+        $weekDates = getWeekDates();
+        $weeklyData = [];
+        foreach ($habits as $habit) {
+            $weeklyData[$habit['id']] = [];
+            foreach ($weekDates as $date) {
+                foreach ($logs as $log) {
+                    if ($log['habit_id'] == $habit['id'] && $log['date'] == $date) {
+                        $weeklyData[$habit['id']][$date] = true;
+                        break;
+                    }
+                }
+            }
+        }
+        $response = ['success' => true, 'habits' => $habits, 'weekDates' => $weekDates, 'weeklyData' => $weeklyData];
     }
     elseif ($action === 'add_habit') {
         $habits = getUserHabits($userId);
@@ -128,25 +245,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $habitId = $_POST['id'];
         $alreadyCompleted = false;
         foreach ($logs as $log) {
-            if ($log['habit_id'] == $habitId && $log['date'] == $today) {
+            if ($log['habit_id'] == $habitId && $log['date'] == $todayJalali) {
                 $alreadyCompleted = true;
                 break;
             }
         }
-        saveHabitLog($userId, $habitId, $today, !$alreadyCompleted);
+        saveHabitLog($userId, $habitId, $todayJalali, !$alreadyCompleted);
         $habits = getUserHabits($userId);
         $logs = getHabitLogs($userId);
         foreach ($habits as &$habit) {
-            $habit['streak'] = calculateStreak($habit['id'], $logs, $today);
+            $habit['streak'] = calculateStreak($habit['id'], $logs, $todayJalali);
             $habit['completed_today'] = false;
             foreach ($logs as $log) {
-                if ($log['habit_id'] == $habit['id'] && $log['date'] == $today) {
+                if ($log['habit_id'] == $habit['id'] && $log['date'] == $todayJalali) {
                     $habit['completed_today'] = true;
                     break;
                 }
             }
         }
-        $response = ['success' => true, 'habits' => $habits];
+        $weekDates = getWeekDates();
+        $weeklyData = [];
+        foreach ($habits as $habit) {
+            $weeklyData[$habit['id']] = [];
+            foreach ($weekDates as $date) {
+                foreach ($logs as $log) {
+                    if ($log['habit_id'] == $habit['id'] && $log['date'] == $date) {
+                        $weeklyData[$habit['id']][$date] = true;
+                        break;
+                    }
+                }
+            }
+        }
+        $response = ['success' => true, 'habits' => $habits, 'weekDates' => $weekDates, 'weeklyData' => $weeklyData];
     }
     elseif ($action === 'delete_habit') {
         $habits = getUserHabits($userId);
@@ -324,23 +454,220 @@ include_once __DIR__ . '/../includes/header.php';
     <div class="toast" id="toast"></div>
     <script>
         let habits=[],weeklyData={},weekDates=[],selectedIcon='fa-fire';
+        const todayJalali = '<?= getJalaliToday() ?>';
+        
         function showToast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),3000)}
-        async function loadHabits(){let fd=new FormData();fd.append('action','load_habits');let r=await fetch(window.location.href,{method:'POST',body:fd});let res=await r.json();if(res.success){habits=res.habits;renderHabits();updateStats();loadWeeklyData()}}
-        async function loadWeeklyData(){let fd=new FormData();fd.append('action','get_weekly_data');let r=await fetch(window.location.href,{method:'POST',body:fd});let res=await r.json();if(res.success){weeklyData=res.weeklyData||{};weekDates=res.weekDates||[];renderWeekDays();renderWeeklyData()}}
-        function renderWeekDays(){const c=document.getElementById('weekDays'),today=new Date().toISOString().split('T')[0],dn=['ی','د','س','چ','پ','ج','ش'];c.innerHTML=weekDates.map((d,i)=>{const dt=new Date(d),n=dt.getDate(),ist=d===today;return `<div class="day-cell ${ist?'today':''}"><div class="day-name">${dn[i]}</div><div class="day-number">${n}</div></div>`}).join('')}
-        function renderWeeklyData(){const c=document.getElementById('weeklyData');if(habits.length===0){c.innerHTML='<p style="text-align:center;color:rgba(255,255,255,0.5);padding:20px;">هنوز عادت‌ای اضافه نشده است</p>';return}c.innerHTML=habits.map(h=>{const hd=weeklyData[h.id]||{};return `<div class="habit-week-row"><div class="habit-week-name"><i class="fas ${h.icon}" style="color:${h.color}"></i>${escapeHtml(h.name)}</div>${weekDates.map(d=>{const cp=hd[d]||false;return `<div class="week-check ${cp?'completed':''}" onclick="toggleHabitOnDate('${h.id}','${d}')">${cp?'<i class="fas fa-check"></i>':''}</div>`}).join('')}</div>`}).join('')}
-        function renderHabits(){const c=document.getElementById('habitsContainer');if(!habits||habits.length===0){c.innerHTML=`<div class="empty-state"><i class="fas fa-seedling"></i><p>هیچ عادتی تعریف نشده است</p><p class="hint">با کلیک روی دکمه "عادت جدید" شروع کنید</p></div>`;return}c.innerHTML=habits.map(h=>{const ct=h.completed_today;return `<div class="habit-card ${ct?'completed':''}" style="--habit-color:${h.color}"><div class="habit-header"><div class="habit-icon" style="background:${h.color}"><i class="fas ${h.icon}"></i></div><div class="habit-info"><div class="habit-name">${escapeHtml(h.name)}</div>${h.description?`<div class="habit-desc">${escapeHtml(h.description)}</div>`:''}</div></div><div class="habit-stats"><div class="habit-stat"><div class="value">${h.target||1}</div><div class="label">هدف روزانه</div></div><div class="habit-stat"><div class="value">${h.streak||0}</div><div class="label">رکورد فعلی</div></div><div class="habit-stat"><div class="value">${h.frequency==='daily'?'روزانه':h.frequency==='weekly'?'هفتگی':'ماهانه'}</div><div class="label">تکرار</div></div></div><div class="habit-actions"><button class="btn btn-check ${ct?'completed':''}" onclick="toggleHabit('${h.id}')"><i class="fas ${ct?'fa-times':'fa-check'}"></i>${ct?'انجام شد':'ثبت انجام'}</button><button class="btn btn-edit" onclick="openEditModal('${h.id}')"><i class="fas fa-edit"></i></button><button class="btn btn-delete" onclick="deleteHabit('${h.id}')"><i class="fas fa-trash"></i></button></div></div>`}).join('')}
-        function updateStats(){const t=habits.length,c=habits.filter(h=>h.completed_today).length,b=Math.max(...habits.map(h=>h.streak||0),0),r=t>0?Math.round((c/t)*100):0;document.getElementById('totalHabits').textContent=t;document.getElementById('completedToday').textContent=c;document.getElementById('bestStreak').textContent=b;document.getElementById('completionRate').textContent=r+'%'}
-        async function toggleHabitOnDate(id,date){const today=new Date().toISOString().split('T')[0];if(date!==today){showToast('فقط ثبت برای امروز امکان‌پذیر است','error');return}await toggleHabit(id)}
-        async function toggleHabit(id){let fd=new FormData();fd.append('action','toggle_habit');fd.append('id',id);let r=await fetch(window.location.href,{method:'POST',body:fd});let res=await r.json();if(res.success){habits=res.habits;renderHabits();updateStats();loadWeeklyData();const h=habits.find(x=>x.id==id);showToast(h&&h.completed_today?'عالیه! عادت امروز ثبت شد 🎉':'عادت از حالت انجام خارج شد',h&&h.completed_today?'success':'error')}}
-        async function deleteHabit(id){if(!confirm('آیا از حذف این عادت مطمئن هستید؟'))return;let fd=new FormData();fd.append('action','delete_habit');fd.append('id',id);let r=await fetch(window.location.href,{method:'POST',body:fd});let res=await r.json();if(res.success){habits=res.habits;renderHabits();updateStats();loadWeeklyData();showToast('عادت با موفقیت حذف شد','success')}}
-        function openAddModal(){selectedIcon='fa-fire';document.querySelectorAll('.icon-option').forEach(o=>o.classList.remove('selected'));document.querySelector('.icon-option[data-icon="fa-fire"]').classList.add('selected');document.getElementById('modalTitle').innerHTML='<i class="fas fa-plus"></i> افزودن عادت جدید';document.getElementById('editId').value='';document.getElementById('habitName').value='';document.getElementById('habitDescription').value='';document.getElementById('habitFrequency').value='daily';document.getElementById('habitTarget').value='1';document.getElementById('saveBtn').textContent='افزودن';document.getElementById('habitModal').classList.add('active')}
-        function openEditModal(id){const h=habits.find(x=>x.id==id);if(!h)return;selectedIcon=h.icon||'fa-fire';document.querySelectorAll('.icon-option').forEach(o=>o.classList.toggle('selected',o.dataset.icon===selectedIcon));document.getElementById('modalTitle').innerHTML='<i class="fas fa-edit"></i> ویرایش عادت';document.getElementById('editId').value=id;document.getElementById('habitName').value=h.name;document.getElementById('habitDescription').value=h.description||'';document.getElementById('habitFrequency').value=h.frequency||'daily';document.getElementById('habitTarget').value=h.target||1;document.getElementById('saveBtn').textContent='ذخیره تغییرات';document.getElementById('habitModal').classList.add('active')}
-        function closeModal(){document.getElementById('habitModal').classList.remove('active')}
-        async function saveHabit(){const name=document.getElementById('habitName').value.trim();if(!name){showToast('لطفاً نام عادت را وارد کنید','error');return}const eid=document.getElementById('editId').value,act=eid?'edit_habit':'add_habit';let fd=new FormData();fd.append('action',act);if(eid)fd.append('id',eid);fd.append('name',name);fd.append('description',document.getElementById('habitDescription').value);fd.append('frequency',document.getElementById('habitFrequency').value);fd.append('target',document.getElementById('habitTarget').value);fd.append('icon',selectedIcon);let r=await fetch(window.location.href,{method:'POST',body:fd});let res=await r.json();if(res.success){habits=res.habits;renderHabits();updateStats();loadWeeklyData();closeModal();showToast(eid?'عادت با موفقیت ویرایش شد':'عادت با موفقیت افزوده شد','success')}else showToast('خطا در ذخیره عادت','error')}
-        document.getElementById('iconSelector').addEventListener('click',function(e){const o=e.target.closest('.icon-option');if(o){document.querySelectorAll('.icon-option').forEach(x=>x.classList.remove('selected'));o.classList.add('selected');selectedIcon=o.dataset.icon}});
-        document.getElementById('habitModal').addEventListener('click',function(e){if(e.target===this)closeModal()});
-        function escapeHtml(t){if(!t)return'';let d=document.createElement('div');d.textContent=t;return d.innerHTML}
+        
+        async function loadHabits(){
+            let fd=new FormData();
+            fd.append('action','load_habits');
+            let r=await fetch(window.location.href,{method:'POST',body:fd});
+            let res=await r.json();
+            if(res.success){
+                habits=res.habits;
+                weekDates=res.weekDates||[];
+                weeklyData=res.weeklyData||{};
+                renderHabits();
+                updateStats();
+                renderWeekDays();
+                renderWeeklyData();
+            }
+        }
+        
+        function renderWeekDays(){
+            const c=document.getElementById('weekDays');
+            const dn=['ش','ی','د','س','چ','پ','ج'];
+            c.innerHTML=weekDates.map((d,i)=>{
+                const parts=d.split('-');
+                const dayNum=parseInt(parts[2]);
+                const isToday=d===todayJalali;
+                return `<div class="day-cell ${isToday?'today':''}"><div class="day-name">${dn[i]}</div><div class="day-number">${dayNum}</div></div>`;
+            }).join('');
+        }
+        
+        function renderWeeklyData(){
+            const c=document.getElementById('weeklyData');
+            if(habits.length===0){
+                c.innerHTML='<p style="text-align:center;color:rgba(255,255,255,0.5);padding:20px;">هنوز عادت‌ای اضافه نشده است</p>';
+                return;
+            }
+            c.innerHTML=habits.map(h=>{
+                const hd=weeklyData[h.id]||{};
+                return `<div class="habit-week-row"><div class="habit-week-name"><i class="fas ${h.icon}" style="color:${h.color}"></i>${escapeHtml(h.name)}</div>${weekDates.map(d=>{
+                    const cp=hd[d]||false;
+                    return `<div class="week-check ${cp?'completed':''}" onclick="toggleHabitOnDate('${h.id}','${d}')">${cp?'<i class="fas fa-check"></i>':''}</div>`;
+                }).join('')}</div>`;
+            }).join('');
+        }
+        
+        function renderHabits(){
+            const c=document.getElementById('habitsContainer');
+            if(!habits||habits.length===0){
+                c.innerHTML=`<div class="empty-state"><i class="fas fa-seedling"></i><p>هیچ عادتی تعریف نشده است</p><p class="hint\">با کلیک روی دکمه "عادت جدید" شروع کنید</p></div>`;
+                return;
+            }
+            c.innerHTML=habits.map(h=>{
+                const ct=h.completed_today;
+                return `<div class="habit-card ${ct?'completed':''}" style="--habit-color:${h.color}">
+                    <div class="habit-header">
+                        <div class="habit-icon" style="background:${h.color}"><i class="fas ${h.icon}"></i></div>
+                        <div class="habit-info">
+                            <div class="habit-name">${escapeHtml(h.name)}</div>
+                            ${h.description?`<div class="habit-desc">${escapeHtml(h.description)}</div>`:''}
+                        </div>
+                    </div>
+                    <div class="habit-stats">
+                        <div class="habit-stat"><div class="value">${h.target||1}</div><div class="label">هدف روزانه</div></div>
+                        <div class="habit-stat"><div class="value">${h.streak||0}</div><div class="label">رکورد فعلی</div></div>
+                        <div class="habit-stat"><div class="value">${h.frequency==='daily'?'روزانه':h.frequency==='weekly'?'هفتگی':'ماهانه'}</div><div class="label">تکرار</div></div>
+                    </div>
+                    <div class="habit-actions">
+                        <button class="btn btn-check ${ct?'completed':''}" onclick="toggleHabit('${h.id}')"><i class="fas ${ct?'fa-times':'fa-check'}"></i>${ct?'انجام شد':'ثبت انجام'}</button>
+                        <button class="btn btn-edit" onclick="openEditModal('${h.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-delete" onclick="deleteHabit('${h.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        
+        function updateStats(){
+            const t=habits.length,
+                  c=habits.filter(h=>h.completed_today).length,
+                  b=Math.max(...habits.map(h=>h.streak||0),0),
+                  r=t>0?Math.round((c/t)*100):0;
+            document.getElementById('totalHabits').textContent=t;
+            document.getElementById('completedToday').textContent=c;
+            document.getElementById('bestStreak').textContent=b;
+            document.getElementById('completionRate').textContent=r+'%';
+        }
+        
+        async function toggleHabitOnDate(id,date){
+            if(date!==todayJalali){
+                showToast('فقط ثبت برای امروز امکان‌پذیر است','error');
+                return;
+            }
+            await toggleHabit(id);
+        }
+        
+        async function toggleHabit(id){
+            let fd=new FormData();
+            fd.append('action','toggle_habit');
+            fd.append('id',id);
+            let r=await fetch(window.location.href,{method:'POST',body:fd});
+            let res=await r.json();
+            if(res.success){
+                habits=res.habits;
+                weekDates=res.weekDates||[];
+                weeklyData=res.weeklyData||{};
+                renderHabits();
+                updateStats();
+                renderWeekDays();
+                renderWeeklyData();
+                const h=habits.find(x=>x.id==id);
+                showToast(h&&h.completed_today?'عالیه! عادت امروز ثبت شد 🎉':'عادت از حالت انجام خارج شد',h&&h.completed_today?'success':'error');
+            }
+        }
+        
+        async function deleteHabit(id){
+            if(!confirm('آیا از حذف این عادت مطمئن هستید؟'))return;
+            let fd=new FormData();
+            fd.append('action','delete_habit');
+            fd.append('id',id);
+            let r=await fetch(window.location.href,{method:'POST',body:fd});
+            let res=await r.json();
+            if(res.success){
+                habits=res.habits;
+                renderHabits();
+                updateStats();
+                renderWeekDays();
+                renderWeeklyData();
+                showToast('عادت با موفقیت حذف شد','success');
+            }
+        }
+        
+        function openAddModal(){
+            selectedIcon='fa-fire';
+            document.querySelectorAll('.icon-option').forEach(o=>o.classList.remove('selected'));
+            document.querySelector('.icon-option[data-icon="fa-fire"]').classList.add('selected');
+            document.getElementById('modalTitle').innerHTML='<i class="fas fa-plus"></i> افزودن عادت جدید';
+            document.getElementById('editId').value='';
+            document.getElementById('habitName').value='';
+            document.getElementById('habitDescription').value='';
+            document.getElementById('habitFrequency').value='daily';
+            document.getElementById('habitTarget').value='1';
+            document.getElementById('saveBtn').textContent='افزودن';
+            document.getElementById('habitModal').classList.add('active');
+        }
+        
+        function openEditModal(id){
+            const h=habits.find(x=>x.id==id);
+            if(!h)return;
+            selectedIcon=h.icon||'fa-fire';
+            document.querySelectorAll('.icon-option').forEach(o=>o.classList.toggle('selected',o.dataset.icon===selectedIcon));
+            document.getElementById('modalTitle').innerHTML='<i class="fas fa-edit"></i> ویرایش عادت';
+            document.getElementById('editId').value=id;
+            document.getElementById('habitName').value=h.name;
+            document.getElementById('habitDescription').value=h.description||'';
+            document.getElementById('habitFrequency').value=h.frequency||'daily';
+            document.getElementById('habitTarget').value=h.target||1;
+            document.getElementById('saveBtn').textContent='ذخیره تغییرات';
+            document.getElementById('habitModal').classList.add('active');
+        }
+        
+        function closeModal(){
+            document.getElementById('habitModal').classList.remove('active');
+        }
+        
+        async function saveHabit(){
+            const name=document.getElementById('habitName').value.trim();
+            if(!name){
+                showToast('لطفاً نام عادت را وارد کنید','error');
+                return;
+            }
+            const eid=document.getElementById('editId').value,
+                  act=eid?'edit_habit':'add_habit';
+            let fd=new FormData();
+            fd.append('action',act);
+            if(eid)fd.append('id',eid);
+            fd.append('name',name);
+            fd.append('description',document.getElementById('habitDescription').value);
+            fd.append('frequency',document.getElementById('habitFrequency').value);
+            fd.append('target',document.getElementById('habitTarget').value);
+            fd.append('icon',selectedIcon);
+            let r=await fetch(window.location.href,{method:'POST',body:fd});
+            let res=await r.json();
+            if(res.success){
+                habits=res.habits;
+                renderHabits();
+                updateStats();
+                loadWeeklyData();
+                closeModal();
+                showToast(eid?'عادت با موفقیت ویرایش شد':'عادت با موفقیت افزوده شد','success');
+            }else{
+                showToast('خطا در ذخیره عادت','error');
+            }
+        }
+        
+        document.getElementById('iconSelector').addEventListener('click',function(e){
+            const o=e.target.closest('.icon-option');
+            if(o){
+                document.querySelectorAll('.icon-option').forEach(x=>x.classList.remove('selected'));
+                o.classList.add('selected');
+                selectedIcon=o.dataset.icon;
+            }
+        });
+        
+        document.getElementById('habitModal').addEventListener('click',function(e){
+            if(e.target===this)closeModal();
+        });
+        
+        function escapeHtml(t){
+            if(!t)return'';
+            let d=document.createElement('div');
+            d.textContent=t;
+            return d.innerHTML;
+        }
+        
         loadHabits();
     </script>
 </body>
