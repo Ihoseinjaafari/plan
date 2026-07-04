@@ -475,22 +475,90 @@ include_once __DIR__ . '/../includes/header.php';
                         }
                     }
                     
+                    // محاسبه فاز چرخه برای این روز
+                    $phaseClass = '';
+                    $daysSinceStart = -1;
+                    $avgCycleLength = 28;
+                    
+                    // اگر سیکل واقعی وجود دارد
+                    if (!empty($cycles)) {
+                        usort($cycles, function($a, $b) {
+                            return strtotime($b['start_date']) - strtotime($a['start_date']);
+                        });
+                        
+                        $relevantCycle = null;
+                        foreach ($cycles as $cycle) {
+                            $startDate = new DateTime($cycle['start_date']);
+                            if ($startDate <= new DateTime($gregDateStr)) {
+                                $relevantCycle = $cycle;
+                                break;
+                            }
+                        }
+                        
+                        if ($relevantCycle) {
+                            $startDate = new DateTime($relevantCycle['start_date']);
+                            $endDate = $relevantCycle['end_date'] ? new DateTime($relevantCycle['end_date']) : null;
+                            $current = new DateTime($gregDateStr);
+                            $daysSinceStart = floor(($current - $startDate)->days);
+                            
+                            // اگر در دوران خونریزی باشد
+                            if ($endDate && $current <= $endDate) {
+                                $phaseClass = 'phase-menstruation';
+                            } elseif ($daysSinceStart >= 0 && $daysSinceStart <= 5) {
+                                $phaseClass = 'phase-menstruation';
+                            } elseif ($daysSinceStart >= 6 && $daysSinceStart <= 14) {
+                                $phaseClass = 'phase-follicular';
+                            } elseif ($daysSinceStart >= 15 && $daysSinceStart <= 17) {
+                                $phaseClass = 'phase-ovulation';
+                            } elseif ($daysSinceStart >= 18 && $daysSinceStart <= 28) {
+                                $phaseClass = 'phase-luteal';
+                            }
+                        }
+                    }
+                    
+                    // اگر سیکل واقعی نیست و پیش‌بینی است
+                    if (empty($phaseClass) && !empty($futureCycles)) {
+                        foreach ($futureCycles as $future) {
+                            $start = new DateTime($future['start_date']);
+                            $end = new DateTime($future['end_date']);
+                            $current = new DateTime($gregDateStr);
+                            if ($current >= $start && $current <= $end) {
+                                // روزهای اول سیکل پیش‌بینی شده = قاعدگی
+                                $daysInFuture = floor(($current - $start)->days);
+                                if ($daysInFuture <= 5) {
+                                    $phaseClass = 'phase-menstruation';
+                                } else {
+                                    // بعد از قاعدگی - محاسبه فاز بر اساس روز چرخه
+                                    $cycleDay = $daysInFuture + 1;
+                                    if ($cycleDay >= 6 && $cycleDay <= 14) {
+                                        $phaseClass = 'phase-follicular';
+                                    } elseif ($cycleDay >= 15 && $cycleDay <= 17) {
+                                        $phaseClass = 'phase-ovulation';
+                                    } elseif ($cycleDay >= 18 && $cycleDay <= 28) {
+                                        $phaseClass = 'phase-luteal';
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    
                     $class = 'cal-day';
                     if ($is_today) $class .= ' today';
-                    if ($hasCycle) {
-                        $class .= ' period period-' . $cycleFlow;
-                    } elseif ($isPredicted) {
-                        $class .= ' predicted predicted-' . $predictedFlow;
-                    } elseif ($hasSymptoms) {
+                    if ($phaseClass) {
+                        $class .= ' ' . $phaseClass;
+                        if ($isPredicted || empty($relevantCycle)) {
+                            $class .= ' predicted';
+                        }
+                    }
+                    if ($hasSymptoms && !$phaseClass) {
                         $class .= ' has-symptoms';
                     }
                     
                     echo '<div class="' . $class . '" data-date="' . $gregDateStr . '" onclick="selectDate(\'' . $gregDateStr . '\')">';
                     echo '<span class="day-number">' . $day . '</span>';
-                    if ($hasCycle) {
-                        echo '<span class="period-dot">●</span>';
-                    } elseif ($isPredicted) {
-                        echo '<span class="predicted-dot">○</span>';
+                    if ($phaseClass) {
+                        echo '<span class="phase-dot">●</span>';
                     } elseif ($hasSymptoms) {
                         echo '<span class="symptom-dot">◆</span>';
                     }
@@ -506,15 +574,13 @@ include_once __DIR__ . '/../includes/header.php';
             
             <!-- راهنما -->
             <div class="calendar-legend">
-                <span class="legend-item"><span class="legend-dot period-dot">●</span> سیکل ثبت‌شده</span>
-                <span class="legend-item"><span class="legend-dot predicted-dot">○</span> پیش‌بینی شده</span>
+                <span class="legend-item"><span class="phase-indicator phase-menstruation"></span> قاعدگی</span>
+                <span class="legend-item"><span class="phase-indicator phase-follicular"></span> فولیکولی</span>
+                <span class="legend-item"><span class="phase-indicator phase-ovulation"></span> تخمک‌گذاری</span>
+                <span class="legend-item"><span class="phase-indicator phase-luteal"></span> لوتئال</span>
                 <span class="legend-item"><span class="legend-dot symptom-dot">◆</span> دارای علامت</span>
                 <span class="legend-item"><span class="legend-dot today-dot">★</span> امروز</span>
-                <span class="legend-item">شدت خونریزی: 
-                    <span class="flow-indicator flow-light" title="کم"></span>
-                    <span class="flow-indicator flow-medium" title="متوسط"></span>
-                    <span class="flow-indicator flow-heavy" title="زیاد"></span>
-                </span>
+                <span class="legend-item" style="opacity: 0.6;">(رنگ‌های کمرنگ = پیش‌بینی)</span>
             </div>
         </div>
 
@@ -640,10 +706,10 @@ include_once __DIR__ . '/../includes/header.php';
 const userId = '<?php echo $userId; ?>';
 const todayJalali = '<?php echo $todayJalali; ?>';
 const currentJalaliDate = '<?php echo $todayDateStr; ?>';
-let cycles = <?php echo json_encode($cycles); ?>;
-let symptoms = <?php echo json_encode($symptoms); ?>;
-let predictionData = <?php echo json_encode($prediction); ?>;
-let futureCycles = <?php echo json_encode($futureCycles); ?>;
+let cycles = <?php echo json_encode($cycles); ?> || [];
+let symptoms = <?php echo json_encode($symptoms); ?> || [];
+let predictionData = <?php echo json_encode($prediction); ?> || null;
+let futureCycles = <?php echo json_encode($futureCycles); ?> || [];
 let currentPhase = '<?php echo $phase; ?>';
 let selectedDate = null;
 let datePickers = {};
