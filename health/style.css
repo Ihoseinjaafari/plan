@@ -1,0 +1,1230 @@
+/* health/style.css - استایل‌های کامل ماژول سلامت */
+
+/* ===== کانتینر اصلی ===== */
+.health-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 15px 30px;
+}
+
+/* ===== هدر ===== */
+.health-header {
+    text-align: center;
+    padding: 20px 0 25px;
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    margin-bottom: 20px;
+}
+.health-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary, #ffffff);
+}
+.health-header .subtitle {
+    color: var(--text-muted, rgba(255,255,255,0.5));
+    font-size: 15px;
+    margin-top: 5px;
+}
+
+/* ===== کارت وضعیت ===== */
+.status-card {
+    background: var(--bg-card, rgba(255,255,255,0.05));
+    border-radius: 16px;
+    padding: 18px 24px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.status-card .phase-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary, #ffffff);
+}
+.status-card .phase-box #phaseIcon { font-size: 28px; }
+.status-card .status-stats {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+.status-card .status-stats > div {
+    text-align: center;
+}
+.status-card .status-stats .label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted, rgba(255,255,255,0.5));
+}
+.status-card .status-stats .value {
+    display: block;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary, #ffffff);
+    margin-top: 2px;
+}
+
+/* ===== آمار ===== */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.stat-box {
+    background: var(--bg-card, rgba(255,255,255,0.05));
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+}
+.stat-box .num {
+    font-size: 24px;
+    font-weight: 700;
+    color: #667eea;
+    display: block;
+}
+.stat-box .lbl {
+    font-size: 12px;
+    color: var(--text-muted, rgba(255,255,255,0.5));
+}
+
+/* ===== تب‌ها ===== */
+.health-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    background: var(--bg-card, rgba(255,255,255,0.05));
+    border-radius: 14px;
+    padding: 6px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    flex-wrap: wrap;
+}
+
+.health-tabs .tab-btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-muted, rgba(255,255,255,0.5));
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    transition: all 0.3s;
+}
+
+.health-tabs .tab-btn:hover {
+    color: var(--text-primary, #ffffff);
+    background: rgba(255,255,255,0.05);
+}
+
+.health-tabs .tab-btn.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+/* ===== پنل تب‌ها ===== */
+.tab-panel {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.panel-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary, #ffffff);
+}
+
+.btn-add {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    transition: all 0.3s;
+}
+
+.btn-add:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 15px rgba(102,126,234,0.35);
+}
+
+/* ===== تقویم ===== */
+.calendar-wrapper {
+    background: var(--bg-card, rgba(255,255,255,0.05));
+    border-radius: 16px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    padding: 16px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.calendar-nav .month-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary, #ffffff);
+    min-width: 140px;
+    text-align: center;
+}
+
+.calendar-nav .nav-arrow {
+    text-decoration: none;
+    padding: 4px 14px;
+    background: var(--bg-input, rgba(255,255,255,0.05));
+    color: var(--text-secondary, rgba(255,255,255,0.8));
+    border-radius: 8px;
+    font-size: 18px;
+    transition: all 0.3s;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    cursor: pointer;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+}
+
+.calendar-nav .nav-arrow:hover {
+    background: var(--bg-card-hover, rgba(255,255,255,0.1));
+    color: var(--text-primary, #ffffff);
+}
+
+.calendar-nav .today-link {
+    text-decoration: none;
+    padding: 4px 14px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.3s;
+    cursor: pointer;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+}
+
+.calendar-nav .today-link:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(102,126,234,0.35);
+}
+
+.calendar-nav .year-link {
+    text-decoration: none;
+    padding: 4px 12px;
+    background: var(--bg-input, rgba(255,255,255,0.05));
+    color: var(--text-secondary, rgba(255,255,255,0.8));
+    border-radius: 8px;
+    font-size: 13px;
+    transition: all 0.3s;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    cursor: pointer;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+}
+
+.calendar-nav .year-link:hover {
+    background: var(--bg-card-hover, rgba(255,255,255,0.1));
+    color: var(--text-primary, #ffffff);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+}
+
+.calendar-grid .cal-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted, rgba(255,255,255,0.5));
+    padding: 8px 0;
+}
+
+.calendar-grid .cal-day {
+    padding: 10px 4px;
+    border-radius: 10px;
+    font-size: 15px;
+    color: var(--text-secondary, rgba(255,255,255,0.8));
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    background: var(--bg-input, rgba(255,255,255,0.03));
+    min-height: 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-grid .cal-day .day-number {
+    font-size: 15px;
+    font-weight: 400;
+}
+
+.calendar-grid .cal-day:hover:not(.empty) {
+    background: var(--bg-card-hover, rgba(255,255,255,0.08));
+    transform: scale(1.05);
+    z-index: 2;
+}
+
+.calendar-grid .cal-day.empty {
+    background: transparent;
+    cursor: default;
+}
+
+.calendar-grid .cal-day.today {
+    background: var(--today-bg, #f1c40f);
+    color: var(--today-text, #1a1a2e);
+    font-weight: 700;
+}
+.calendar-grid .cal-day.today .day-number {
+    font-weight: 700;
+}
+
+/* ===== رنگ‌های سیکل بر اساس شدت خونریزی ===== */
+.calendar-grid .cal-day.period {
+    color: #ffffff;
+    font-weight: 600;
+}
+.calendar-grid .cal-day.period .day-number {
+    font-weight: 600;
+}
+
+.calendar-grid .cal-day.period-light {
+    background: rgba(40,167,69,0.7);
+}
+.calendar-grid .cal-day.period-medium {
+    background: rgba(255,193,7,0.8);
+}
+.calendar-grid .cal-day.period-heavy {
+    background: rgba(220,53,69,0.8);
+}
+
+/* ===== آیتم‌های پیش‌بینی شده در تقویم ===== */
+.calendar-grid .cal-day.predicted {
+    background: rgba(102,126,234,0.2);
+    color: #667eea;
+    border: 1px dashed rgba(102,126,234,0.4);
+    position: relative;
+}
+.calendar-grid .cal-day.predicted .day-number {
+    font-weight: 500;
+}
+.calendar-grid .cal-day.predicted .predicted-dot {
+    display: block;
+    font-size: 10px;
+    color: #667eea;
+    margin-top: 2px;
+}
+
+/* ===== نقاط پایین روز ===== */
+.calendar-grid .cal-day .period-dot {
+    display: block;
+    font-size: 8px;
+    color: #ffffff;
+    margin-top: 2px;
+    text-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+
+.calendar-grid .cal-day.period-light .period-dot {
+    color: #28a745;
+}
+.calendar-grid .cal-day.period-medium .period-dot {
+    color: #ffc107;
+}
+.calendar-grid .cal-day.period-heavy .period-dot {
+    color: #dc3545;
+}
+
+/* ===== راهنمای تقویم ===== */
+.calendar-legend {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    padding: 10px 0 4px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    margin-top: 12px;
+}
+
+.calendar-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted, rgba(255,255,255,0.5));
+}
+
+.calendar-legend .legend-dot {
+    font-size: 14px;
+}
+
+.calendar-legend .legend-dot.period-dot {
+    color: #f5576c;
+}
+
+.calendar-legend .legend-dot.predicted-dot {
+    color: #667eea;
+}
+
+.calendar-legend .legend-dot.today-dot {
+    color: var(--today-bg, #f1c40f);
+}
+
+/* ===== سایدبار اطلاعات روز ===== */
+.day-info {
+    background: var(--bg-card, rgba(255,255,255,0.05));
+    border-radius: 16px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.day-info-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.1));
+}
+
+.day-info-header #selectedDateDisplay {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary, #ffffff);
+    flex: 1;
+}
+
+.btn-add-small {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    transition: all 0.3s;
+}
+
+.btn-add-small:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(102,126,234,0.35);
+}
+
+.btn-add-small:last-child {
+    background: linear-gradient(135deg, #f5576c, #f093fb);
+}
+
+#dayDetails {
+    min-height: 60px;
+}
+
+#dayDetails .empty {
+    color: var(--text-muted, rgba(255,255,255,0.5));
+    text-align: center;
+    padding: 20px 0;
+}
+
+#dayDetails .day-item {
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--bg-input, rgba(255,255,255,0.05));
+    margin-bottom: 6px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    font-size: 14px;
+    color: var(--text-secondary, rgba(255,255,255,0.8));
+}
+
+#dayDetails .day-item.cycle-item {
+    border-right: 3px solid #f5576c;
+}
+
+#dayDetails .day-item.symptom-item {
+    border-right: 3px solid #667eea;
+}
+
+#dayDetails .day-item.predicted-item {
+    border-right: 3px solid #667eea;
+    background: rgba(102,126,234,0.1);
+}
+
+/* ===== لیست آیتم‌ها ===== */
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--bg-input, rgba(255,255,255,0.05));
+    border-radius: 12px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    transition: all 0.3s;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.item-row:hover {
+    border-color: rgba(102,126,234,0.3);
+    background: var(--bg-card-hover, rgba(255,255,255,0.08));
+}
+
+.item-row .info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.item-row .info .main {
+    font-weight: 500;
+    color: var(--text-primary, #ffffff);
+}
+
+.item-row .info .badge {
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.item-row .info .badge.flow-light {
+    background: rgba(40,167,69,0.15);
+    color: #28a745;
+}
+.item-row .info .badge.flow-medium {
+    background: rgba(255,193,7,0.15);
+    color: #ffc107;
+}
+.item-row .info .badge.flow-heavy {
+    background: rgba(220,53,69,0.15);
+    color: #dc3545;
+}
+
+.item-row .info .badge.sev-low {
+    background: rgba(40,167,69,0.15);
+    color: #28a745;
+}
+.item-row .info .badge.sev-medium {
+    background: rgba(255,193,7,0.15);
+    color: #ffc107;
+}
+.item-row .info .badge.sev-high {
+    background: rgba(220,53,69,0.15);
+    color: #dc3545;
+}
+
+.item-row .info .meta {
+    font-size: 13px;
+    color: var(--text-muted, rgba(255,255,255,0.5));
+}
+
+.item-row .info .note {
+    font-size: 13px;
+    color: var(--text-muted, rgba(255,255,255,0.5));
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.item-row .actions {
+    display: flex;
+    gap: 6px;
+}
+
+.item-row .actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--text-light, rgba(255,255,255,0.3));
+    transition: all 0.3s;
+}
+
+.item-row .actions .edit-btn:hover {
+    background: rgba(102,126,234,0.15);
+    color: #667eea;
+}
+
+.item-row .actions .delete-btn:hover {
+    background: rgba(220,53,69,0.15);
+    color: #dc3545;
+}
+
+/* ===== پیش‌بینی ===== */
+.predict-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.predict-grid .pcard {
+    background: var(--bg-card, rgba(255,255,255,0.05));
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+}
+
+.predict-grid .pcard .pl {
+    font-size: 12px;
+    color: var(--text-muted, rgba(255,255,255,0.5));
+}
+
+.predict-grid .pcard .pv {
+    font-size: 20px;
+    font-weight: 700;
+    color: #667eea;
+    margin-top: 4px;
+}
+
+.note {
+    background: rgba(102,126,234,0.15);
+    padding: 12px 18px;
+    border-radius: 10px;
+    color: #667eea;
+    font-size: 13px;
+}
+
+/* ===== مودال‌ها ===== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-box {
+    background: var(--bg-card, #1a1a2e);
+    border-radius: 20px;
+    max-width: 480px;
+    width: 92%;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary, #ffffff);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 20px 20px 0 0;
+}
+
+.modal-body {
+    padding: 20px 22px;
+}
+
+.modal-body label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary, rgba(255,255,255,0.8));
+    margin-bottom: 4px;
+}
+
+.modal-body input,
+.modal-body select,
+.modal-body textarea {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    border-radius: 10px;
+    font-size: 14px;
+    background: var(--bg-input, rgba(255,255,255,0.05));
+    color: var(--text-primary, #ffffff);
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    box-sizing: border-box;
+}
+
+.modal-body input:focus,
+.modal-body select:focus,
+.modal-body textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.modal-body textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.modal-footer {
+    padding: 16px 22px;
+    border-top: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.modal-footer button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    transition: all 0.3s;
+}
+
+.btn-cancel {
+    background: var(--bg-input, rgba(255,255,255,0.05));
+    color: var(--text-secondary, rgba(255,255,255,0.8));
+}
+
+.btn-cancel:hover {
+    background: var(--bg-card-hover, rgba(255,255,255,0.1));
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+}
+
+.btn-save:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
+}
+
+/* ===== Picker تاریخ شمسی ===== */
+.date-picker-wrapper {
+    position: relative;
+    margin-bottom: 14px;
+}
+
+.date-picker-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    border-radius: 10px;
+    font-size: 14px;
+    background: var(--bg-input, rgba(255,255,255,0.05));
+    color: var(--text-primary, #ffffff);
+    cursor: pointer;
+    direction: rtl;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    box-sizing: border-box;
+}
+
+.date-picker-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.jalali-calendar {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    left: 0;
+    z-index: 9999999;
+    background: var(--bg-card, #1a1a2e);
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    min-width: 280px;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+}
+
+.jalali-calendar.show {
+    display: block;
+}
+
+.jalali-calendar .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.jalali-calendar .calendar-header .month-year {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary, #ffffff);
+}
+
+.jalali-calendar .calendar-header .nav-btn {
+    background: var(--bg-input, rgba(255,255,255,0.05));
+    border: none;
+    color: var(--text-secondary, rgba(255,255,255,0.8));
+    padding: 4px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+}
+
+.jalali-calendar .calendar-header .nav-btn:hover {
+    background: var(--bg-card-hover, rgba(255,255,255,0.1));
+    color: var(--text-primary, #ffffff);
+}
+
+.jalali-calendar .calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.jalali-calendar .calendar-weekdays div {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted, rgba(255,255,255,0.5));
+    padding: 4px 0;
+}
+
+.jalali-calendar .calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.jalali-calendar .calendar-day {
+    padding: 6px 2px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    color: var(--text-secondary, rgba(255,255,255,0.8));
+    border: none;
+    background: transparent;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+}
+
+.jalali-calendar .calendar-day:hover:not(.empty) {
+    background: rgba(102, 126, 234, 0.2);
+    color: var(--text-primary, #ffffff);
+}
+
+.jalali-calendar .calendar-day.today {
+    background: var(--today-bg, #f1c40f);
+    color: var(--today-text, #1a1a2e);
+    font-weight: bold;
+}
+
+.jalali-calendar .calendar-day.selected {
+    background: #667eea;
+    color: white;
+}
+
+.jalali-calendar .calendar-day.empty {
+    cursor: default;
+    color: var(--text-light, rgba(255,255,255,0.3));
+}
+
+/* ===== Toast ===== */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--bg-card, #1a1a2e);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 12px;
+    z-index: 10001;
+    opacity: 0;
+    transition: all 0.4s;
+    font-size: 14px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast.success {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+.toast.error {
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+/* ===== حالت خالی ===== */
+.empty {
+    color: var(--text-muted, rgba(255,255,255,0.5));
+    text-align: center;
+    padding: 30px 0;
+}
+
+/* ============================================================ */
+/* ===== تم روشن ===== */
+/* ============================================================ */
+body[data-theme="light"] .health-header {
+    border-bottom-color: #e8e8e8;
+}
+
+body[data-theme="light"] .health-header h1 {
+    color: #1a1a2e;
+}
+
+body[data-theme="light"] .health-header .subtitle {
+    color: #6c757d;
+}
+
+body[data-theme="light"] .status-card {
+    border-color: #e8e8e8;
+}
+
+body[data-theme="light"] .status-card .status-stats .value {
+    color: #1a1a2e;
+}
+
+body[data-theme="light"] .stat-box {
+    border-color: #e8e8e8;
+}
+
+body[data-theme="light"] .stat-box .lbl {
+    color: #6c757d;
+}
+
+body[data-theme="light"] .health-tabs {
+    border-color: #e8e8e8;
+}
+
+body[data-theme="light"] .health-tabs .tab-btn {
+    color: #6c757d;
+}
+
+body[data-theme="light"] .health-tabs .tab-btn:hover {
+    color: #1a1a2e;
+    background: rgba(0,0,0,0.03);
+}
+
+body[data-theme="light"] .calendar-wrapper {
+    border-color: #e8e8e8;
+}
+
+body[data-theme="light"] .calendar-nav .month-title {
+    color: #1a1a2e;
+}
+
+body[data-theme="light"] .calendar-grid .cal-header {
+    color: #6c757d;
+}
+
+body[data-theme="light"] .calendar-grid .cal-day {
+    color: #333333;
+    background: rgba(0,0,0,0.03);
+}
+
+body[data-theme="light"] .calendar-grid .cal-day.today {
+    background: #f1c40f;
+    color: #1a1a2e;
+}
+
+/* رنگ‌های سیکل در تم روشن */
+body[data-theme="light"] .calendar-grid .cal-day.period-light {
+    background: rgba(40,167,69,0.4);
+    color: #1a1a2e;
+}
+body[data-theme="light"] .calendar-grid .cal-day.period-medium {
+    background: rgba(255,193,7,0.5);
+    color: #1a1a2e;
+}
+body[data-theme="light"] .calendar-grid .cal-day.period-heavy {
+    background: rgba(220,53,69,0.4);
+    color: #ffffff;
+}
+
+body[data-theme="light"] .calendar-grid .cal-day.predicted {
+    background: rgba(102,126,234,0.15);
+    color: #4a6fa5;
+    border-color: rgba(102,126,234,0.3);
+}
+
+body[data-theme="light"] .calendar-grid .cal-day:hover:not(.empty) {
+    background: rgba(0,0,0,0.05);
+}
+
+body[data-theme="light"] .calendar-legend {
+    border-top-color: #e8e8e8;
+}
+
+body[data-theme="light"] .calendar-legend .legend-item {
+    color: #6c757d;
+}
+
+body[data-theme="light"] .day-info {
+    border-color: #e8e8e8;
+}
+
+body[data-theme="light"] .day-info-header {
+    border-bottom-color: #e8e8e8;
+}
+
+body[data-theme="light"] .day-info-header #selectedDateDisplay {
+    color: #1a1a2e;
+}
+
+body[data-theme="light"] #dayDetails .day-item {
+    border-color: #e8e8e8;
+    color: #333333;
+}
+
+body[data-theme="light"] #dayDetails .day-item.predicted-item {
+    background: rgba(102,126,234,0.08);
+}
+
+body[data-theme="light"] .item-row {
+    background: #fafafa;
+    border-color: #e8e8e8;
+}
+
+body[data-theme="light"] .item-row:hover {
+    border-color: rgba(102,126,234,0.3);
+    background: #f0f0f0;
+}
+
+body[data-theme="light"] .item-row .info .main {
+    color: #1a1a2e;
+}
+
+body[data-theme="light"] .item-row .info .meta {
+    color: #6c757d;
+}
+
+body[data-theme="light"] .item-row .info .note {
+    color: #6c757d;
+}
+
+body[data-theme="light"] .predict-grid .pcard {
+    border-color: #e8e8e8;
+}
+
+body[data-theme="light"] .predict-grid .pcard .pl {
+    color: #6c757d;
+}
+
+body[data-theme="light"] .panel-header h2 {
+    color: #1a1a2e;
+}
+
+body[data-theme="light"] .note {
+    background: rgba(102,126,234,0.08);
+}
+
+body[data-theme="light"] .modal-box {
+    background: #ffffff;
+}
+
+body[data-theme="light"] .modal-body input,
+body[data-theme="light"] .modal-body select,
+body[data-theme="light"] .modal-body textarea {
+    background: #fafafa;
+    color: #1a1a2e;
+    border-color: #e8e8e8;
+}
+
+body[data-theme="light"] .modal-body input:focus,
+body[data-theme="light"] .modal-body select:focus,
+body[data-theme="light"] .modal-body textarea:focus {
+    border-color: #667eea;
+}
+
+body[data-theme="light"] .jalali-calendar {
+    background: #ffffff;
+}
+
+body[data-theme="light"] .jalali-calendar .calendar-day {
+    color: #333333;
+}
+
+body[data-theme="light"] .jalali-calendar .calendar-day:hover:not(.empty) {
+    background: rgba(102,126,234,0.1);
+    color: #1a1a2e;
+}
+
+body[data-theme="light"] .jalali-calendar .calendar-header .month-year {
+    color: #1a1a2e;
+}
+
+body[data-theme="light"] .jalali-calendar .calendar-header .nav-btn {
+    background: #fafafa;
+    color: #333333;
+}
+
+body[data-theme="light"] .jalali-calendar .calendar-header .nav-btn:hover {
+    background: #e8e8e8;
+}
+
+body[data-theme="light"] .date-picker-input {
+    background: #fafafa;
+    color: #1a1a2e;
+    border-color: #e8e8e8;
+}
+
+body[data-theme="light"] .modal-footer {
+    border-top-color: #e8e8e8;
+}
+
+body[data-theme="light"] .btn-cancel {
+    background: #fafafa;
+    color: #333333;
+}
+
+body[data-theme="light"] .btn-cancel:hover {
+    background: #e8e8e8;
+}
+
+/* ============================================================ */
+/* ===== ریسپانسیو ===== */
+/* ============================================================ */
+@media (max-width: 768px) {
+    .status-card {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    .status-card .status-stats {
+        justify-content: center;
+    }
+    .calendar-nav .month-title {
+        font-size: 16px;
+        min-width: 100px;
+    }
+    .calendar-nav .nav-arrow,
+    .calendar-nav .year-link {
+        padding: 4px 10px;
+        font-size: 14px;
+    }
+    .calendar-grid .cal-day {
+        padding: 8px 2px;
+        font-size: 13px;
+        min-height: 38px;
+    }
+    .day-info-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .day-info-header #selectedDateDisplay {
+        text-align: center;
+    }
+    .btn-add-small {
+        width: 100%;
+        justify-content: center;
+    }
+    .modal-box {
+        width: 95%;
+    }
+    .stats-row {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .health-tabs .tab-btn {
+        flex: 1;
+        text-align: center;
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    .item-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .item-row .info {
+        justify-content: center;
+    }
+    .item-row .actions {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .health-header h1 {
+        font-size: 22px;
+    }
+    .calendar-grid .cal-day {
+        padding: 6px 2px;
+        font-size: 12px;
+        min-height: 32px;
+    }
+    .calendar-nav .nav-arrow,
+    .calendar-nav .year-link {
+        padding: 2px 8px;
+        font-size: 13px;
+    }
+    .calendar-nav .today-link {
+        font-size: 12px;
+        padding: 2px 10px;
+    }
+    .stats-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .modal-body {
+        padding: 16px;
+    }
+    .predict-grid {
+        grid-template-columns: 1fr;
+    }
+    .item-row .info .note {
+        max-width: 100%;
+        white-space: normal;
+    }
+}
