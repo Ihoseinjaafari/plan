@@ -1574,17 +1574,31 @@ include_once __DIR__ . '/../includes/header.php';
         }
 
         .subtask-actions button {
-            background: none;
-            border: none;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border-color);
             cursor: pointer;
-            padding: 2px 5px;
+            padding: 4px 6px;
             font-size: 12px;
-            border-radius: 4px;
-            color: var(--text-light);
+            border-radius: 6px;
+            color: var(--text-secondary);
             font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .subtask-actions button:hover { background: var(--border-color); }
+        .subtask-actions button:hover { 
+            background: var(--badge-bg);
+            color: var(--badge-color);
+            border-color: var(--badge-color);
+            transform: scale(1.05);
+        }
+        
+        body[data-theme="light"] .subtask-actions button {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-primary);
+        }
 
         .card-actions {
             display: flex;
@@ -1599,13 +1613,13 @@ include_once __DIR__ . '/../includes/header.php';
         }
 
         .card-btn {
-            background: none;
-            border: none;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border-color);
             font-size: 12px;
             cursor: pointer;
-            padding: 5px 12px;
+            padding: 6px 12px;
             border-radius: 8px;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
             color: var(--text-secondary);
             font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
             display: inline-flex;
@@ -1613,8 +1627,23 @@ include_once __DIR__ . '/../includes/header.php';
             gap: 4px;
         }
 
-        .edit-card-btn:hover { background: var(--badge-bg); color: var(--badge-color); }
-        .delete-card-btn:hover { background: rgba(220,53,69,0.15); color: #ff6b6b; }
+        .edit-card-btn:hover { 
+            background: var(--badge-bg); 
+            color: var(--badge-color);
+            border-color: var(--badge-color);
+            transform: scale(1.05);
+        }
+        .delete-card-btn:hover { 
+            background: rgba(220,53,69,0.15); 
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+            transform: scale(1.05);
+        }
+        
+        body[data-theme="light"] .card-btn {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-primary);
+        }
         .subtask-btn { 
             background: none; 
             border: none; 
@@ -1703,18 +1732,38 @@ include_once __DIR__ . '/../includes/header.php';
         }
 
         .edit-btn-list, .delete-btn-list {
-            background: none;
-            border: none;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border-color);
             font-size: 14px;
             cursor: pointer;
-            padding: 4px 6px;
-            border-radius: 6px;
-            color: var(--text-light);
+            padding: 6px 8px;
+            border-radius: 8px;
+            color: var(--text-secondary);
             font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .edit-btn-list:hover { background: var(--badge-bg); color: var(--badge-color); }
-        .delete-btn-list:hover { background: rgba(220,53,69,0.15); color: #ff6b6b; }
+        .edit-btn-list:hover { 
+            background: var(--badge-bg); 
+            color: var(--badge-color);
+            border-color: var(--badge-color);
+            transform: scale(1.05);
+        }
+        .delete-btn-list:hover { 
+            background: rgba(220,53,69,0.15); 
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+            transform: scale(1.05);
+        }
+        
+        body[data-theme="light"] .edit-btn-list,
+        body[data-theme="light"] .delete-btn-list {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-primary);
+        }
 
         .empty-state {
             text-align: center;

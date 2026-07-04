@@ -67,6 +67,23 @@ if (!isset($page_title)) $page_title = 'Life+';
         .icon-chart::before { content: "📈"; }
         .icon-lifeplan::before { content: "🧭"; }
         .icon-fire::before { content: "🔥"; }
+        .icon-edit::before { content: "✏️"; }
+        .icon-trash::before { content: "🗑️"; }
+        .icon-tag::before { content: "🏷️"; }
+        .icon-file-csv::before { content: "📊"; }
+        .icon-shield-alt::before { content: "🛡️"; }
+        .icon-close::before { content: "❌"; }
+        .icon-filter::before { content: "🔽"; }
+        .icon-calendar-day::before { content: "📆"; }
+        .icon-calendar-plus::before { content: "📅➕"; }
+        .icon-calendar-week::before { content: "📅📅"; }
+        .icon-calendar-minus::before { content: "📅➖"; }
+        .icon-check-circle::before { content: "✅"; }
+        .icon-list::before { content: "📝"; }
+        .icon-clock::before { content: "⏰"; }
+        .icon-align-left::before { content: "📄"; }
+        .icon-grip-vertical::before { content: "⋮⋮"; }
+        .icon-sitemap::before { content: "🌳"; }
         
         /* کلاس‌های آیکون */
         .icon {
