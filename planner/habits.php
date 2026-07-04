@@ -1,4 +1,5 @@
 <?php
+// planner/habits.php - هبیت ترکر حرفه‌ای با تقویم شمسی
 session_start();
 date_default_timezone_set('Asia/Tehran');
 
@@ -27,6 +28,61 @@ if (!$currentUser) {
     exit;
 }
 
+// ==================== توابع تبدیل تاریخ (همانند calendar/index.php) ====================
+function gregorian_to_jalali($gy, $gm, $gd, $mod = '') {
+    $g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+    $gy2 = ($gm > 2) ? ($gy + 1) : $gy;
+    $days = 355666 + (365 * $gy) + ((int)(($gy2 + 3) / 4)) - ((int)(($gy2 + 99) / 100)) + ((int)(($gy2 + 399) / 400)) + $gd + $g_d_m[$gm - 1];
+    $jy = -1595 + (33 * ((int)($days / 12053)));
+    $days %= 12053;
+    $jy += 4 * ((int)($days / 1461));
+    $days %= 1461;
+    if ($days > 365) {
+        $jy += (int)(($days - 1) / 365);
+        $days = ($days - 1) % 365;
+    }
+    if ($days < 186) {
+        $jm = 1 + (int)($days / 31);
+        $jd = 1 + ($days % 31);
+    } else {
+        $jm = 7 + (int)(($days - 186) / 30);
+        $jd = 1 + (($days - 186) % 30);
+    }
+    return ($mod == '') ? [$jy, $jm, $jd] : $jy . $mod . $jm . $mod . $jd;
+}
+
+function jalali_to_gregorian($jy, $jm, $jd, $mod = '') {
+    $jy += 1595;
+    $days = -355668 + (365 * $jy) + (((int)($jy / 33)) * 8) + ((int)((($jy % 33) + 3) / 4)) + $jd + (($jm < 7) ? ($jm - 1) * 31 : (($jm - 7) * 30) + 186);
+    $gy = 400 * ((int)($days / 146097));
+    $days %= 146097;
+    if ($days > 36524) {
+        $gy += 100 * ((int)(--$days / 36524));
+        $days %= 36524;
+        if ($days >= 365) $days++;
+    }
+    $gy += 4 * ((int)($days / 1461));
+    $days %= 1461;
+    if ($days > 365) {
+        $gy += (int)(($days - 1) / 365);
+        $days = ($days - 1) % 365;
+    }
+    $gd = $days + 1;
+    $sal_a = [0,31,(($gy % 4 == 0 && $gy % 100 != 0) || ($gy % 400 == 0)) ? 29 : 28,31,30,31,30,31,31,30,31,30,31];
+    for ($gm = 0; $gm < 13 && $gd > $sal_a[$gm]; $gm++) $gd -= $sal_a[$gm];
+    return ($mod == '') ? [$gy, $gm, $gd] : $gy . $mod . $gm . $mod . $gd;
+}
+
+function getJalaliToday() {
+    list($gy, $gm, $gd) = explode('-', date('Y-m-d'));
+    list($jy, $jm, $jd) = gregorian_to_jalali($gy, $gm, $gd);
+    return sprintf("%04d-%02d-%02d", $jy, $jm, $jd);
+}
+
+function getGregorianFromJalali($jy, $jm, $jd) {
+    list($gy, $gm, $gd) = jalali_to_gregorian($jy, $jm, $jd);
+    return sprintf("%04d-%02d-%02d", $gy, $gm, $gd);
+}
 
 $habitsFile = __DIR__ . '/../data/habits.json';
 $habitLogsFile = __DIR__ . '/../data/habit_logs.json';
@@ -69,28 +125,104 @@ function saveHabitLog($userId, $habitId, $date, $completed = true) {
     file_put_contents($habitLogsFile, json_encode($logs, JSON_PRETTY_PRINT));
 }
 
+function calculateStreak($habitId, $logs, $todayJalali) {
+    $habitLogs = array_values(array_filter($logs, fn($l) => $l['habit_id'] == $habitId));
+    usort($habitLogs, fn($a, $b) => strcmp($b['date'], $a['date']));
+    $streak = 0;
+    $checkDate = $todayJalali;
+    foreach ($habitLogs as $log) {
+        $logDate = $log['date'];
+        if ($logDate == $checkDate) {
+            $streak++;
+            // محاسبه روز قبل
+            list($jy, $jm, $jd) = explode('-', $checkDate);
+            $jd--;
+            if ($jd < 1) {
+                $jm--;
+                if ($jm < 1) {
+                    $jm = 12;
+                    $jy--;
+                }
+                $daysInMonth = ($jm <= 6) ? 31 : (($jm <= 11) ? 30 : ($jy % 4 == 3 ? 30 : 29));
+                $jd = $daysInMonth;
+            }
+            $checkDate = sprintf("%04d-%02d-%02d", $jy, $jm, $jd);
+        } elseif ($logDate < $checkDate) {
+            break;
+        }
 
     }
     return $streak;
 }
 
+function getWeekDates() {
+    // دریافت 7 روز اخیر به تاریخ شمسی
+    $dates = [];
+    list($gy, $gm, $gd) = explode('-', date('Y-m-d'));
+    for ($i = 6; $i >= 0; $i--) {
+        $timestamp = strtotime("-{$i} days", strtotime(date('Y-m-d')));
+        list($jy, $jm, $jd) = gregorian_to_jalali(
+            date('Y', $timestamp),
+            date('m', $timestamp),
+            date('d', $timestamp)
+        );
+        $dates[] = sprintf("%04d-%02d-%02d", $jy, $jm, $jd);
+    }
+    return $dates;
+}
+
+function getDayName($jalaliDate) {
+    list($jy, $jm, $jd) = explode('-', $jalaliDate);
+    $gregorian = getGregorianFromJalali($jy, $jm, $jd);
+    $dayOfWeek = date('w', strtotime($gregorian));
+    $names = ['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه'];
+    return $names[$dayOfWeek];
+}
+
+function getShortDayName($jalaliDate) {
+    list($jy, $jm, $jd) = explode('-', $jalaliDate);
+    $gregorian = getGregorianFromJalali($jy, $jm, $jd);
+    $dayOfWeek = date('w', strtotime($gregorian));
+    $names = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
+    return $names[$dayOfWeek];
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     $action = $_POST['action'] ?? '';
     $response = ['success' => false];
     $userId = $_SESSION['user_id'];
+    $todayJalali = getJalaliToday();
+    $todayGregorian = date('Y-m-d');
 
     if ($action === 'load_habits') {
         $habits = getUserHabits($userId);
         $logs = getHabitLogs($userId);
         foreach ($habits as &$habit) {
+            $habit['streak'] = calculateStreak($habit['id'], $logs, $todayJalali);
+            $habit['completed_today'] = false;
+            foreach ($logs as $log) {
+                if ($log['habit_id'] == $habit['id'] && $log['date'] == $todayJalali) {
 
                     $habit['completed_today'] = true;
                     break;
                 }
             }
         }
+        $weekDates = getWeekDates();
+        $weeklyData = [];
+        foreach ($habits as $habit) {
+            $weeklyData[$habit['id']] = [];
+            foreach ($weekDates as $date) {
+                foreach ($logs as $log) {
+                    if ($log['habit_id'] == $habit['id'] && $log['date'] == $date) {
+                        $weeklyData[$habit['id']][$date] = true;
+                        break;
+                    }
+                }
+            }
+        }
+        $response = ['success' => true, 'habits' => $habits, 'weekDates' => $weekDates, 'weeklyData' => $weeklyData];
 
     }
     elseif ($action === 'add_habit') {
@@ -116,11 +248,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $habitId = $_POST['id'];
         $alreadyCompleted = false;
         foreach ($logs as $log) {
+            if ($log['habit_id'] == $habitId && $log['date'] == $todayJalali) {
 
                 $alreadyCompleted = true;
                 break;
             }
         }
+        saveHabitLog($userId, $habitId, $todayJalali, !$alreadyCompleted);
+        $habits = getUserHabits($userId);
+        $logs = getHabitLogs($userId);
+        foreach ($habits as &$habit) {
+            $habit['streak'] = calculateStreak($habit['id'], $logs, $todayJalali);
+            $habit['completed_today'] = false;
+            foreach ($logs as $log) {
+                if ($log['habit_id'] == $habit['id'] && $log['date'] == $todayJalali) {
 
                     $habit['completed_today'] = true;
                     break;
@@ -166,6 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         saveUserHabits($userId, $habits);
         $response = ['success' => true, 'habits' => getUserHabits($userId)];
     }
+    
     echo json_encode($response);
     exit;
 }
