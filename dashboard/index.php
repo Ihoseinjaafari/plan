@@ -218,16 +218,27 @@ include __DIR__ . '/../includes/header.php';
         --modal-overlay: rgba(0,0,0,0.7);
     }
 
-    body.light-mode {
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+        font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+        background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+        min-height: 100vh;
+        color: var(--text-primary);
+        transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    [data-theme="light"] {
         --bg-primary: #f0f2f5;
-        --bg-card: #ffffff;
-        --bg-card-hover: #f8f9fa;
+        --bg-secondary: #ffffff;
+        --bg-card: rgba(255,255,255,0.95);
+        --bg-card-hover: rgba(0,0,0,0.03);
         --bg-input: #fafafa;
         --text-primary: #1a1a2e;
         --text-secondary: #333333;
         --text-muted: #6c757d;
         --text-light: #999999;
-        --border-color: #e8e8e8;
+        --border-color: #e2e8f0;
         --shadow-color: rgba(0,0,0,0.08);
         --shadow-hover: rgba(0,0,0,0.15);
         --today-bg: #f1c40f;
@@ -235,20 +246,6 @@ include __DIR__ . '/../includes/header.php';
         --weekend-color: #dc3545;
         --toast-bg: #f8f9fa;
         --modal-overlay: rgba(0,0,0,0.5);
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    body {
-        font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
-        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-        min-height: 100vh;
-        color: var(--text-primary);
-        transition: background 0.3s ease, color 0.3s ease;
-    }
-
-    body.light-mode {
-        background: #ffffff;
     }
 
     .container { 
