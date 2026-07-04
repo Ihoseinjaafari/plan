@@ -807,15 +807,16 @@ include __DIR__ . '/../includes/header.php';
 
     .countdown-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
     }
 
     .countdown-item {
         background: var(--bg-input);
         border-radius: 12px;
-        padding: 12px 8px;
+        padding: 10px 6px;
         transition: all 0.3s;
+        text-align: center;
     }
 
     .countdown-item:hover {
@@ -823,7 +824,7 @@ include __DIR__ . '/../includes/header.php';
     }
 
     .countdown-value {
-        font-size: 24px;
+        font-size: 18px;
         font-weight: 700;
         background: linear-gradient(135deg, #667eea, #f5576c);
         -webkit-background-clip: text;
@@ -831,7 +832,7 @@ include __DIR__ . '/../includes/header.php';
     }
 
     .countdown-label {
-        font-size: 11px;
+        font-size: 10px;
         color: var(--text-muted);
         margin-top: 4px;
     }
@@ -1176,16 +1177,28 @@ include __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="countdown-grid" id="countdownGrid">
                     <div class="countdown-item">
-                        <div class="countdown-value" id="daysRemaining">-</div>
-                        <div class="countdown-label">روز</div>
+                        <div class="countdown-value" id="yearsRemaining">-</div>
+                        <div class="countdown-label">سال</div>
                     </div>
                     <div class="countdown-item">
                         <div class="countdown-value" id="monthsRemaining">-</div>
                         <div class="countdown-label">ماه</div>
                     </div>
                     <div class="countdown-item">
-                        <div class="countdown-value" id="yearsRemaining">-</div>
-                        <div class="countdown-label">سال</div>
+                        <div class="countdown-value" id="daysRemaining">-</div>
+                        <div class="countdown-label">روز</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="hoursRemaining">-</div>
+                        <div class="countdown-label">ساعت</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="minutesRemaining">-</div>
+                        <div class="countdown-label">دقیقه</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="secondsRemaining">-</div>
+                        <div class="countdown-label">ثانیه</div>
                     </div>
                 </div>
                 <button class="btn-set-date" onclick="openCountdownModal()">
@@ -1615,29 +1628,43 @@ include __DIR__ . '/../includes/header.php';
         
         const now = new Date();
         const targetGregorian = jalali_to_gregorian(selectedTargetDate.y, selectedTargetDate.m, selectedTargetDate.d);
-        const targetDate = new Date(targetGregorian[0], targetGregorian[1] - 1, targetGregorian[2]);
+        const targetDate = new Date(targetGregorian[0], targetGregorian[1] - 1, targetGregorian[2], 0, 0, 0);
         
         const diffTime = targetDate - now;
         if (diffTime <= 0) {
-            document.getElementById('daysRemaining').textContent = '۰';
-            document.getElementById('monthsRemaining').textContent = '۰';
             document.getElementById('yearsRemaining').textContent = '۰';
+            document.getElementById('monthsRemaining').textContent = '۰';
+            document.getElementById('daysRemaining').textContent = '۰';
+            document.getElementById('hoursRemaining').textContent = '۰';
+            document.getElementById('minutesRemaining').textContent = '۰';
+            document.getElementById('secondsRemaining').textContent = '۰';
             return;
         }
         
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        // محاسبه دقیق سال، ماه، روز، ساعت، دقیقه و ثانیه
+        let remainingMs = diffTime;
         
-        // محاسبه تقریبی ماه و سال
-        let remainingDays = diffDays;
+        const seconds = Math.floor((remainingMs / 1000) % 60);
+        const minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
+        const hours = Math.floor((remainingMs / (1000 * 60 * 60)) % 24);
+        
+        let remainingDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+        
         let years = Math.floor(remainingDays / 365);
         remainingDays %= 365;
         let months = Math.floor(remainingDays / 30);
         let days = remainingDays % 30;
         
-        document.getElementById('daysRemaining').textContent = days.toLocaleString('fa-IR');
-        document.getElementById('monthsRemaining').textContent = months.toLocaleString('fa-IR');
         document.getElementById('yearsRemaining').textContent = years.toLocaleString('fa-IR');
+        document.getElementById('monthsRemaining').textContent = months.toLocaleString('fa-IR');
+        document.getElementById('daysRemaining').textContent = days.toLocaleString('fa-IR');
+        document.getElementById('hoursRemaining').textContent = hours.toLocaleString('fa-IR');
+        document.getElementById('minutesRemaining').textContent = minutes.toLocaleString('fa-IR');
+        document.getElementById('secondsRemaining').textContent = seconds.toLocaleString('fa-IR');
     }
+
+    // بروزرسانی هر ثانیه
+    setInterval(updateCountdownDisplay, 1000);
 
     function openCountdownModal() {
         const modal = document.getElementById('countdownModal');
