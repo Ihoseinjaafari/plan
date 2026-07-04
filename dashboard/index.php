@@ -746,6 +746,117 @@ include __DIR__ . '/../includes/header.php';
         opacity: 0.4;
     }
 
+    /* استایل‌های مودال روزشمار */
+    #countdownModal .modal-body input[type="text"] {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        font-size: 16px;
+        font-family: inherit;
+        background: var(--bg-input);
+        color: var(--text-primary);
+        text-align: center;
+    }
+
+    #countdownModal .picker-day {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    #countdownModal .picker-day:hover {
+        background: var(--bg-card-hover);
+    }
+
+    #countdownModal .picker-day.selected {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        font-weight: bold;
+    }
+
+    #countdownModal .picker-day.today {
+        border: 2px solid #f1c40f;
+    }
+
+    /* کارت روزشمار */
+    .countdown-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        text-align: center;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .countdown-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(102,126,234,0.3);
+    }
+
+    .countdown-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .countdown-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .countdown-item {
+        background: var(--bg-input);
+        border-radius: 12px;
+        padding: 12px 8px;
+        transition: all 0.3s;
+    }
+
+    .countdown-item:hover {
+        background: var(--bg-card-hover);
+    }
+
+    .countdown-value {
+        font-size: 24px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea, #f5576c);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .countdown-label {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    .btn-set-date {
+        margin-top: 12px;
+        background: var(--bg-input);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        padding: 8px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 12px;
+        font-family: inherit;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-set-date:hover {
+        background: var(--bg-card-hover);
+        border-color: #667eea;
+    }
+
     .calendar-mini-table td .task-dot-mini {
         display: block;
         width: 4px;
@@ -1057,6 +1168,32 @@ include __DIR__ . '/../includes/header.php';
         <!-- ===== کارت‌های اصلی ===== -->
         <div class="cards-grid">
 
+            <!-- کارت روزشمار -->
+            <div class="countdown-card">
+                <div class="countdown-title">
+                    <i class="fas fa-hourglass-half"></i>
+                    <span>روزشمار هدف</span>
+                </div>
+                <div class="countdown-grid" id="countdownGrid">
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="daysRemaining">-</div>
+                        <div class="countdown-label">روز</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="monthsRemaining">-</div>
+                        <div class="countdown-label">ماه</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="yearsRemaining">-</div>
+                        <div class="countdown-label">سال</div>
+                    </div>
+                </div>
+                <button class="btn-set-date" onclick="openCountdownModal()">
+                    <i class="fas fa-calendar-alt"></i>
+                    تنظیم تاریخ هدف
+                </button>
+            </div>
+
             <!-- 1. کار و بهره‌وری (تسک‌های امروز) -->
             <div class="card">
                 <div class="card-header">
@@ -1333,7 +1470,7 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<!-- ===== دکمه افزودن ===== -->
+    <!-- ===== دکمه افزودن ===== -->
 <button class="add-fab" onclick="openModal('task')" title="افزودن تسک جدید">
     <i class="fas fa-plus"></i>
 </button>
@@ -1355,6 +1492,33 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<!-- ===== مودال تنظیم تاریخ روزشمار ===== -->
+<div class="modal" id="countdownModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-hourglass-half"></i>
+            <span>تنظیم تاریخ هدف</span>
+        </div>
+        <div class="modal-body">
+            <label>تاریخ هدف را انتخاب کنید:</label>
+            <input type="text" id="targetDateJalali" placeholder="۱۴۰۴/۰۱/۰۱" readonly style="cursor:pointer;">
+            <div id="jalaliCalendarPicker" style="margin-top:15px; display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <button class="btn-primary btn-sm" onclick="prevMonthPicker()"><i class="fas fa-chevron-right"></i></button>
+                    <span id="pickerMonthYear" style="font-weight:bold;"></span>
+                    <button class="btn-primary btn-sm" onclick="nextMonthPicker()"><i class="fas fa-chevron-left"></i></button>
+                </div>
+                <table class="calendar-mini-table" id="pickerCalendarTable">
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeCountdownModal()">انصراف</button>
+            <button class="btn-save" onclick="saveTargetDate()">ذخیره</button>
+        </div>
+    </div>
+</div>
+
 <!-- ===== Toast ===== -->
 <div class="toast" id="toast"></div>
 
@@ -1363,6 +1527,221 @@ include __DIR__ . '/../includes/header.php';
     // متغیرها
     // ============================================
     let currentModalType = '';
+    
+    // متغیرهای روزشمار
+    let pickerYear = null;
+    let pickerMonth = null;
+    let selectedTargetDate = null;
+
+    // ============================================
+    // توابع کمکی تبدیل تاریخ
+    // ============================================
+    function gregorian_to_jalali(gy, gm, gd) {
+        const g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+        const gy2 = (gm > 2) ? (gy + 1) : gy;
+        let days = 355666 + (365 * gy) + Math.floor((gy2 + 3) / 4) - Math.floor((gy2 + 99) / 100) + Math.floor((gy2 + 399) / 400) + gd + g_d_m[gm - 1];
+        let jy = -1595 + (33 * Math.floor(days / 12053));
+        days %= 12053;
+        jy += 4 * Math.floor(days / 1461);
+        days %= 1461;
+        if (days > 365) {
+            jy += Math.floor((days - 1) / 365);
+            days = (days - 1) % 365;
+        }
+        let jm, jd;
+        if (days < 186) {
+            jm = 1 + Math.floor(days / 31);
+            jd = 1 + (days % 31);
+        } else {
+            jm = 7 + Math.floor((days - 186) / 30);
+            jd = 1 + ((days - 186) % 30);
+        }
+        return [jy, jm, jd];
+    }
+
+    function jalali_to_gregorian(jy, jm, jd) {
+        jy += 1595;
+        let days = -355668 + (365 * jy) + (Math.floor(jy / 33) * 8) + Math.floor(((jy % 33) + 3) / 4) + jd + ((jm < 7) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
+        let gy = 400 * Math.floor(days / 146097);
+        days %= 146097;
+        if (days > 36524) {
+            gy += 100 * Math.floor(--days / 36524);
+            days %= 36524;
+            if (days >= 365) days++;
+        }
+        gy += 4 * Math.floor(days / 1461);
+        days %= 1461;
+        if (days > 365) {
+            gy += Math.floor((days - 1) / 365);
+            days = (days - 1) % 365;
+        }
+        let gd = days + 1;
+        const sal_a = [0,31,(gy % 4 == 0 && gy % 100 != 0) || (gy % 400 == 0) ? 29 : 28,31,30,31,30,31,31,30,31,30,31];
+        let gm = 0;
+        for (gm = 0; gm < 13 && gd > sal_a[gm]; gm++) gd -= sal_a[gm];
+        return [gy, gm, gd];
+    }
+
+    function getDaysInJalaliMonth(jy, jm) {
+        if (jm <= 6) return 31;
+        if (jm < 12) return 30;
+        return (jy % 4 == 3) ? 30 : 29;
+    }
+
+    // ============================================
+    // توابع روزشمار
+    // ============================================
+    function loadTargetDate() {
+        const saved = localStorage.getItem('targetDate');
+        if (saved) {
+            selectedTargetDate = JSON.parse(saved);
+            updateCountdownDisplay();
+        }
+    }
+
+    function saveTargetDate() {
+        if (!selectedTargetDate) {
+            showToast('لطفاً یک تاریخ انتخاب کنید.', 'error');
+            return;
+        }
+        localStorage.setItem('targetDate', JSON.stringify(selectedTargetDate));
+        updateCountdownDisplay();
+        closeCountdownModal();
+        showToast('تاریخ هدف ذخیره شد.', 'success');
+    }
+
+    function updateCountdownDisplay() {
+        if (!selectedTargetDate) return;
+        
+        const now = new Date();
+        const targetGregorian = jalali_to_gregorian(selectedTargetDate.y, selectedTargetDate.m, selectedTargetDate.d);
+        const targetDate = new Date(targetGregorian[0], targetGregorian[1] - 1, targetGregorian[2]);
+        
+        const diffTime = targetDate - now;
+        if (diffTime <= 0) {
+            document.getElementById('daysRemaining').textContent = '۰';
+            document.getElementById('monthsRemaining').textContent = '۰';
+            document.getElementById('yearsRemaining').textContent = '۰';
+            return;
+        }
+        
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        // محاسبه تقریبی ماه و سال
+        let remainingDays = diffDays;
+        let years = Math.floor(remainingDays / 365);
+        remainingDays %= 365;
+        let months = Math.floor(remainingDays / 30);
+        let days = remainingDays % 30;
+        
+        document.getElementById('daysRemaining').textContent = days.toLocaleString('fa-IR');
+        document.getElementById('monthsRemaining').textContent = months.toLocaleString('fa-IR');
+        document.getElementById('yearsRemaining').textContent = years.toLocaleString('fa-IR');
+    }
+
+    function openCountdownModal() {
+        const modal = document.getElementById('countdownModal');
+        const input = document.getElementById('targetDateJalali');
+        const picker = document.getElementById('jalaliCalendarPicker');
+        
+        // بارگذاری تاریخ ذخیره شده یا استفاده از تاریخ امروز
+        if (selectedTargetDate) {
+            input.value = `${selectedTargetDate.y}/${selectedTargetDate.m.toString().padStart(2,'0')}/${selectedTargetDate.d.toString().padStart(2,'0')}`;
+            pickerYear = selectedTargetDate.y;
+            pickerMonth = selectedTargetDate.m;
+        } else {
+            const now = new Date();
+            const todayJalali = gregorian_to_jalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+            pickerYear = todayJalali[0];
+            pickerMonth = todayJalali[1];
+        }
+        
+        picker.style.display = 'block';
+        renderPickerCalendar();
+        modal.classList.add('show');
+    }
+
+    function closeCountdownModal() {
+        document.getElementById('countdownModal').classList.remove('show');
+    }
+
+    function renderPickerCalendar() {
+        const monthNames = ['','فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+        const dayNames = ['ش','ی','د','س','چ','پ','ج'];
+        
+        document.getElementById('pickerMonthYear').textContent = `${monthNames[pickerMonth]} ${pickerYear}`;
+        
+        const table = document.getElementById('pickerCalendarTable');
+        let html = '<tr>';
+        dayNames.forEach(d => { html += `<th>${d}</th>`; });
+        html += '</tr><tr>';
+        
+        const [firstGy, firstGm, firstGd] = jalali_to_gregorian(pickerYear, pickerMonth, 1);
+        const firstWeekday = new Date(firstGy, firstGm - 1, firstGd).getDay();
+        const weekdayStart = (firstWeekday + 1) % 7;
+        const daysInMonth = getDaysInJalaliMonth(pickerYear, pickerMonth);
+        
+        for (let i = 0; i < weekdayStart; i++) {
+            html += '<td class="other-month"></td>';
+        }
+        
+        const now = new Date();
+        const todayJalali = gregorian_to_jalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+        const isCurrentMonth = (pickerYear === todayJalali[0] && pickerMonth === todayJalali[1]);
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            let classes = 'picker-day';
+            if (isCurrentMonth && day === todayJalali[2]) classes += ' today';
+            if (selectedTargetDate && selectedTargetDate.y === pickerYear && selectedTargetDate.m === pickerMonth && selectedTargetDate.d === day) {
+                classes += ' selected';
+            }
+            html += `<td class="${classes}" onclick="selectPickerDay(${day})">${day}</td>`;
+            
+            if ((weekdayStart + day) % 7 === 0 && day !== daysInMonth) {
+                html += '</tr><tr>';
+            }
+        }
+        
+        const remaining = (7 - ((weekdayStart + daysInMonth) % 7)) % 7;
+        for (let i = 0; i < remaining; i++) {
+            html += '<td class="other-month"></td>';
+        }
+        html += '</tr>';
+        
+        table.innerHTML = html;
+    }
+
+    function selectPickerDay(day) {
+        selectedTargetDate = { y: pickerYear, m: pickerMonth, d: day };
+        document.getElementById('targetDateJalali').value = `${pickerYear}/${pickerMonth.toString().padStart(2,'0')}/${day.toString().padStart(2,'0')}`;
+        renderPickerCalendar();
+    }
+
+    function prevMonthPicker() {
+        pickerMonth--;
+        if (pickerMonth < 1) {
+            pickerMonth = 12;
+            pickerYear--;
+        }
+        renderPickerCalendar();
+    }
+
+    function nextMonthPicker() {
+        pickerMonth++;
+        if (pickerMonth > 12) {
+            pickerMonth = 1;
+            pickerYear++;
+        }
+        renderPickerCalendar();
+    }
+
+    // بستن مودال با کلیک بیرون
+    document.getElementById('countdownModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCountdownModal();
+    });
+
+    // بارگذاری اولیه روزشمار
+    loadTargetDate();
 
     // ============================================
     // Toast
