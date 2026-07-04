@@ -1,0 +1,142 @@
+[24-Jun-2026 22:54:42 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:42 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:44 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:44 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:47 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:47 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:48 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:48 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:58 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:58 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:59 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:59 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:59 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:54:59 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:57:41 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 110
+[24-Jun-2026 22:57:41 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 110
+[24-Jun-2026 22:57:41 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 119
+[24-Jun-2026 22:57:41 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 119
+[24-Jun-2026 22:57:49 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 110
+[24-Jun-2026 22:57:49 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 110
+[24-Jun-2026 22:57:49 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 119
+[24-Jun-2026 22:57:49 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 119
+[24-Jun-2026 22:57:49 Asia/Tehran] PHP Warning:  Undefined variable $tasksFile in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[24-Jun-2026 22:57:49 Asia/Tehran] PHP Fatal error:  Uncaught ValueError: Path cannot be empty in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php:133
+Stack trace:
+#0 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(133): file_get_contents('')
+#1 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(248): deleteUserProject('1781812289454', '1782328373696')
+#2 {main}
+  thrown in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[24-Jun-2026 22:57:53 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:57:53 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:59:31 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:59:31 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:59:32 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 22:59:32 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:49 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:49 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:50 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:50 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:51 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:51 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:51 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:51 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:51 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:51 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:51 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:51 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:52 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:52 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:54 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:54 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:57 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:57 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:58 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:05:58 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:06:00 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:06:00 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:06:01 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:06:01 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:06:01 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:06:01 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:15:43 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:15:43 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:15:44 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:15:44 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:15:46 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:15:46 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:15:46 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[24-Jun-2026 23:15:46 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[25-Jun-2026 13:06:21 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[25-Jun-2026 13:06:21 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[25-Jun-2026 13:06:22 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[25-Jun-2026 13:06:22 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[25-Jun-2026 13:06:26 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 110
+[25-Jun-2026 13:06:26 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 110
+[25-Jun-2026 13:06:26 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 119
+[25-Jun-2026 13:06:26 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 119
+[25-Jun-2026 13:06:26 Asia/Tehran] PHP Warning:  Undefined variable $tasksFile in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[25-Jun-2026 13:06:26 Asia/Tehran] PHP Fatal error:  Uncaught ValueError: Path cannot be empty in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php:133
+Stack trace:
+#0 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(133): file_get_contents('')
+#1 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(248): deleteUserProject('1781812289454', '1782328448681')
+#2 {main}
+  thrown in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[01-Jul-2026 01:45:38 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[01-Jul-2026 01:45:39 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[01-Jul-2026 01:45:39 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[01-Jul-2026 01:45:40 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[01-Jul-2026 01:45:40 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:11 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:11 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:13 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:13 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:13 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:13 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:14 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:15 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:15 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:16 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:16 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:17 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:32 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 110
+[02-Jul-2026 18:05:32 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 119
+[02-Jul-2026 18:05:46 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:05:46 Asia/Tehran] PHP Warning:  Undefined array key "id" in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 289
+[02-Jul-2026 18:22:10 Asia/Tehran] PHP Warning:  Undefined variable $tasksFile in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[02-Jul-2026 18:22:10 Asia/Tehran] PHP Fatal error:  Uncaught ValueError: Path cannot be empty in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php:133
+Stack trace:
+#0 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(133): file_get_contents('')
+#1 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(248): deleteUserProject('1782920601708', '1783002998445')
+#2 {main}
+  thrown in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[02-Jul-2026 18:22:38 Asia/Tehran] PHP Warning:  Undefined variable $tasksFile in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[02-Jul-2026 18:22:38 Asia/Tehran] PHP Fatal error:  Uncaught ValueError: Path cannot be empty in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php:133
+Stack trace:
+#0 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(133): file_get_contents('')
+#1 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(248): deleteUserProject('1781812289454', '1783003460917')
+#2 {main}
+  thrown in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[02-Jul-2026 18:34:09 Asia/Tehran] PHP Warning:  Undefined variable $tasksFile in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[02-Jul-2026 18:34:09 Asia/Tehran] PHP Fatal error:  Uncaught ValueError: Path cannot be empty in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php:133
+Stack trace:
+#0 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(133): file_get_contents('')
+#1 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(248): deleteUserProject('1781812289454', '1783004637272')
+#2 {main}
+  thrown in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[02-Jul-2026 18:35:00 Asia/Tehran] PHP Warning:  Undefined variable $tasksFile in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[02-Jul-2026 18:35:00 Asia/Tehran] PHP Fatal error:  Uncaught ValueError: Path cannot be empty in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php:133
+Stack trace:
+#0 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(133): file_get_contents('')
+#1 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(248): deleteUserProject('1781812289454', '1783004690900')
+#2 {main}
+  thrown in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[02-Jul-2026 18:49:59 Asia/Tehran] PHP Warning:  Undefined variable $tasksFile in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[02-Jul-2026 18:49:59 Asia/Tehran] PHP Fatal error:  Uncaught ValueError: Path cannot be empty in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php:133
+Stack trace:
+#0 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(133): file_get_contents('')
+#1 /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php(248): deleteUserProject('1782920601708', '1783005580257')
+#2 {main}
+  thrown in /home3/lxjynjih/plan.hoseinjaafari.ir/projects/index.php on line 133
+[04-Jul-2026 12:29:18 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "}" in /home3/lxjynjih/plan.hoseinjaafari.ir/includes/header.php on line 18
+[04-Jul-2026 12:29:25 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "}" in /home3/lxjynjih/plan.hoseinjaafari.ir/includes/header.php on line 18

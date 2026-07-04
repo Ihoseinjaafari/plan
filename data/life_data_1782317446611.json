@@ -1,0 +1,27 @@
+{
+    "finance": {
+        "income": 0,
+        "expenses": [],
+        "savings_goal": 10000000,
+        "current_savings": 0
+    },
+    "health": {
+        "steps": 0,
+        "water": 0,
+        "sleep": 0,
+        "workout": ""
+    },
+    "habits": [],
+    "contacts": [
+        {
+            "id": "6a45748184670",
+            "name": "\u062c\u0648\u062c\u0647",
+            "phone": "09129543374",
+            "relation": "family"
+        }
+    ],
+    "leisure": {
+        "playlist": "",
+        "relax_time": 0
+    }
+}

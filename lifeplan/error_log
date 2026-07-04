@@ -1,0 +1,82 @@
+[24-Jun-2026 20:19:52 Asia/Tehran] PHP Fatal error:  Cannot use auto-global as lexical variable in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 139
+[24-Jun-2026 20:20:31 Asia/Tehran] PHP Fatal error:  Cannot use auto-global as lexical variable in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 139
+[24-Jun-2026 21:21:36 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1086
+[24-Jun-2026 21:21:36 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1092
+[24-Jun-2026 21:21:36 Asia/Tehran] PHP Warning:  Undefined variable $currentDate in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1170
+[24-Jun-2026 21:21:36 Asia/Tehran] PHP Warning:  Undefined variable $categories in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1178
+[24-Jun-2026 21:21:36 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1178
+[24-Jun-2026 21:21:36 Asia/Tehran] PHP Warning:  Undefined variable $projects in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1185
+[24-Jun-2026 21:21:36 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1185
+[24-Jun-2026 21:21:36 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1206
+[24-Jun-2026 21:21:49 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1086
+[24-Jun-2026 21:21:49 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1092
+[24-Jun-2026 21:21:49 Asia/Tehran] PHP Warning:  Undefined variable $currentDate in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1170
+[24-Jun-2026 21:21:49 Asia/Tehran] PHP Warning:  Undefined variable $categories in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1178
+[24-Jun-2026 21:21:49 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1178
+[24-Jun-2026 21:21:49 Asia/Tehran] PHP Warning:  Undefined variable $projects in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1185
+[24-Jun-2026 21:21:49 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1185
+[24-Jun-2026 21:21:49 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1206
+[24-Jun-2026 21:25:46 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1103
+[24-Jun-2026 21:25:46 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1109
+[24-Jun-2026 21:25:46 Asia/Tehran] PHP Warning:  Undefined variable $currentDate in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1187
+[24-Jun-2026 21:25:46 Asia/Tehran] PHP Warning:  Undefined variable $categories in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1195
+[24-Jun-2026 21:25:46 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1195
+[24-Jun-2026 21:25:46 Asia/Tehran] PHP Warning:  Undefined variable $projects in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1202
+[24-Jun-2026 21:25:46 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1202
+[24-Jun-2026 21:25:46 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1223
+[24-Jun-2026 21:30:41 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1105
+[24-Jun-2026 21:30:41 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1108
+[24-Jun-2026 21:30:41 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1112
+[24-Jun-2026 21:30:41 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1115
+[24-Jun-2026 21:30:41 Asia/Tehran] PHP Warning:  Undefined variable $currentDate in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1192
+[24-Jun-2026 21:30:41 Asia/Tehran] PHP Warning:  Undefined variable $categories in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1200
+[24-Jun-2026 21:30:41 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1200
+[24-Jun-2026 21:30:41 Asia/Tehran] PHP Warning:  Undefined variable $projects in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1207
+[24-Jun-2026 21:30:41 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1207
+[24-Jun-2026 21:30:41 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1228
+[24-Jun-2026 21:30:41 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1229
+[24-Jun-2026 21:33:53 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1107
+[24-Jun-2026 21:33:53 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1110
+[24-Jun-2026 21:33:53 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1114
+[24-Jun-2026 21:33:53 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1117
+[24-Jun-2026 21:33:53 Asia/Tehran] PHP Warning:  Undefined variable $currentDate in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1194
+[24-Jun-2026 21:33:53 Asia/Tehran] PHP Warning:  Undefined variable $categories in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1202
+[24-Jun-2026 21:33:53 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1202
+[24-Jun-2026 21:33:53 Asia/Tehran] PHP Warning:  Undefined variable $projects in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1209
+[24-Jun-2026 21:33:53 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1209
+[24-Jun-2026 21:33:53 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1230
+[24-Jun-2026 21:33:53 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1231
+[24-Jun-2026 21:39:07 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1107
+[24-Jun-2026 21:39:07 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1110
+[24-Jun-2026 21:39:07 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1114
+[24-Jun-2026 21:39:07 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1117
+[24-Jun-2026 21:39:07 Asia/Tehran] PHP Warning:  Undefined variable $currentDate in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1194
+[24-Jun-2026 21:39:07 Asia/Tehran] PHP Warning:  Undefined variable $categories in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1202
+[24-Jun-2026 21:39:07 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1202
+[24-Jun-2026 21:39:07 Asia/Tehran] PHP Warning:  Undefined variable $projects in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1209
+[24-Jun-2026 21:39:07 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1209
+[24-Jun-2026 21:39:07 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1230
+[24-Jun-2026 21:39:07 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1231
+[24-Jun-2026 21:39:30 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1107
+[24-Jun-2026 21:39:30 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1110
+[24-Jun-2026 21:39:30 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1114
+[24-Jun-2026 21:39:30 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1117
+[24-Jun-2026 21:39:30 Asia/Tehran] PHP Warning:  Undefined variable $currentDate in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1194
+[24-Jun-2026 21:39:30 Asia/Tehran] PHP Warning:  Undefined variable $categories in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1202
+[24-Jun-2026 21:39:30 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1202
+[24-Jun-2026 21:39:30 Asia/Tehran] PHP Warning:  Undefined variable $projects in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1209
+[24-Jun-2026 21:39:30 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1209
+[24-Jun-2026 21:39:30 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1230
+[24-Jun-2026 21:39:30 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1231
+[24-Jun-2026 21:45:51 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1108
+[24-Jun-2026 21:45:51 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1111
+[24-Jun-2026 21:45:51 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1115
+[24-Jun-2026 21:45:51 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1118
+[24-Jun-2026 21:45:51 Asia/Tehran] PHP Warning:  Undefined variable $currentDate in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1195
+[24-Jun-2026 21:45:51 Asia/Tehran] PHP Warning:  Undefined variable $categories in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1203
+[24-Jun-2026 21:45:51 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1203
+[24-Jun-2026 21:45:51 Asia/Tehran] PHP Warning:  Undefined variable $projects in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1210
+[24-Jun-2026 21:45:51 Asia/Tehran] PHP Warning:  foreach() argument must be of type array|object, null given in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1210
+[24-Jun-2026 21:45:51 Asia/Tehran] PHP Warning:  Undefined variable $pageTitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1231
+[24-Jun-2026 21:45:51 Asia/Tehran] PHP Warning:  Undefined variable $pageSubtitle in /home3/lxjynjih/plan.hoseinjaafari.ir/lifeplan/index.php on line 1232
+[04-Jul-2026 12:29:17 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "}" in /home3/lxjynjih/plan.hoseinjaafari.ir/includes/header.php on line 18

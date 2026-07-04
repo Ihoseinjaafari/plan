@@ -1,0 +1,449 @@
+/* planner/style.css */
+
+/* ===== اصلاحات جدید ===== */
+
+/* 1. دکمه افزودن تسک - مربعی با گوشه‌های گرد */
+.add-task-fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 16px !important;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+    z-index: 998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+}
+
+.add-task-fab .icon-plus {
+    font-size: 32px;
+    font-weight: 300;
+}
+
+.add-task-fab:hover { 
+    transform: scale(1.08);
+    box-shadow: 0 8px 30px rgba(102,126,234,0.5);
+}
+
+/* 2. اصلاح موقعیت مودال - بالای همه عناصر */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 999999 !important;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--modal-overlay);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex !important;
+}
+
+.modal-content {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    width: 90%;
+    max-width: 600px;
+    border-radius: 25px;
+    max-height: 85vh;
+    overflow-y: auto;
+    transition: background 0.3s ease, border-color 0.3s ease;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    position: relative;
+    z-index: 999999;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 20px 25px;
+    font-weight: 600;
+    font-size: 18px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-radius: 25px 25px 0 0;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.modal-body {
+    padding: 25px;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    overflow-y: auto;
+    max-height: calc(85vh - 140px);
+}
+
+/* 3. استایل ورودی زمان - ساعت و دقیقه جدا */
+.time-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.time-input-group label {
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 14px;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 60px;
+}
+
+.time-input-group .time-fields {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex: 1;
+}
+
+.time-input-group .time-fields input {
+    width: 60px;
+    padding: 10px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 16px;
+    text-align: center;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', monospace !important;
+    transition: all 0.3s;
+}
+
+.time-input-group .time-fields input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+}
+
+.time-input-group .time-fields span {
+    color: var(--text-muted);
+    font-size: 18px;
+    font-weight: bold;
+}
+
+body[data-theme="light"] .time-input-group .time-fields input {
+    background: #fafafa;
+    color: #1a1a2e;
+    border-color: #e2e8f0;
+}
+
+/* 4. استایل دسته‌بندی با شمارش */
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.category-item .category-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 120px;
+}
+
+.category-item .category-info .category-name {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    flex: 1;
+}
+
+.category-item .category-info .category-count {
+    background: var(--badge-bg);
+    color: var(--badge-color);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    white-space: nowrap;
+}
+
+.category-item .category-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.category-item .category-actions button {
+    padding: 4px 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    transition: all 0.3s;
+}
+
+.category-item .category-actions .edit-cat-btn {
+    background: var(--badge-bg);
+    color: var(--badge-color);
+}
+
+.category-item .category-actions .edit-cat-btn:hover {
+    background: rgba(102,126,234,0.3);
+}
+
+.category-item .category-actions .delete-cat-btn {
+    background: rgba(220,53,69,0.15);
+    color: #ff6b6b;
+}
+
+.category-item .category-actions .delete-cat-btn:hover {
+    background: rgba(220,53,69,0.3);
+}
+
+.category-item .category-actions .save-cat-btn {
+    background: rgba(40,167,69,0.2);
+    color: #28a745;
+}
+
+.category-item .category-actions .save-cat-btn:hover {
+    background: rgba(40,167,69,0.35);
+}
+
+.category-item .category-actions .cancel-cat-btn {
+    background: rgba(108,117,125,0.15);
+    color: var(--text-muted);
+}
+
+.category-item .category-actions .cancel-cat-btn:hover {
+    background: rgba(108,117,125,0.3);
+}
+
+.category-item .category-edit-input {
+    display: none;
+    padding: 6px 12px;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    width: 150px;
+}
+
+.category-item .category-edit-input:focus {
+    outline: none;
+}
+
+.category-item.editing .category-name {
+    display: none;
+}
+
+.category-item.editing .category-edit-input {
+    display: inline-block;
+}
+
+/* 5. آیکون‌های دکمه‌ها */
+.btn-menu .icon-tag::before { content: "🏷️"; }
+.btn-menu .icon-file-csv::before { content: "📊"; }
+.btn-menu .icon-fire::before { content: "🔥"; }
+.btn-menu .icon-shield-alt::before { content: "🛡️"; }
+
+/* 6. استایل‌های اضافی پلنر */
+.planner-nav {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 12px 20px;
+    margin: 0 15px 20px 15px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 15px var(--shadow-color);
+    transition: all 0.3s ease;
+}
+
+.planner-nav-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.nav-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.nav-filters .nav-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: none;
+    background: rgba(255,255,255,0.03);
+    font-size: 13px;
+    transition: all 0.3s;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nav-filters .nav-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-primary);
+}
+
+.nav-filters .nav-btn.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.nav-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.btn-menu {
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    padding: 6px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+}
+
+.btn-menu:hover {
+    background: var(--bg-card-hover);
+    border-color: #667eea;
+    color: var(--text-primary);
+}
+
+.main-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 15px 20px 15px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* 7. ریسپانسیو */
+@media (max-width: 768px) {
+    .add-task-fab {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+        border-radius: 14px !important;
+        bottom: 20px;
+        right: 20px;
+    }
+    
+    .add-task-fab .icon-plus {
+        font-size: 26px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        max-height: 90vh;
+    }
+    
+    .modal-body {
+        max-height: calc(90vh - 130px);
+        padding: 18px;
+    }
+    
+    .time-input-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .time-input-group .time-fields {
+        justify-content: center;
+    }
+    
+    .category-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .category-item .category-info {
+        justify-content: space-between;
+    }
+    
+    .category-item .category-actions {
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    .add-task-fab {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+        border-radius: 12px !important;
+        bottom: 15px;
+        right: 15px;
+    }
+    
+    .add-task-fab .icon-plus {
+        font-size: 22px;
+    }
+    
+    .time-input-group .time-fields input {
+        width: 50px;
+        font-size: 14px;
+        padding: 8px 4px;
+    }
+    
+    .category-item .category-edit-input {
+        width: 100px;
+    }
+}

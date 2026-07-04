@@ -1,0 +1,57 @@
+{
+    "work": {
+        "tasks": [
+            {
+                "id": "6a4520fc61a22",
+                "title": "\u062e\u0631\u06cc\u062f \u0628\u0627\u0632\u06cc \u06af\u06cc\u0645 \u0627\u0641 \u062a\u0631\u0648\u0646\u0632",
+                "priority": "medium",
+                "done": false,
+                "created_at": "2026-07-01 17:45:24"
+            }
+        ],
+        "projects": [],
+        "meetings": []
+    },
+    "finance": {
+        "income": 0,
+        "expenses": [
+            {
+                "id": "6a4521928f457",
+                "title": "\u062e\u0631\u06cc\u062f \u0628\u0633\u062a\u0647 \u0627\u06cc\u0646\u062a\u0631\u0646\u062a",
+                "amount": 65000,
+                "category": "other",
+                "date": "2026-07-01"
+            }
+        ],
+        "savings_goal": 10000000,
+        "current_savings": 0
+    },
+    "health": {
+        "steps": 5,
+        "water": 5,
+        "sleep": 0,
+        "workout": ""
+    },
+    "learning": {
+        "books": [],
+        "courses": [],
+        "habits": []
+    },
+    "relationships": {
+        "contacts": [],
+        "events": []
+    },
+    "leisure": {
+        "playlist": "",
+        "podcasts": [],
+        "relax_time": 0
+    },
+    "habits": [
+        {
+            "id": "6a45226899159",
+            "name": "\u062e\u0648\u0631\u062f\u0646\u0646\u0646\u0646\u0646\u0646",
+            "done": false,
+            "date": "2026-07-01"
+        }
+    ]
+}
