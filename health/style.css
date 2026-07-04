@@ -239,24 +239,6 @@
     box-shadow: 0 4px 15px rgba(102,126,234,0.35);
 }
 
-.calendar-nav .year-link {
-    text-decoration: none;
-    padding: 4px 12px;
-    background: var(--bg-input, rgba(255,255,255,0.05));
-    color: var(--text-secondary, rgba(255,255,255,0.8));
-    border-radius: 8px;
-    font-size: 13px;
-    transition: all 0.3s;
-    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
-    cursor: pointer;
-    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
-}
-
-.calendar-nav .year-link:hover {
-    background: var(--bg-card-hover, rgba(255,255,255,0.1));
-    color: var(--text-primary, #ffffff);
-}
-
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -321,22 +303,26 @@
     font-weight: 600;
 }
 
-.calendar-grid .cal-day.period-light {
-    background: rgba(40,167,69,0.7);
+.calendar-grid .cal-day.period-light,
+.calendar-grid .cal-day.predicted.predicted-light {
+    background: rgba(40,167,69,0.85) !important;
+    border: none;
 }
-.calendar-grid .cal-day.period-medium {
-    background: rgba(255,193,7,0.8);
+.calendar-grid .cal-day.period-medium,
+.calendar-grid .cal-day.predicted.predicted-medium {
+    background: rgba(255,193,7,0.9) !important;
+    border: none;
 }
-.calendar-grid .cal-day.period-heavy {
-    background: rgba(220,53,69,0.8);
+.calendar-grid .cal-day.period-heavy,
+.calendar-grid .cal-day.predicted.predicted-heavy {
+    background: rgba(220,53,69,0.9) !important;
+    border: none;
 }
 
 /* ===== آیتم‌های پیش‌بینی شده در تقویم ===== */
 .calendar-grid .cal-day.predicted {
-    background: rgba(102,126,234,0.2);
-    color: #667eea;
-    border: 1px dashed rgba(102,126,234,0.4);
     position: relative;
+    opacity: 0.85;
 }
 .calendar-grid .cal-day.predicted .day-number {
     font-weight: 500;
@@ -344,8 +330,9 @@
 .calendar-grid .cal-day.predicted .predicted-dot {
     display: block;
     font-size: 10px;
-    color: #667eea;
+    color: #ffffff;
     margin-top: 2px;
+    text-shadow: 0 0 4px rgba(0,0,0,0.3);
 }
 
 /* ===== نقاط پایین روز ===== */
@@ -365,6 +352,18 @@
 }
 .calendar-grid .cal-day.period-heavy .period-dot {
     color: #dc3545;
+}
+
+/* ===== علامت دارای علائم ===== */
+.calendar-grid .cal-day.has-symptoms {
+    background: rgba(102,126,234,0.3);
+    border: 1px dashed rgba(102,126,234,0.5);
+}
+.calendar-grid .cal-day .symptom-dot {
+    display: block;
+    font-size: 8px;
+    color: #667eea;
+    margin-top: 2px;
 }
 
 /* ===== راهنمای تقویم ===== */
@@ -395,12 +394,28 @@
 }
 
 .calendar-legend .legend-dot.predicted-dot {
+    color: #ffc107;
+}
+
+.calendar-legend .legend-dot.symptom-dot {
     color: #667eea;
 }
 
 .calendar-legend .legend-dot.today-dot {
     color: var(--today-bg, #f1c40f);
 }
+
+/* راهنمای رنگ‌های شدت خونریزی */
+.calendar-legend .flow-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin: 0 2px;
+}
+.calendar-legend .flow-light { background: rgba(40,167,69,0.85); }
+.calendar-legend .flow-medium { background: rgba(255,193,7,0.9); }
+.calendar-legend .flow-heavy { background: rgba(220,53,69,0.9); }
 
 /* ===== سایدبار اطلاعات روز ===== */
 .day-info {
@@ -1151,8 +1166,7 @@ body[data-theme="light"] .btn-cancel:hover {
         font-size: 16px;
         min-width: 100px;
     }
-    .calendar-nav .nav-arrow,
-    .calendar-nav .year-link {
+    .calendar-nav .nav-arrow {
         padding: 4px 10px;
         font-size: 14px;
     }
@@ -1205,8 +1219,7 @@ body[data-theme="light"] .btn-cancel:hover {
         font-size: 12px;
         min-height: 32px;
     }
-    .calendar-nav .nav-arrow,
-    .calendar-nav .year-link {
+    .calendar-nav .nav-arrow {
         padding: 2px 8px;
         font-size: 13px;
     }

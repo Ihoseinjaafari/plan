@@ -312,8 +312,13 @@ function renderStatus() {
 // ============================================
 function selectDate(dateStr) {
     selectedDate = dateStr;
+    // تبدیل تاریخ میلادی به شمسی برای نمایش
     const parts = dateStr.split('-');
-    const display = parts[0] + '/' + parts[1] + '/' + parts[2];
+    const gy = parseInt(parts[0]);
+    const gm = parseInt(parts[1]);
+    const gd = parseInt(parts[2]);
+    const jalali = gregorianToJalali(gy, gm, gd);
+    const display = jalali[0] + '/' + jalali[1] + '/' + jalali[2];
     const displayEl = document.getElementById('selectedDateDisplay');
     if (displayEl) displayEl.textContent = '📅 ' + display;
     
