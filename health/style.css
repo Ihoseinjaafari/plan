@@ -1432,6 +1432,108 @@ body[data-theme="light"] .btn-cancel:hover {
     display: block;
 }
 
+/* استایل‌های تقویم داخل dropdown */
+.calendar-dropdown .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.calendar-dropdown .calendar-header .month-year {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary, #ffffff);
+}
+
+.calendar-dropdown .calendar-header .nav-btn {
+    background: var(--bg-input, rgba(255,255,255,0.05));
+    border: none;
+    color: var(--text-secondary, rgba(255,255,255,0.8));
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.3s;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    touch-action: manipulation;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-dropdown .calendar-header .nav-btn:hover {
+    background: var(--bg-card-hover, rgba(255,255,255,0.1));
+    color: var(--text-primary, #ffffff);
+}
+
+.calendar-dropdown .calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.calendar-dropdown .calendar-weekdays div {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted, rgba(255,255,255,0.5));
+    padding: 4px 0;
+}
+
+.calendar-dropdown .calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.calendar-dropdown .calendar-day {
+    padding: 8px 2px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    color: var(--text-secondary, rgba(255,255,255,0.8));
+    border: none;
+    background: transparent;
+    font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+}
+
+.calendar-dropdown .calendar-day:hover:not(.empty) {
+    background: rgba(102, 126, 234, 0.2);
+    color: var(--text-primary, #ffffff);
+}
+
+.calendar-dropdown .calendar-day.today {
+    background: var(--today-bg, #f1c40f);
+    color: var(--today-text, #1a1a2e);
+    font-weight: bold;
+}
+
+.calendar-dropdown .calendar-day.selected {
+    background: #667eea;
+    color: white;
+}
+
+.calendar-dropdown .calendar-day.empty {
+    cursor: default;
+    color: var(--text-light, rgba(255,255,255,0.3));
+}
+
 .form-input {
     width: 100%;
     padding: 12px 16px;
@@ -1594,5 +1696,23 @@ body[data-theme="dark"] .calendar-dropdown {
     
     .calendar-dropdown {
         padding: 12px;
+    }
+    
+    /* ریسپانسیو برای تقویم داخل dropdown */
+    .calendar-dropdown .calendar-days {
+        gap: 1px;
+    }
+    
+    .calendar-dropdown .calendar-day {
+        min-height: 38px;
+        min-width: 38px;
+        font-size: 13px;
+        padding: 6px 1px;
+    }
+    
+    .calendar-dropdown .calendar-header .nav-btn {
+        min-width: 38px;
+        min-height: 38px;
+        padding: 6px 12px;
     }
 }
