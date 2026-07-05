@@ -491,60 +491,48 @@ include_once __DIR__ . '/../includes/header.php';
                             return strtotime($a['start_date']) - strtotime($b['start_date']);
                         });
                         
+                        // پیدا کردن آخرین سیکلی که قبل از این تاریخ شروع شده
+                        $relevantCycle = null;
                         foreach ($cycles as $cycle) {
                             $startTs = strtotime($cycle['start_date']);
-                            $endTs = $cycle['end_date'] ? strtotime($cycle['end_date']) : null;
-                            
-                            // اگر تاریخ جاری در بازه خونریزی ثبت‌شده است
-                            if ($currentTs >= $startTs && ($endTs === null || $currentTs <= $endTs)) {
-                                $isInPeriod = true;
-                                $phaseClass = 'phase-menstruation';
-                                $daysSinceStart = floor(($currentTs - $startTs) / 86400);
-                                $cycleDay = $daysSinceStart + 1;
-                                break;
+                            if ($startTs <= $currentTs) {
+                                $relevantCycle = $cycle;
+                            } else {
+                                break; // چون مرتب شده‌اند، بقیه آینده هستند
                             }
                         }
                         
-                        // اگر در خونریزی نبود، بررسی می‌کنیم جزو کدام سیکل است
-                        if (!$isInPeriod) {
-                            // پیدا کردن آخرین سیکلی که قبل از این تاریخ شروع شده
-                            $lastCycle = null;
-                            foreach ($cycles as $cycle) {
-                                $startTs = strtotime($cycle['start_date']);
-                                if ($startTs <= $currentTs) {
-                                    $lastCycle = $cycle;
-                                } else {
-                                    break; // چون مرتب شده‌اند، بقیه آینده هستند
-                                }
-                            }
+                        if ($relevantCycle) {
+                            $startTs = strtotime($relevantCycle['start_date']);
+                            $endTs = $relevantCycle['end_date'] ? strtotime($relevantCycle['end_date']) : null;
+                            $daysSinceStart = floor(($currentTs - $startTs) / 86400);
+                            $cycleDay = $daysSinceStart + 1;
                             
-                            if ($lastCycle) {
-                                $startTs = strtotime($lastCycle['start_date']);
-                                $endTs = $lastCycle['end_date'] ? strtotime($lastCycle['end_date']) : null;
-                                $daysSinceStart = floor(($currentTs - $startTs) / 86400);
-                                $cycleDay = $daysSinceStart + 1;
-                                
-                                // طول دوره خونریزی واقعی (اگر ثبت شده باشد)
+                            // بررسی آیا در روزهای خونریزی هستیم؟
+                            if ($endTs !== null && $currentTs >= $startTs && $currentTs <= $endTs) {
+                                // در بازه خونریزی ثبت‌شده
+                                $isInPeriod = true;
+                                $phaseClass = 'phase-menstruation';
+                            } else {
+                                // بعد از پایان خونریزی - تعیین فاز بر اساس روز چرخه
+                                // طول دوره خونریزی واقعی
                                 $periodLength = $endTs ? floor(($endTs - $startTs) / 86400) + 1 : 5;
                                 
-                                // اگر بعد از پایان خونریزی است
-                                if ($currentTs > $startTs) {
-                                    // تعیین فاز بر اساس روز چرخه
-                                    // فاز قاعدگی: روز 1 تا انتهای خونریزی
+                                if ($cycleDay <= $periodLength && $currentTs >= $startTs) {
+                                    // در بازه قاعدگی (برای وقتی که end_date ثبت نشده)
+                                    $phaseClass = 'phase-menstruation';
+                                } elseif ($cycleDay > $periodLength && $cycleDay <= 13) {
                                     // فاز فولیکولی: بعد از قاعدگی تا روز 13
+                                    $phaseClass = 'phase-follicular';
+                                } elseif ($cycleDay >= 14 && $cycleDay <= 16) {
                                     // فاز تخمک‌گذاری: روز 14 تا 16
-                                    // فاز لوتئال: روز 17 تا پایان چرخه (معمولاً روز 28)
-                                    
-                                    if ($cycleDay <= $periodLength) {
-                                        // هنوز در قاعدگی (این حالت نباید اینجا اتفاق بیفتد چون بالا چک شد، اما برای اطمینان)
-                                        $phaseClass = 'phase-menstruation';
-                                    } elseif ($cycleDay >= 6 && $cycleDay <= 13) {
-                                        $phaseClass = 'phase-follicular';
-                                    } elseif ($cycleDay >= 14 && $cycleDay <= 16) {
-                                        $phaseClass = 'phase-ovulation';
-                                    } elseif ($cycleDay >= 17) {
-                                        $phaseClass = 'phase-luteal';
-                                    }
+                                    $phaseClass = 'phase-ovulation';
+                                } elseif ($cycleDay >= 17 && $cycleDay <= 28) {
+                                    // فاز لوتئال: روز 17 تا 28
+                                    $phaseClass = 'phase-luteal';
+                                } elseif ($cycleDay > 28) {
+                                    // بعد از روز 28 - شروع چرخه جدید (هنوز پریود بعدی شروع نشده)
+                                    $phaseClass = 'phase-luteal';
                                 }
                             }
                         }
@@ -555,20 +543,27 @@ include_once __DIR__ . '/../includes/header.php';
                         foreach ($futureCycles as $future) {
                             $startTs = strtotime($future['start_date']);
                             $endTs = strtotime($future['end_date']);
-                            $currentTs = strtotime($gregDateStr);
                             
                             if ($currentTs >= $startTs && $currentTs <= $endTs) {
-                                // روزهای اول سیکل پیش‌بینی شده = قاعدگی
+                                // در بازه قاعدگی پیش‌بینی شده
+                                $daysInFuture = floor(($currentTs - $startTs) / 86400);
+                                $cycleDay = $daysInFuture + 1;
+                                $phaseClass = 'phase-menstruation';
+                                break;
+                            } elseif ($currentTs > $endTs) {
+                                // بعد از پایان قاعدگی پیش‌بینی شده - تعیین فاز
+                                $startTs = strtotime($future['start_date']);
                                 $daysInFuture = floor(($currentTs - $startTs) / 86400);
                                 $cycleDay = $daysInFuture + 1;
                                 
-                                if ($daysInFuture <= 5) {
-                                    $phaseClass = 'phase-menstruation';
-                                } elseif ($cycleDay >= 6 && $cycleDay <= 13) {
+                                // طول دوره قاعدگی پیش‌بینی شده (معمولاً 5 روز)
+                                $periodLength = floor(($endTs - $startTs) / 86400) + 1;
+                                
+                                if ($cycleDay > $periodLength && $cycleDay <= 13) {
                                     $phaseClass = 'phase-follicular';
                                 } elseif ($cycleDay >= 14 && $cycleDay <= 16) {
                                     $phaseClass = 'phase-ovulation';
-                                } elseif ($cycleDay >= 17) {
+                                } elseif ($cycleDay >= 17 && $cycleDay <= 28) {
                                     $phaseClass = 'phase-luteal';
                                 }
                                 break;
