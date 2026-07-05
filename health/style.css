@@ -665,6 +665,8 @@
     background: rgba(0, 0, 0, 0.85);
     align-items: center;
     justify-content: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .modal-box {
@@ -809,6 +811,7 @@
     font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    user-select: none;
 }
 
 .jalali-calendar.show {
@@ -832,14 +835,20 @@
     background: var(--bg-input, rgba(255,255,255,0.05));
     border: none;
     color: var(--text-secondary, rgba(255,255,255,0.8));
-    padding: 6px 14px;
+    padding: 8px 16px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 20px;
     transition: all 0.3s;
     font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
+    touch-action: manipulation;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .jalali-calendar .calendar-header .nav-btn:hover {
@@ -881,10 +890,12 @@
     font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-    min-height: 36px;
+    min-height: 44px;
+    min-width: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
+    touch-action: manipulation;
 }
 
 .jalali-calendar .calendar-day:hover:not(.empty) {
@@ -1257,5 +1268,22 @@ body[data-theme="light"] .btn-cancel:hover {
     .item-row .info .note {
         max-width: 100%;
         white-space: normal;
+    }
+    /* بهبود تقویم جلالی در موبایل */
+    .jalali-calendar {
+        max-width: 95vw;
+        min-width: 280px;
+        padding: 12px;
+    }
+    .jalali-calendar .calendar-header .nav-btn {
+        padding: 10px 18px;
+        font-size: 22px;
+        min-width: 48px;
+        min-height: 48px;
+    }
+    .jalali-calendar .calendar-day {
+        min-height: 40px;
+        min-width: 40px;
+        font-size: 13px;
     }
 }
