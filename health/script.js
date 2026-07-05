@@ -202,7 +202,6 @@ class JalaliDatePicker {
     }
     
     goToMonth(year, month) {
-        event.stopPropagation();
         // مدیریت چرخش بین ماه‌ها و سال‌ها
         if (month < 1) {
             month = 12;
@@ -248,9 +247,9 @@ class JalaliDatePicker {
         
         var html = '';
         html += '<div class="calendar-header">';
-        html += '<button class="nav-btn" onclick="event.stopPropagation(); window.datePickers[\'' + this.calendar.id + '\'].goToMonth(' + this.currentYear + ', ' + (this.currentMonth - 1) + ')">‹</button>';
+        html += '<button class="nav-btn" onclick="if(window.datePickers[\'' + this.calendar.id + '\']) window.datePickers[\'' + this.calendar.id + '\'].goToMonth(' + this.currentYear + ', ' + (this.currentMonth - 1) + '); return false;">‹</button>';
         html += '<span class="month-year">' + monthNames[this.currentMonth - 1] + ' ' + this.currentYear + '</span>';
-        html += '<button class="nav-btn" onclick="event.stopPropagation(); window.datePickers[\'' + this.calendar.id + '\'].goToMonth(' + this.currentYear + ', ' + (this.currentMonth + 1) + ')">›</button>';
+        html += '<button class="nav-btn" onclick="if(window.datePickers[\'' + this.calendar.id + '\']) window.datePickers[\'' + this.calendar.id + '\'].goToMonth(' + this.currentYear + ', ' + (this.currentMonth + 1) + '); return false;">›</button>';
         html += '</div>';
         
         html += '<div class="calendar-weekdays">';
@@ -270,7 +269,7 @@ class JalaliDatePicker {
             var cls = 'calendar-day';
             if (isToday) cls += ' today';
             if (isSelected) cls += ' selected';
-            html += '<div class="' + cls + '" onclick="event.stopPropagation(); window.datePickers[\'' + this.calendar.id + '\'].selectDay(' + d + ')">' + d + '</div>';
+            html += '<div class="' + cls + '" onclick="if(window.datePickers[\'' + this.calendar.id + '\']) window.datePickers[\'' + this.calendar.id + '\'].selectDay(' + d + '); return false;">' + d + '</div>';
         }
         html += '</div>';
         
