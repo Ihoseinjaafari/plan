@@ -584,12 +584,12 @@ function renderPrediction() {
 }
 
 // ============================================
-// مدیریت سیکل‌ها
+// مدیریت سیکل‌ها - نسخه جدید
 // ============================================
 function openAddCycleModal() {
     editCycleId = null;
     document.getElementById('cycleModalTitle').textContent = '📅 ثبت سیکل جدید';
-    document.getElementById('saveCycleBtn').textContent = 'ذخیره';
+    document.getElementById('saveCycleBtn').textContent = 'ذخیره سیکل';
     document.getElementById('editCycleId').value = '';
     
     const date = selectedDate || currentJalaliDate;
@@ -598,13 +598,29 @@ function openAddCycleModal() {
     
     document.getElementById('cycleStartDate').value = jalaliDate;
     document.getElementById('cycleEndDate').value = '';
+    document.getElementById('cycleDurationInput').value = '5';
     document.getElementById('cycleFlow').value = 'medium';
     document.getElementById('cycleNotes').value = '';
+    
+    // مخفی کردن همه تقویم‌ها
+    hideAllCalendars();
     
     document.getElementById('cycleModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
     
-    updateCyclePickers(jalaliDate);
+    // تنظیم تقویم شروع روی تاریخ فعلی
+    setTimeout(() => {
+        if (datePickers['cycleDateCalendar']) {
+            const p = jalaliDate.split('/');
+            if (p.length === 3) {
+                datePickers['cycleDateCalendar'].currentYear = parseInt(p[0]);
+                datePickers['cycleDateCalendar'].currentMonth = parseInt(p[1]);
+                datePickers['cycleDateCalendar'].currentDay = parseInt(p[2]);
+                datePickers['cycleDateCalendar'].currentDate = jalaliDate;
+                datePickers['cycleDateCalendar'].render();
+            }
+        }
+    }, 100);
 }
 
 function openEditCycle(id) {
@@ -624,29 +640,78 @@ function openEditCycle(id) {
     document.getElementById('cycleFlow').value = cycle.flow || 'medium';
     document.getElementById('cycleNotes').value = cycle.notes || '';
     
+    // مخفی کردن همه تقویم‌ها
+    hideAllCalendars();
+    
     document.getElementById('cycleModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
     
-    updateCyclePickers(jalaliStart);
-}
-
-function updateCyclePickers(jalaliDate) {
-    if (datePickers['cycleDateCalendar']) {
-        const p = jalaliDate.split('/');
-        if (p.length === 3) {
-            datePickers['cycleDateCalendar'].currentYear = parseInt(p[0]);
-            datePickers['cycleDateCalendar'].currentMonth = parseInt(p[1]);
-            datePickers['cycleDateCalendar'].currentDay = parseInt(p[2]);
-            datePickers['cycleDateCalendar'].currentDate = jalaliDate;
-            datePickers['cycleDateCalendar'].render();
+    // تنظیم تقویم شروع
+    setTimeout(() => {
+        if (datePickers['cycleDateCalendar']) {
+            const p = jalaliStart.split('/');
+            if (p.length === 3) {
+                datePickers['cycleDateCalendar'].currentYear = parseInt(p[0]);
+                datePickers['cycleDateCalendar'].currentMonth = parseInt(p[1]);
+                datePickers['cycleDateCalendar'].currentDay = parseInt(p[2]);
+                datePickers['cycleDateCalendar'].currentDate = jalaliStart;
+                datePickers['cycleDateCalendar'].render();
+            }
         }
-    }
+    }, 100);
 }
 
 function closeCycleModal() {
     document.getElementById('cycleModal').style.display = 'none';
     document.body.style.overflow = '';
+    hideAllCalendars();
 }
+
+function hideAllCalendars() {
+    document.querySelectorAll('.calendar-dropdown').forEach(cal => {
+        cal.classList.remove('show');
+    });
+}
+
+// مدیریت کلیک روی دکمه‌های تقویم
+document.addEventListener('DOMContentLoaded', function() {
+    // دکمه تقویم شروع سیکل
+    const toggleCycleStart = document.getElementById('toggleCycleStartCal');
+    if (toggleCycleStart) {
+        toggleCycleStart.addEventListener('click', function(e) {
+            e.stopPropagation();
+            hideAllCalendars();
+            document.getElementById('cycleDateCalendar').classList.toggle('show');
+        });
+    }
+    
+    // دکمه تقویم پایان سیکل
+    const toggleCycleEnd = document.getElementById('toggleCycleEndCal');
+    if (toggleCycleEnd) {
+        toggleCycleEnd.addEventListener('click', function(e) {
+            e.stopPropagation();
+            hideAllCalendars();
+            document.getElementById('cycleEndCalendar').classList.toggle('show');
+        });
+    }
+    
+    // دکمه تقویم علامت
+    const toggleSymptom = document.getElementById('toggleSymptomCal');
+    if (toggleSymptom) {
+        toggleSymptom.addEventListener('click', function(e) {
+            e.stopPropagation();
+            hideAllCalendars();
+            document.getElementById('symptomDateCalendar').classList.toggle('show');
+        });
+    }
+    
+    // کلیک بیرون برای بستن تقویم‌ها
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.date-input-wrapper') && !e.target.closest('.calendar-dropdown')) {
+            hideAllCalendars();
+        }
+    });
+});
 
 function initCycleSave() {
     const btn = document.getElementById('saveCycleBtn');
@@ -717,12 +782,12 @@ function deleteCycle(id) {
 }
 
 // ============================================
-// مدیریت علائم
+// مدیریت علائم - نسخه جدید
 // ============================================
 function openAddSymptomModal() {
     editSymptomId = null;
     document.getElementById('symptomModalTitle').textContent = '💊 ثبت علامت جدید';
-    document.getElementById('saveSymptomBtn').textContent = 'ذخیره';
+    document.getElementById('saveSymptomBtn').textContent = 'ذخیره علامت';
     document.getElementById('editSymptomId').value = '';
     
     const date = selectedDate || currentJalaliDate;
@@ -734,50 +799,31 @@ function openAddSymptomModal() {
     document.getElementById('symptomSeverity').value = 'medium';
     document.getElementById('symptomNotes').value = '';
     
-    document.getElementById('symptomModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    
-    updateSymptomPickers(jalaliDate);
-}
-
-function openEditSymptom(id) {
-    const symptom = symptoms.find(s => s.id === id);
-    if (!symptom) return;
-    
-    editSymptomId = id;
-    document.getElementById('symptomModalTitle').textContent = '✏️ ویرایش علامت';
-    document.getElementById('saveSymptomBtn').textContent = 'ویرایش';
-    document.getElementById('editSymptomId').value = id;
-    
-    const jalaliDate = toJalaliDate(symptom.date);
-    
-    document.getElementById('symptomDate').value = jalaliDate;
-    document.getElementById('symptomType').value = symptom.type || 'pain';
-    document.getElementById('symptomSeverity').value = symptom.severity || 'medium';
-    document.getElementById('symptomNotes').value = symptom.notes || '';
+    // مخفی کردن همه تقویم‌ها
+    hideAllCalendars();
     
     document.getElementById('symptomModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
     
-    updateSymptomPickers(jalaliDate);
-}
-
-function updateSymptomPickers(jalaliDate) {
-    if (datePickers['symptomDateCalendar']) {
-        const p = jalaliDate.split('/');
-        if (p.length === 3) {
-            datePickers['symptomDateCalendar'].currentYear = parseInt(p[0]);
-            datePickers['symptomDateCalendar'].currentMonth = parseInt(p[1]);
-            datePickers['symptomDateCalendar'].currentDay = parseInt(p[2]);
-            datePickers['symptomDateCalendar'].currentDate = jalaliDate;
-            datePickers['symptomDateCalendar'].render();
+    // تنظیم تقویم روی تاریخ فعلی
+    setTimeout(() => {
+        if (datePickers['symptomDateCalendar']) {
+            const p = jalaliDate.split('/');
+            if (p.length === 3) {
+                datePickers['symptomDateCalendar'].currentYear = parseInt(p[0]);
+                datePickers['symptomDateCalendar'].currentMonth = parseInt(p[1]);
+                datePickers['symptomDateCalendar'].currentDay = parseInt(p[2]);
+                datePickers['symptomDateCalendar'].currentDate = jalaliDate;
+                datePickers['symptomDateCalendar'].render();
+            }
         }
-    }
+    }, 100);
 }
 
 function closeSymptomModal() {
     document.getElementById('symptomModal').style.display = 'none';
     document.body.style.overflow = '';
+    hideAllCalendars();
 }
 
 function initSymptomSave() {
@@ -840,7 +886,7 @@ function deleteSymptom(id) {
 }
 
 // ============================================
-// مقداردهی Pickerها
+// مقداردهی Pickerها - نسخه جدید
 // ============================================
 function initDatePickers() {
     const pickers = [
@@ -857,6 +903,8 @@ function initDatePickers() {
                 defaultDate: todayJalali || '1400/01/01',
                 onSelect: function(dateStr) {
                     document.getElementById(p.id).value = dateStr;
+                    // بستن تقویم بعد از انتخاب
+                    hideAllCalendars();
                 }
             });
             datePickers[p.cal] = picker;

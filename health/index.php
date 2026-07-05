@@ -662,67 +662,111 @@ include_once __DIR__ . '/../includes/header.php';
 
 <!-- ===== مودال ثبت/ویرایش سیکل ===== -->
 <div id="cycleModal" class="modal" style="display:none;">
-    <div class="modal-box">
-        <div class="modal-header" id="cycleModalTitle">📅 ثبت سیکل جدید</div>
-        <div class="modal-body">
-            <input type="hidden" id="editCycleId">
-            <label>تاریخ شروع</label>
-            <div class="date-picker-wrapper">
-                <input type="text" id="cycleStartDate" class="date-picker-input" placeholder="تاریخ" value="<?php echo $todayJalali; ?>" readonly>
-                <div class="jalali-calendar" id="cycleDateCalendar"></div>
-            </div>
-            <label>تاریخ پایان (اختیاری)</label>
-            <div class="date-picker-wrapper">
-                <input type="text" id="cycleEndDate" class="date-picker-input" placeholder="تاریخ پایان" readonly>
-                <div class="jalali-calendar" id="cycleEndCalendar"></div>
-            </div>
-            <label>شدت خونریزی</label>
-            <select id="cycleFlow">
-                <option value="light">🟢 کم</option>
-                <option value="medium" selected>🟡 متوسط</option>
-                <option value="heavy">🔴 زیاد</option>
-            </select>
-            <label>یادداشت</label>
-            <textarea id="cycleNotes" rows="2"></textarea>
+    <div class="modal-box modal-sheet-new">
+        <div class="modal-header-new">
+            <h3 id="cycleModalTitle">📅 ثبت سیکل جدید</h3>
+            <button class="close-btn-new" onclick="closeCycleModal()">&times;</button>
         </div>
-        <div class="modal-footer">
-            <button class="btn-cancel" onclick="closeCycleModal()">انصراف</button>
-            <button class="btn-save" id="saveCycleBtn">ذخیره</button>
+        <div class="modal-body-new">
+            <input type="hidden" id="editCycleId">
+            
+            <div class="form-group-new">
+                <label class="form-label">تاریخ شروع قاعدگی</label>
+                <div class="date-input-wrapper">
+                    <input type="text" id="cycleStartDate" class="form-input-date" placeholder="انتخاب تاریخ" readonly>
+                    <button type="button" class="btn-calendar-toggle" id="toggleCycleStartCal">
+                        <i class="far fa-calendar-alt"></i>
+                    </button>
+                </div>
+                <div class="calendar-dropdown" id="cycleDateCalendar"></div>
+            </div>
+
+            <div class="form-group-new">
+                <label class="form-label">تاریخ پایان (اختیاری)</label>
+                <div class="date-input-wrapper">
+                    <input type="text" id="cycleEndDate" class="form-input-date" placeholder="انتخاب تاریخ" readonly>
+                    <button type="button" class="btn-calendar-toggle" id="toggleCycleEndCal">
+                        <i class="far fa-calendar-alt"></i>
+                    </button>
+                </div>
+                <div class="calendar-dropdown" id="cycleEndCalendar"></div>
+            </div>
+
+            <div class="form-group-new">
+                <label class="form-label">مدت خونریزی (روز)</label>
+                <input type="number" id="cycleDurationInput" class="form-input" min="2" max="10" value="5">
+            </div>
+
+            <div class="form-group-new">
+                <label class="form-label">شدت خونریزی</label>
+                <select id="cycleFlow" class="form-select">
+                    <option value="light">🟢 کم (Light)</option>
+                    <option value="medium" selected>🟡 متوسط (Medium)</option>
+                    <option value="heavy">🔴 زیاد (Heavy)</option>
+                </select>
+            </div>
+
+            <div class="form-group-new">
+                <label class="form-label">یادداشت</label>
+                <textarea id="cycleNotes" class="form-textarea" rows="2" placeholder="یادداشت خود را بنویسید..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer-new">
+            <button class="btn-cancel-new" onclick="closeCycleModal()">انصراف</button>
+            <button class="btn-save-new" id="saveCycleBtn">ذخیره سیکل</button>
         </div>
     </div>
 </div>
 
 <!-- ===== مودال ثبت/ویرایش علامت ===== -->
 <div id="symptomModal" class="modal" style="display:none;">
-    <div class="modal-box">
-        <div class="modal-header" id="symptomModalTitle">💊 ثبت علامت جدید</div>
-        <div class="modal-body">
-            <input type="hidden" id="editSymptomId">
-            <label>تاریخ</label>
-            <div class="date-picker-wrapper">
-                <input type="text" id="symptomDate" class="date-picker-input" placeholder="تاریخ" value="<?php echo $todayJalali; ?>" readonly>
-                <div class="jalali-calendar" id="symptomDateCalendar"></div>
-            </div>
-            <label>نوع علامت</label>
-            <select id="symptomType">
-                <option value="pain">درد</option>
-                <option value="mood">خلق و خو</option>
-                <option value="physical">جسمی</option>
-                <option value="digestive">گوارشی</option>
-                <option value="other">سایر</option>
-            </select>
-            <label>شدت</label>
-            <select id="symptomSeverity">
-                <option value="low">کم</option>
-                <option value="medium" selected>متوسط</option>
-                <option value="high">زیاد</option>
-            </select>
-            <label>یادداشت</label>
-            <textarea id="symptomNotes" rows="2"></textarea>
+    <div class="modal-box modal-sheet-new">
+        <div class="modal-header-new">
+            <h3 id="symptomModalTitle">💊 ثبت علامت جدید</h3>
+            <button class="close-btn-new" onclick="closeSymptomModal()">&times;</button>
         </div>
-        <div class="modal-footer">
-            <button class="btn-cancel" onclick="closeSymptomModal()">انصراف</button>
-            <button class="btn-save" id="saveSymptomBtn">ذخیره</button>
+        <div class="modal-body-new">
+            <input type="hidden" id="editSymptomId">
+            
+            <div class="form-group-new">
+                <label class="form-label">تاریخ ثبت علامت</label>
+                <div class="date-input-wrapper">
+                    <input type="text" id="symptomDate" class="form-input-date" placeholder="انتخاب تاریخ" readonly>
+                    <button type="button" class="btn-calendar-toggle" id="toggleSymptomCal">
+                        <i class="far fa-calendar-alt"></i>
+                    </button>
+                </div>
+                <div class="calendar-dropdown" id="symptomDateCalendar"></div>
+            </div>
+
+            <div class="form-group-new">
+                <label class="form-label">دسته‌بندی علامت</label>
+                <select id="symptomType" class="form-select">
+                    <option value="pain">😣 درد (Pain)</option>
+                    <option value="mood">😊 خلق و خو (Mood)</option>
+                    <option value="physical">💪 جسمی (Physical)</option>
+                    <option value="digestive">🍽️ گوارشی (Digestive)</option>
+                    <option value="other">📌 سایر (Other)</option>
+                </select>
+            </div>
+
+            <div class="form-group-new">
+                <label class="form-label">شدت علامت</label>
+                <select id="symptomSeverity" class="form-select">
+                    <option value="low">کم (Low)</option>
+                    <option value="medium" selected>متوسط (Medium)</option>
+                    <option value="high">زیاد (High)</option>
+                </select>
+            </div>
+
+            <div class="form-group-new">
+                <label class="form-label">یادداشت</label>
+                <textarea id="symptomNotes" class="form-textarea" rows="2" placeholder="توضیحات بیشتر..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer-new">
+            <button class="btn-cancel-new" onclick="closeSymptomModal()">انصراف</button>
+            <button class="btn-save-new" id="saveSymptomBtn">ذخیره علامت</button>
         </div>
     </div>
 </div>
