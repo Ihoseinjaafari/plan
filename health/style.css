@@ -1287,7 +1287,7 @@ body[data-theme="light"] .btn-cancel:hover {
         font-size: 13px;
     }
     
-    /* بهبود استایل مودال‌های جدید در موبایل */
+    /* بهبود استایل مودال‌های جدید در موبایل - کوچک */
     .modal-sheet-new {
         display: flex;
         flex-direction: column;
@@ -1362,6 +1362,7 @@ body[data-theme="light"] .btn-cancel:hover {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
+    max-height: 90vh;
 }
 
 .modal-header-new {
@@ -1371,6 +1372,7 @@ body[data-theme="light"] .btn-cancel:hover {
     padding: 20px 24px;
     background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(52, 152, 219, 0.1));
     border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    flex-shrink: 0;
 }
 
 .modal-header-new h3 {
@@ -1705,11 +1707,14 @@ body[data-theme="dark"] .calendar-dropdown {
         width: 98%;
         max-height: 90vh;
         overflow-y: auto;
+        display: flex;
+        flex-direction: column;
     }
     
     .modal-body-new {
         padding: 16px;
-        max-height: none;
+        flex: 1;
+        overflow-y: auto;
     }
     
     .modal-header-new {
@@ -1719,6 +1724,7 @@ body[data-theme="dark"] .calendar-dropdown {
     .modal-footer-new {
         padding: 16px 20px;
         flex-direction: column-reverse;
+        flex-shrink: 0;
     }
     
     .btn-cancel-new,
