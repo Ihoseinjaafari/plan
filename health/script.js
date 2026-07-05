@@ -7,6 +7,14 @@ let currentTab = 'calendar';
 let editCycleId = null;
 let editSymptomId = null;
 let datePickers = {}; // شیء نگهداری پیکرهای تاریخ
+let todayJalali = ''; // تاریخ امروز به فرمت شمسی
+
+// محاسبه تاریخ امروز در ابتدای اجرا
+(function initTodayJalali() {
+    const today = new Date();
+    const j = gregorianToJalali(today.getFullYear(), today.getMonth() + 1, today.getDate());
+    todayJalali = j[0] + '/' + String(j[1]).padStart(2, '0') + '/' + String(j[2]).padStart(2, '0');
+})();
 
 // ============================================
 // محاسبه فاز چرخه برای یک تاریخ خاص
