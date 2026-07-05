@@ -13,44 +13,55 @@ let editSymptomId = null;
 function getPhaseForDate(targetDate, cycles) {
     if (!cycles || cycles.length === 0) return null;
     
-    // مرتب‌سازی سیکل‌ها بر اساس تاریخ
-    const sorted = [...cycles].sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+    // تبدیل تاریخ هدف به timestamp
+    const targetTs = new Date(targetDate).getTime();
     
-    // پیدا کردن آخرین سیکلی که قبل از تاریخ هدف شروع شده
-    let relevantCycle = null;
+    // مرتب‌سازی سیکل‌ها بر اساس تاریخ شروع (صعودی)
+    const sorted = [...cycles].sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+    
+    // 1. بررسی می‌کنیم آیا در بازه خونریزی ثبت‌شده هستیم؟
     for (const cycle of sorted) {
-        const startDate = new Date(cycle.start_date);
-        if (startDate <= new Date(targetDate)) {
-            relevantCycle = cycle;
-            break;
+        const startTs = new Date(cycle.start_date).getTime();
+        const endTs = cycle.end_date ? new Date(cycle.end_date).getTime() : null;
+        
+        if (targetTs >= startTs && (endTs === null || targetTs <= endTs)) {
+            return { phase: 'menstruation', dayInCycle: Math.floor((targetTs - startTs) / 86400000) + 1, isPeriod: true };
         }
     }
     
-    if (!relevantCycle) return null;
-    
-    const startDate = new Date(relevantCycle.start_date);
-    const target = new Date(targetDate);
-    const daysSinceStart = Math.floor((target - startDate) / (1000 * 60 * 60 * 24));
-    
-    // اگر در دوران خونریزی باشد
-    const endDate = relevantCycle.end_date ? new Date(relevantCycle.end_date) : null;
-    if (endDate && target <= endDate) {
-        return 'menstruation';
+    // 2. اگر در خونریزی نیستیم، آخرین سیکلی که قبل از این تاریخ شروع شده را پیدا می‌کنیم
+    let lastCycle = null;
+    for (const cycle of sorted) {
+        const startTs = new Date(cycle.start_date).getTime();
+        if (startTs <= targetTs) {
+            lastCycle = cycle;
+        } else {
+            break; // چون مرتب شده‌اند، بقیه آینده هستند
+        }
     }
     
-    // محاسبه فاز بر اساس روز چرخه
-    if (daysSinceStart >= 0 && daysSinceStart <= 5) {
-        return 'menstruation';
-    } else if (daysSinceStart >= 6 && daysSinceStart <= 14) {
-        return 'follicular';
-    } else if (daysSinceStart >= 15 && daysSinceStart <= 17) {
-        return 'ovulation';
-    } else if (daysSinceStart >= 18 && daysSinceStart <= 28) {
-        return 'luteal';
-    } else {
-        // بعد از روز 28 - ممکن است سیکل جدیدی شروع شود
-        return 'pre_menstrual';
+    if (!lastCycle) return null;
+    
+    const startTs = new Date(lastCycle.start_date).getTime();
+    const endTs = lastCycle.end_date ? new Date(lastCycle.end_date).getTime() : null;
+    const daysSinceStart = Math.floor((targetTs - startTs) / 86400000);
+    const cycleDay = daysSinceStart + 1;
+    
+    // طول دوره خونریزی واقعی
+    const periodLength = endTs ? Math.floor((endTs - startTs) / 86400000) + 1 : 5;
+    
+    // تعیین فاز بر اساس روز چرخه
+    if (cycleDay <= periodLength) {
+        return { phase: 'menstruation', dayInCycle: cycleDay, isPeriod: false };
+    } else if (cycleDay >= 6 && cycleDay <= 13) {
+        return { phase: 'follicular', dayInCycle: cycleDay, isPeriod: false };
+    } else if (cycleDay >= 14 && cycleDay <= 16) {
+        return { phase: 'ovulation', dayInCycle: cycleDay, isPeriod: false };
+    } else if (cycleDay >= 17) {
+        return { phase: 'luteal', dayInCycle: cycleDay, isPeriod: false };
     }
+    
+    return null;
 }
 
 // ============================================
@@ -400,21 +411,23 @@ function selectDate(dateStr) {
     });
     
     // محاسبه فاز چرخه برای این تاریخ
-    const phase = getPhaseForDate(dateStr, cycles);
+    const phaseInfo = getPhaseForDate(dateStr, cycles);
     const phaseNames = {
         'menstruation': 'قاعدگی',
         'follicular': 'فولیکولی',
         'ovulation': 'تخمک‌گذاری',
-        'luteal': 'لوتئال',
-        'pre_menstrual': 'پیش‌قاعدگی'
+        'luteal': 'لوتئال'
     };
     
     let html = '';
     
     // نمایش فاز چرخه
-    if (phase) {
-        html += '<div class="day-item phase-item" style="border-right-color: ' + getPhaseColor(phase) + ';">';
-        html += '🔄 <strong>فاز چرخه:</strong> ' + (phaseNames[phase] || phase);
+    if (phaseInfo) {
+        html += '<div class="day-item phase-item" style="border-right-color: ' + getPhaseColor(phaseInfo.phase) + ';">';
+        html += '🔄 <strong>فاز چرخه:</strong> ' + (phaseNames[phaseInfo.phase] || phaseInfo.phase);
+        if (phaseInfo.dayInCycle) {
+            html += ' (روز ' + phaseInfo.dayInCycle + ' چرخه)';
+        }
         html += '</div>';
     }
     
@@ -461,7 +474,7 @@ function selectDate(dateStr) {
     
     const dayDetails = document.getElementById('dayDetails');
     if (dayDetails) {
-        if (!hasCycle && !hasPredicted && daySymptoms.length === 0 && !phase) {
+        if (!hasCycle && !hasPredicted && daySymptoms.length === 0 && !phaseInfo) {
             dayDetails.innerHTML = '<p class="empty">هیچ رویدادی برای این روز ثبت نشده است</p>';
         } else {
             dayDetails.innerHTML = html;
