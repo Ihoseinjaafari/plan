@@ -805,7 +805,10 @@
     padding: 16px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
     min-width: 280px;
+    max-width: 320px;
     font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .jalali-calendar.show {
@@ -829,12 +832,14 @@
     background: var(--bg-input, rgba(255,255,255,0.05));
     border: none;
     color: var(--text-secondary, rgba(255,255,255,0.8));
-    padding: 4px 12px;
+    padding: 6px 14px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 18px;
     transition: all 0.3s;
     font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
 }
 
 .jalali-calendar .calendar-header .nav-btn:hover {
@@ -864,7 +869,7 @@
 }
 
 .jalali-calendar .calendar-day {
-    padding: 6px 2px;
+    padding: 8px 2px;
     text-align: center;
     border-radius: 8px;
     cursor: pointer;
@@ -874,6 +879,12 @@
     border: none;
     background: transparent;
     font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .jalali-calendar .calendar-day:hover:not(.empty) {
