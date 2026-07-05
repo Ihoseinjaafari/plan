@@ -296,46 +296,55 @@
 
 /* ===== رنگ‌بندی فازهای چرخه قاعدگی ===== */
 /* فاز قاعدگی (خونریزی) - قرمز */
-.calendar-grid .cal-day.phase-menstruation,
-.calendar-grid .cal-day.phase-menstruation.predicted {
-    background: rgba(231, 76, 60, 0.85) !important;
+.calendar-grid .cal-day.phase-menstruation {
+    background: rgba(231, 76, 60, 0.95) !important;
     border: none;
     color: #ffffff;
     font-weight: 600;
 }
 
 /* فاز فولیکولی - آبی */
-.calendar-grid .cal-day.phase-follicular,
-.calendar-grid .cal-day.phase-follicular.predicted {
+.calendar-grid .cal-day.phase-follicular {
     background: rgba(52, 152, 219, 0.85) !important;
     border: none;
     color: #ffffff;
     font-weight: 600;
 }
 
-/* فاز تخمک‌گذاری - بنفش */
-.calendar-grid .cal-day.phase-ovulation,
-.calendar-grid .cal-day.phase-ovulation.predicted {
-    background: rgba(155, 89, 182, 0.85) !important;
-    border: none;
+/* فاز تخمک‌گذاری - بنفش با درخشش */
+.calendar-grid .cal-day.phase-ovulation {
+    background: rgba(155, 89, 182, 0.9) !important;
+    border: 2px solid rgba(155, 89, 182, 0.6);
     color: #ffffff;
     font-weight: 600;
-    box-shadow: 0 0 8px rgba(155, 89, 182, 0.6);
+    box-shadow: 0 0 10px rgba(155, 89, 182, 0.7);
 }
 
 /* فاز لوتئال - فیروزه‌ای */
-.calendar-grid .cal-day.phase-luteal,
-.calendar-grid .cal-day.phase-luteal.predicted {
+.calendar-grid .cal-day.phase-luteal {
     background: rgba(26, 188, 156, 0.85) !important;
     border: none;
     color: #ffffff;
     font-weight: 600;
 }
 
-/* ===== حالت‌های پیش‌بینی شده (کمرنگ‌تر) ===== */
-.calendar-grid .cal-day.predicted {
-    opacity: 0.6;
-    position: relative;
+/* ===== حالت‌های پیش‌بینی شده (کمرنگ‌تر با شفافیت کمتر) ===== */
+.calendar-grid .cal-day.phase-menstruation.predicted {
+    background: rgba(231, 76, 60, 0.5) !important;
+    opacity: 0.7;
+}
+.calendar-grid .cal-day.phase-follicular.predicted {
+    background: rgba(52, 152, 219, 0.5) !important;
+    opacity: 0.7;
+}
+.calendar-grid .cal-day.phase-ovulation.predicted {
+    background: rgba(155, 89, 182, 0.5) !important;
+    opacity: 0.7;
+    box-shadow: 0 0 6px rgba(155, 89, 182, 0.4);
+}
+.calendar-grid .cal-day.phase-luteal.predicted {
+    background: rgba(26, 188, 156, 0.5) !important;
+    opacity: 0.7;
 }
 
 /* ===== نقاط نشانگر پایین روز ===== */
@@ -653,8 +662,7 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.85);
     align-items: center;
     justify-content: center;
 }

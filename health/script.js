@@ -19,46 +19,49 @@ function getPhaseForDate(targetDate, cycles) {
     // مرتب‌سازی سیکل‌ها بر اساس تاریخ شروع (صعودی)
     const sorted = [...cycles].sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
     
-    // 1. بررسی می‌کنیم آیا در بازه خونریزی ثبت‌شده هستیم؟
-    for (const cycle of sorted) {
-        const startTs = new Date(cycle.start_date).getTime();
-        const endTs = cycle.end_date ? new Date(cycle.end_date).getTime() : null;
-        
-        if (targetTs >= startTs && (endTs === null || targetTs <= endTs)) {
-            return { phase: 'menstruation', dayInCycle: Math.floor((targetTs - startTs) / 86400000) + 1, isPeriod: true };
-        }
-    }
-    
-    // 2. اگر در خونریزی نیستیم، آخرین سیکلی که قبل از این تاریخ شروع شده را پیدا می‌کنیم
-    let lastCycle = null;
+    // پیدا کردن آخرین سیکلی که قبل از این تاریخ شروع شده
+    let relevantCycle = null;
     for (const cycle of sorted) {
         const startTs = new Date(cycle.start_date).getTime();
         if (startTs <= targetTs) {
-            lastCycle = cycle;
+            relevantCycle = cycle;
         } else {
             break; // چون مرتب شده‌اند، بقیه آینده هستند
         }
     }
     
-    if (!lastCycle) return null;
+    if (!relevantCycle) return null;
     
-    const startTs = new Date(lastCycle.start_date).getTime();
-    const endTs = lastCycle.end_date ? new Date(lastCycle.end_date).getTime() : null;
+    const startTs = new Date(relevantCycle.start_date).getTime();
+    const endTs = relevantCycle.end_date ? new Date(relevantCycle.end_date).getTime() : null;
     const daysSinceStart = Math.floor((targetTs - startTs) / 86400000);
     const cycleDay = daysSinceStart + 1;
     
-    // طول دوره خونریزی واقعی
-    const periodLength = endTs ? Math.floor((endTs - startTs) / 86400000) + 1 : 5;
-    
-    // تعیین فاز بر اساس روز چرخه
-    if (cycleDay <= periodLength) {
-        return { phase: 'menstruation', dayInCycle: cycleDay, isPeriod: false };
-    } else if (cycleDay >= 6 && cycleDay <= 13) {
-        return { phase: 'follicular', dayInCycle: cycleDay, isPeriod: false };
-    } else if (cycleDay >= 14 && cycleDay <= 16) {
-        return { phase: 'ovulation', dayInCycle: cycleDay, isPeriod: false };
-    } else if (cycleDay >= 17) {
-        return { phase: 'luteal', dayInCycle: cycleDay, isPeriod: false };
+    // بررسی آیا در روزهای خونریزی هستیم؟
+    if (endTs !== null && targetTs >= startTs && targetTs <= endTs) {
+        // در بازه خونریزی ثبت‌شده
+        return { phase: 'menstruation', dayInCycle: cycleDay, isPeriod: true };
+    } else {
+        // بعد از پایان خونریزی - تعیین فاز بر اساس روز چرخه
+        // طول دوره خونریزی واقعی
+        const periodLength = endTs ? Math.floor((endTs - startTs) / 86400000) + 1 : 5;
+        
+        if (cycleDay <= periodLength && targetTs >= startTs) {
+            // در بازه قاعدگی (برای وقتی که end_date ثبت نشده)
+            return { phase: 'menstruation', dayInCycle: cycleDay, isPeriod: false };
+        } else if (cycleDay > periodLength && cycleDay <= 13) {
+            // فاز فولیکولی: بعد از قاعدگی تا روز 13
+            return { phase: 'follicular', dayInCycle: cycleDay, isPeriod: false };
+        } else if (cycleDay >= 14 && cycleDay <= 16) {
+            // فاز تخمک‌گذاری: روز 14 تا 16
+            return { phase: 'ovulation', dayInCycle: cycleDay, isPeriod: false };
+        } else if (cycleDay >= 17 && cycleDay <= 28) {
+            // فاز لوتئال: روز 17 تا 28
+            return { phase: 'luteal', dayInCycle: cycleDay, isPeriod: false };
+        } else if (cycleDay > 28) {
+            // بعد از روز 28 - هنوز در فاز لوتئال
+            return { phase: 'luteal', dayInCycle: cycleDay, isPeriod: false };
+        }
     }
     
     return null;
