@@ -6,6 +6,7 @@
 let currentTab = 'calendar';
 let editCycleId = null;
 let editSymptomId = null;
+let datePickers = {}; // شیء نگهداری پیکرهای تاریخ
 
 // ============================================
 // محاسبه فاز چرخه برای یک تاریخ خاص
