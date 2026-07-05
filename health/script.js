@@ -247,9 +247,9 @@ class JalaliDatePicker {
         
         var html = '';
         html += '<div class="calendar-header">';
-        html += '<button class="nav-btn" onclick="if(window.datePickers[\'' + this.calendar.id + '\']) window.datePickers[\'' + this.calendar.id + '\'].goToMonth(' + this.currentYear + ', ' + (this.currentMonth - 1) + '); return false;">‹</button>';
+        html += '<button type="button" class="nav-btn" onclick="if(window.datePickers[\'' + this.calendar.id + '\']) { window.datePickers[\'' + this.calendar.id + '\'].goToMonth(' + this.currentYear + ', ' + (this.currentMonth - 1) ); return false; }">\u2039</button>';
         html += '<span class="month-year">' + monthNames[this.currentMonth - 1] + ' ' + this.currentYear + '</span>';
-        html += '<button class="nav-btn" onclick="if(window.datePickers[\'' + this.calendar.id + '\']) window.datePickers[\'' + this.calendar.id + '\'].goToMonth(' + this.currentYear + ', ' + (this.currentMonth + 1) + '); return false;">›</button>';
+        html += '<button type="button" class="nav-btn" onclick="if(window.datePickers[\'' + this.calendar.id + '\']) { window.datePickers[\'' + this.calendar.id + '\'].goToMonth(' + this.currentYear + ', ' + (this.currentMonth + 1) ); return false; }">\u203a</button>';
         html += '</div>';
         
         html += '<div class="calendar-weekdays">';

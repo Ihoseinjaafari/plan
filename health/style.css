@@ -1338,6 +1338,8 @@ body[data-theme="light"] .btn-cancel:hover {
     
     .calendar-dropdown .calendar-days {
         gap: 1px;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
     }
     
     .calendar-dropdown .calendar-day {
@@ -1781,6 +1783,8 @@ body[data-theme="dark"] .calendar-dropdown {
     
     .calendar-dropdown .calendar-days {
         gap: 1px;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
     }
     
     .calendar-dropdown .calendar-day {
