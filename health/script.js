@@ -16,6 +16,15 @@ let todayJalali = ''; // تاریخ امروز به فرمت شمسی
     todayJalali = j[0] + '/' + String(j[1]).padStart(2, '0') + '/' + String(j[2]).padStart(2, '0');
 })();
 
+// توجه: todayJalali و currentJalaliDate از PHP در index.php تعریف شده‌اند
+// اگر در محیطی بدون PHP اجرا می‌شود، مقادیر پیش‌فرض استفاده می‌شوند
+if (typeof todayJalali === 'undefined') {
+    todayJalali = '1403/01/01';
+}
+if (typeof currentJalaliDate === 'undefined') {
+    currentJalaliDate = '1403-01-01';
+}
+
 // ============================================
 // محاسبه فاز چرخه برای یک تاریخ خاص
 // ============================================
