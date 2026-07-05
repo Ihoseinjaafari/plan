@@ -1299,6 +1299,55 @@ body[data-theme="light"] .btn-cancel:hover {
     .modal-footer-new {
         flex-shrink: 0;
     }
+    
+    /* بهبود تقویم dropdown در موبایل */
+    .calendar-dropdown {
+        padding: 10px;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .calendar-dropdown .calendar-header {
+        margin-bottom: 8px;
+    }
+    
+    .calendar-dropdown .calendar-header .month-year {
+        font-size: 13px;
+        white-space: nowrap;
+    }
+    
+    .calendar-dropdown .calendar-header .nav-btn {
+        min-width: 40px;
+        min-height: 40px;
+        padding: 6px 12px;
+        font-size: 20px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+    }
+    
+    .calendar-dropdown .calendar-weekdays {
+        gap: 1px;
+        margin-bottom: 4px;
+    }
+    
+    .calendar-dropdown .calendar-weekdays div {
+        font-size: 10px;
+        padding: 2px 0;
+    }
+    
+    .calendar-dropdown .calendar-days {
+        gap: 1px;
+    }
+    
+    .calendar-dropdown .calendar-day {
+        min-height: 36px;
+        min-width: 36px;
+        font-size: 12px;
+        padding: 4px 1px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
 }
 
 /* ===== استایل‌های جدید مودال (Modal Sheet New) ===== */
@@ -1696,23 +1745,50 @@ body[data-theme="dark"] .calendar-dropdown {
     
     .calendar-dropdown {
         padding: 12px;
+        max-width: 100%;
+        overflow-x: hidden;
     }
     
     /* ریسپانسیو برای تقویم داخل dropdown */
+    .calendar-dropdown .calendar-header {
+        margin-bottom: 10px;
+    }
+    
+    .calendar-dropdown .calendar-header .month-year {
+        font-size: 14px;
+        white-space: nowrap;
+    }
+    
+    .calendar-dropdown .calendar-header .nav-btn {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 8px 14px;
+        font-size: 22px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+    }
+    
+    .calendar-dropdown .calendar-weekdays {
+        gap: 1px;
+        margin-bottom: 6px;
+    }
+    
+    .calendar-dropdown .calendar-weekdays div {
+        font-size: 11px;
+        padding: 3px 0;
+    }
+    
     .calendar-dropdown .calendar-days {
         gap: 1px;
     }
     
     .calendar-dropdown .calendar-day {
-        min-height: 38px;
-        min-width: 38px;
+        min-height: 40px;
+        min-width: 40px;
         font-size: 13px;
-        padding: 6px 1px;
-    }
-    
-    .calendar-dropdown .calendar-header .nav-btn {
-        min-width: 38px;
-        min-height: 38px;
-        padding: 6px 12px;
+        padding: 6px 2px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
     }
 }
