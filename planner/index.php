@@ -2173,8 +2173,6 @@ include_once __DIR__ . '/../includes/header.php';
             padding: 20px 25px;
             font-weight: 600;
             font-size: 18px;
-            position: sticky;
-            top: 0;
             border-radius: 25px 25px 0 0;
             font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
             display: flex;
