@@ -44,12 +44,23 @@ $current_user = $_SESSION['username'] ?? $_SESSION['user_id'] ?? 'user';
     <?php include '../includes/header.php'; ?>
     <div class="toolbar">
         <button class="tool-btn primary" onclick="triggerImageUpload()"><span>📷</span> افزودن تصویر</button>
-        <button class="tool-btn" onclick="addTextNote()"><span>📝</span> یادداشت</button>
+        <button class="tool-btn" onclick="showTextOptions()"><span>📝</span> یادداشت</button>
         <div style="width: 1px; height: 20px; background: #ddd; margin: 0 5px;"></div>
         <button class="tool-btn primary" onclick="saveBoard()"><span>💾</span> ذخیره تغییرات</button>
         <button class="tool-btn danger" onclick="clearBoard()"><span>🗑️</span> پاک کردن همه</button>
         <span id="status-msg"></span>
     </div>
+    
+    <!-- مودال انتخاب نوع یادداشت -->
+    <div id="textOptionsModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:25px; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.2); z-index:2000; min-width:300px;">
+        <h3 style="margin:0 0 20px 0; font-family:'Vazirmatn',sans-serif; color:#374151;">نوع یادداشت را انتخاب کنید:</h3>
+        <button class="tool-btn" style="width:100%; margin-bottom:10px; justify-content:center;" onclick="addTextNote('full')">📝 یادداشت کامل (متن + عنوان)</button>
+        <button class="tool-btn" style="width:100%; margin-bottom:10px; justify-content:center;" onclick="addTextNote('title-only','small')">🏷️ فقط عنوان (کوچک)</button>
+        <button class="tool-btn" style="width:100%; margin-bottom:10px; justify-content:center;" onclick="addTextNote('title-only','medium')">🏷️ فقط عنوان (متوسط)</button>
+        <button class="tool-btn" style="width:100%; margin-bottom:10px; justify-content:center;" onclick="addTextNote('title-only','large')">🏷️ فقط عنوان (بزرگ)</button>
+        <button class="tool-btn danger" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeTextOptions()">انصراف</button>
+    </div>
+    
     <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)">
     <div id="vision-board-container"></div>
     <script>
@@ -119,12 +130,40 @@ $current_user = $_SESSION['username'] ?? $_SESSION['user_id'] ?? 'user';
             items.push({ id, type: 'image', src, x, y, width, height });
         }
 
-        function addTextNote() {
+        function addTextNote(type = 'full', size = 'medium') {
+            closeTextOptions();
             const id = 'item-' + Date.now();
             const x = 100 + Math.random() * 50;
             const y = 100 + Math.random() * 50;
-            const width = 250;
-            const height = 150;
+            
+            let width, height, content, placeholder, fontSize;
+            
+            if (type === 'title-only') {
+                // فقط عنوان با سایزهای مختلف
+                if (size === 'small') {
+                    width = 150;
+                    height = 50;
+                    fontSize = '16px';
+                } else if (size === 'medium') {
+                    width = 200;
+                    height = 70;
+                    fontSize = '20px';
+                } else if (size === 'large') {
+                    width = 300;
+                    height = 100;
+                    fontSize = '28px';
+                }
+                content = 'عنوان جدید';
+                placeholder = 'عنوان خود را بنویسید...';
+            } else {
+                // یادداشت کامل
+                width = 250;
+                height = 150;
+                fontSize = '14px';
+                content = 'یادداشت جدید...';
+                placeholder = 'متن انگیزشی خود را بنویسید...';
+            }
+            
             const item = document.createElement('div');
             item.className = 'vision-item';
             item.id = id;
@@ -134,12 +173,35 @@ $current_user = $_SESSION['username'] ?? $_SESSION['user_id'] ?? 'user';
             item.setAttribute('data-x', x);
             item.setAttribute('data-y', y);
             item.dataset.type = 'text';
-            item.dataset.content = 'یادداشت جدید...';
-            item.innerHTML = `<textarea placeholder="متن انگیزشی خود را بنویسید...">یادداشت جدید...</textarea><button class="delete-btn" onclick="removeItem('${id}')">×</button><div class="resize-handle"></div>`;
-            const textarea = item.querySelector('textarea');
+            item.dataset.textType = type;
+            item.dataset.size = size;
+            
+            const textarea = document.createElement('textarea');
+            textarea.placeholder = placeholder;
+            textarea.value = content;
+            textarea.style.fontSize = fontSize;
+            if (type === 'title-only') {
+                textarea.style.fontWeight = 'bold';
+                textarea.style.textAlign = 'center';
+                textarea.style.display = 'flex';
+                textarea.style.alignItems = 'center';
+                textarea.style.justifyContent = 'center';
+            }
             textarea.addEventListener('input', (e) => { item.dataset.content = e.target.value; });
+            
+            item.innerHTML = `<button class="delete-btn" onclick="removeItem('${id}')">×</button><div class="resize-handle"></div>`;
+            item.appendChild(textarea);
+            
             boardContainer.appendChild(item);
-            items.push({ id, type: 'text', content: 'یادداشت جدید...', x, y, width, height });
+            items.push({ id, type: 'text', textType: type, size: size, content: content, x, y, width, height, fontSize });
+        }
+
+        function showTextOptions() {
+            document.getElementById('textOptionsModal').style.display = 'block';
+        }
+
+        function closeTextOptions() {
+            document.getElementById('textOptionsModal').style.display = 'none';
         }
 
         function removeItem(id) { const el = document.getElementById(id); if (el) el.remove(); items = items.filter(i => i.id !== id); }
@@ -153,8 +215,17 @@ $current_user = $_SESSION['username'] ?? $_SESSION['user_id'] ?? 'user';
                 const width = el.offsetWidth;
                 const height = el.offsetHeight;
                 const itemData = { id: el.id, type: el.dataset.type, x, y, width, height };
-                if (el.dataset.type === 'image') { itemData.src = el.dataset.src; }
-                else if (el.dataset.type === 'text') { itemData.content = el.querySelector('textarea').value; }
+                if (el.dataset.type === 'image') { 
+                    itemData.src = el.dataset.src; 
+                } else if (el.dataset.type === 'text') { 
+                    itemData.content = el.querySelector('textarea').value;
+                    itemData.textType = el.dataset.textType || 'full';
+                    itemData.size = el.dataset.size || 'medium';
+                    const textarea = el.querySelector('textarea');
+                    if (textarea && textarea.style.fontSize) {
+                        itemData.fontSize = textarea.style.fontSize;
+                    }
+                }
                 items.push(itemData);
             });
             fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save', user: currentUserId, items: items }) })
@@ -170,8 +241,9 @@ $current_user = $_SESSION['username'] ?? $_SESSION['user_id'] ?? 'user';
                     items = data.items;
                     boardContainer.innerHTML = '';
                     items.forEach(item => {
-                        if (item.type === 'image') { createImageItem(item.src, item.x, item.y, item.width, item.height); }
-                        else if (item.type === 'text') {
+                        if (item.type === 'image') { 
+                            createImageItem(item.src, item.x, item.y, item.width, item.height); 
+                        } else if (item.type === 'text') {
                             const id = item.id;
                             const el = document.createElement('div');
                             el.className = 'vision-item';
@@ -182,9 +254,26 @@ $current_user = $_SESSION['username'] ?? $_SESSION['user_id'] ?? 'user';
                             el.setAttribute('data-x', item.x);
                             el.setAttribute('data-y', item.y);
                             el.dataset.type = 'text';
-                            el.innerHTML = `<textarea>${item.content || ''}</textarea><button class="delete-btn" onclick="removeItem('${id}')">×</button><div class="resize-handle"></div>`;
-                            const textarea = el.querySelector('textarea');
+                            el.dataset.textType = item.textType || 'full';
+                            el.dataset.size = item.size || 'medium';
+                            
+                            const textarea = document.createElement('textarea');
+                            textarea.value = item.content || '';
+                            if (item.fontSize) {
+                                textarea.style.fontSize = item.fontSize;
+                            }
+                            if (item.textType === 'title-only') {
+                                textarea.style.fontWeight = 'bold';
+                                textarea.style.textAlign = 'center';
+                                textarea.style.display = 'flex';
+                                textarea.style.alignItems = 'center';
+                                textarea.style.justifyContent = 'center';
+                            }
                             textarea.addEventListener('input', (e) => { el.dataset.content = e.target.value; });
+                            
+                            el.innerHTML = `<button class="delete-btn" onclick="removeItem('${id}')">×</button><div class="resize-handle"></div>`;
+                            el.appendChild(textarea);
+                            
                             boardContainer.appendChild(el);
                         }
                     });
