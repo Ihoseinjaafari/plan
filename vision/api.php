@@ -41,6 +41,11 @@ if ($method === 'GET' && $action === 'load') {
     $input = file_get_contents('php://input');
     $data = json_decode($input, true);
     
+    if (!isset($data['user']) || $data['user'] !== $current_user) {
+        echo json_encode(['success' => false, 'message' => 'کاربر نامعتبر است']);
+        exit;
+    }
+    
     if (isset($data['items'])) {
         $items = $data['items'];
         if (file_put_contents($data_file, json_encode($items, JSON_UNESCAPED_UNICODE))) {
@@ -52,5 +57,5 @@ if ($method === 'GET' && $action === 'load') {
         echo json_encode(['success' => false, 'message' => 'داده‌ای برای ذخیره وجود ندارد']);
     }
 } else {
-    echo json_encode(['success' => false, 'message' => 'درخواست نامعتبر']);
+    echo json_encode(['success' => false, 'message' => 'درخواست نامعتبر: ' . $method . ' - ' . $action]);
 }

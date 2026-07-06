@@ -197,7 +197,7 @@ if (!isset($page_title)) $page_title = 'Life+';
             backdrop-filter: blur(12px);
             border-radius: 20px;
             padding: 16px 28px;
-            margin: 15px 15px 25px 15px;
+            margin: 15px 15px 15px 15px;
             border: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
