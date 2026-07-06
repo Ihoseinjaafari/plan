@@ -501,7 +501,10 @@
         }
 
         function getTimeFromSelector(selector) {
-            return selector ? selector.getTime() : '12:00';
+            if (!selector || !selector.getTime) return '';
+            var timeStr = selector.getTime();
+            if (!timeStr || !validateTime(timeStr)) return '';
+            return timeStr;
         }
 
         // ============================================
@@ -799,8 +802,7 @@
             if (!title) { alert('لطفاً عنوان کار را وارد کنید'); return; }
 
             var timeValue = getTimeFromSelector(addTimeSelector);
-            if (!validateTime(timeValue)) { alert('فرمت زمان صحیح نیست'); return; }
-
+            
             var jalaliDate = document.getElementById('addDate').value;
             var gregorianDate = toGregorianDate(jalaliDate) || SERVER_TODAY;
             var parentId = document.getElementById('addParentTask').value;
@@ -811,7 +813,7 @@
                 category: document.getElementById('addCategory').value,
                 project: document.getElementById('addProject').value,
                 date: gregorianDate,
-                time: timeValue,
+                time: timeValue || null,
                 priority: document.getElementById('addPriority').value,
                 parent_id: parentId
             }).then(function() {
