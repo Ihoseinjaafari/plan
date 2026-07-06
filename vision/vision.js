@@ -97,7 +97,10 @@ class VisionBoard {
     
     async loadItems() {
         try {
-            const response = await fetch(`vision/api.php?action=get&user_id=${this.userId}`);
+            const response = await fetch(`api.php?action=get&user_id=${this.userId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
             
             if (data.success && data.items.length > 0) {
@@ -108,7 +111,7 @@ class VisionBoard {
             }
         } catch (error) {
             console.error('Error loading items:', error);
-            this.showEmptyState();
+            this.showMessage('خطا در ارتباط با سرور: ' + error.message, 'error');
         }
     }
     
@@ -155,7 +158,7 @@ class VisionBoard {
         formData.append('user_id', this.userId);
         
         try {
-            const response = await fetch('vision/api.php?action=add', {
+            const response = await fetch('api.php?action=add', {
                 method: 'POST',
                 body: formData
             });
@@ -187,7 +190,7 @@ class VisionBoard {
         formData.append('user_id', this.userId);
         
         try {
-            const response = await fetch('vision/api.php?action=update', {
+            const response = await fetch('api.php?action=update', {
                 method: 'POST',
                 body: formData
             });
@@ -304,7 +307,7 @@ class VisionBoard {
     
     async savePosition(itemId, position) {
         try {
-            const response = await fetch('vision/api.php?action=reorder', {
+            const response = await fetch('api.php?action=reorder', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -359,7 +362,7 @@ class VisionBoard {
     
     async openEditModalById(itemId) {
         try {
-            const response = await fetch(`vision/api.php?action=get&user_id=${this.userId}`);
+            const response = await fetch(`api.php?action=get&user_id=${this.userId}`);
             const data = await response.json();
             
             if (data.success) {
@@ -389,7 +392,7 @@ class VisionBoard {
         }
         
         try {
-            const response = await fetch(`vision/api.php?action=delete&id=${itemId}&user_id=${this.userId}`, {
+            const response = await fetch(`api.php?action=delete&id=${itemId}&user_id=${this.userId}`, {
                 method: 'DELETE'
             });
             
@@ -431,13 +434,13 @@ class VisionBoard {
         }
         
         try {
-            const response = await fetch(`vision/api.php?action=get&user_id=${this.userId}`);
+            const response = await fetch(`api.php?action=get&user_id=${this.userId}`);
             const data = await response.json();
             
             if (data.success && data.items.length > 0) {
                 // Delete all items one by one
                 for (const item of data.items) {
-                    await fetch(`vision/api.php?action=delete&id=${item.id}&user_id=${this.userId}`, {
+                    await fetch(`api.php?action=delete&id=${item.id}&user_id=${this.userId}`, {
                         method: 'DELETE'
                     });
                 }
