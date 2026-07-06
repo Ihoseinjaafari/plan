@@ -135,6 +135,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response = ['success' => false, 'message' => 'ماژول یافت نشد'];
         }
     }
+    elseif ($action === 'send_notification') {
+        $title = $_POST['title'] ?? '';
+        $message = $_POST['message'] ?? '';
+        $type = $_POST['type'] ?? 'info';
+        
+        if (empty($title) || empty($message)) {
+            $response = ['success' => false, 'message' => 'عنوان و متن پیام الزامی است'];
+        } else {
+            $notifFile = __DIR__ . '/../data/notifications.json';
+            $notifications = [];
+            if (file_exists($notifFile)) {
+                $notifications = json_decode(file_get_contents($notifFile), true);
+                if (!is_array($notifications)) $notifications = [];
+            }
+            
+            $newNotification = [
+                'id' => uniqid('notif_'),
+                'title' => $title,
+                'message' => $message,
+                'type' => $type,
+                'created_at' => date('Y-m-d H:i:s'),
+                'created_by' => $_SESSION['user_id']
+            ];
+            
+            array_unshift($notifications, $newNotification);
+            file_put_contents($notifFile, json_encode($notifications, JSON_PRETTY_PRINT));
+            $response = ['success' => true];
+        }
+    }
+    elseif ($action === 'delete_notification') {
+        $notifId = $_POST['notification_id'] ?? '';
+        if ($notifId) {
+            $notifFile = __DIR__ . '/../data/notifications.json';
+            if (file_exists($notifFile)) {
+                $notifications = json_decode(file_get_contents($notifFile), true);
+                if (is_array($notifications)) {
+                    $notifications = array_filter($notifications, fn($n) => $n['id'] !== $notifId);
+                    $notifications = array_values($notifications);
+                    file_put_contents($notifFile, json_encode($notifications, JSON_PRETTY_PRINT));
+                    $response = ['success' => true];
+                }
+            }
+        } else {
+            $response = ['success' => false, 'message' => 'شناسه اعلان مشخص نشده'];
+        }
+    }
     elseif ($action === 'delete_user') {
         $userId = $_POST['user_id'] ?? '';
         if ($userId && $userId != $_SESSION['user_id']) {
@@ -590,6 +636,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
         
+        <!-- مدیریت اعلان‌ها -->
+        <div class="admin-card">
+            <h2><i class="fas fa-bell"></i> ارسال اعلان به کاربران</h2>
+            <p style="margin-bottom: 15px; color: #666; font-size: 13px;">اعلان جدیدی برای همه کاربران ارسال کنید</p>
+            <form id="sendNotificationForm" onsubmit="sendNotification(event)">
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">عنوان اعلان:</label>
+                        <input type="text" name="title" id="notifTitle" required 
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: inherit; font-size: 14px;"
+                               placeholder="مثال: بروزرسانی جدید">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">متن پیام:</label>
+                        <textarea name="message" id="notifMessage" required rows="4"
+                                  style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: inherit; font-size: 14px; resize: vertical;"
+                                  placeholder="پیام خود را وارد کنید..."></textarea>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">نوع اعلان:</label>
+                        <select name="type" id="notifType" 
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: inherit; font-size: 14px;">
+                            <option value="info">اطلاع‌رسانی</option>
+                            <option value="success">موفقیت</option>
+                            <option value="warning">هشدار</option>
+                            <option value="error">خطا</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="toggle-btn enabled" style="width: auto; align-self: flex-start;">
+                        <i class="fas fa-paper-plane"></i> ارسال اعلان
+                    </button>
+                </div>
+            </form>
+            
+            <div style="margin-top: 25px;">
+                <h3 style="font-size: 16px; color: #2c3e50; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-history" style="color: #667eea;"></i>
+                    اعلان‌های ارسال شده
+                </h3>
+                <div id="notificationsList">
+                    <?php
+                    $notifFile = __DIR__ . '/../data/notifications.json';
+                    $notifications = [];
+                    if (file_exists($notifFile)) {
+                        $notifications = json_decode(file_get_contents($notifFile), true);
+                        if (!is_array($notifications)) $notifications = [];
+                        usort($notifications, function($a, $b) {
+                            return strtotime($b['created_at']) - strtotime($a['created_at']);
+                        });
+                    }
+                    
+                    if (empty($notifications)):
+                    ?>
+                        <div style="text-align:center; padding:20px; color:#999;">هیچ اعلانی ارسال نشده است</div>
+                    <?php else: ?>
+                        <?php foreach ($notifications as $notif): 
+                            $typeColors = [
+                                'info' => '#667eea',
+                                'success' => '#28a745',
+                                'warning' => '#f1c40f',
+                                'error' => '#dc3545'
+                            ];
+                            $typeLabels = [
+                                'info' => 'اطلاع‌رسانی',
+                                'success' => 'موفقیت',
+                                'warning' => 'هشدار',
+                                'error' => 'خطا'
+                            ];
+                        ?>
+                        <div class="setting-item" style="margin-bottom: 10px;">
+                            <div class="info" style="flex: 1;">
+                                <div class="icon" style="background: <?php echo $typeColors[$notif['type'] ?? 'info']; ?>; color: white;">
+                                    <i class="fas fa-bell"></i>
+                                </div>
+                                <div class="text">
+                                    <div class="title"><?php echo htmlspecialchars($notif['title']); ?></div>
+                                    <div class="desc" style="font-size: 12px; margin-top: 5px;">
+                                        <?php echo htmlspecialchars(mb_substr($notif['message'], 0, 100)); ?>
+                                        <?php if (mb_strlen($notif['message']) > 100) echo '...'; ?>
+                                    </div>
+                                    <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                                        <span style="background: <?php echo $typeColors[$notif['type'] ?? 'info']; ?>; color: white; padding: 2px 8px; border-radius: 10px;">
+                                            <?php echo $typeLabels[$notif['type'] ?? 'info'] ?? 'اعلان'; ?>
+                                        </span>
+                                        • <?php echo date('Y/m/d H:i', strtotime($notif['created_at'])); ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="toggle-btn disabled" onclick="deleteNotification('<?php echo $notif['id']; ?>')" 
+                                    style="background: #dc3545; color: white;">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        
         <!-- لیست کاربران -->
         <div class="admin-card">
             <h2><i class="fas fa-users"></i> لیست کاربران</h2>
@@ -748,6 +893,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             btn.disabled = false;
+        }
+
+        async function sendNotification(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('notifTitle').value;
+            const message = document.getElementById('notifMessage').value;
+            const type = document.getElementById('notifType').value;
+            
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ارسال...';
+
+            try {
+                let formData = new FormData();
+                formData.append('action', 'send_notification');
+                formData.append('title', title);
+                formData.append('message', message);
+                formData.append('type', type);
+
+                let response = await fetch(window.location.href, { method: 'POST', body: formData });
+                let result = await response.json();
+
+                if (result.success) {
+                    showToast('اعلان با موفقیت ارسال شد', 'success');
+                    document.getElementById('notifTitle').value = '';
+                    document.getElementById('notifMessage').value = '';
+                    document.getElementById('notifType').value = 'info';
+                    
+                    // رفرش لیست اعلان‌ها
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(result.message || 'خطا در ارسال اعلان', 'error');
+                }
+            } catch (e) {
+                showToast('خطا در ارتباط با سرور', 'error');
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ارسال اعلان';
+        }
+
+        async function deleteNotification(notifId) {
+            if (!confirm('آیا از حذف این اعلان مطمئن هستید؟')) return;
+
+            try {
+                let formData = new FormData();
+                formData.append('action', 'delete_notification');
+                formData.append('notification_id', notifId);
+
+                let response = await fetch(window.location.href, { method: 'POST', body: formData });
+                let result = await response.json();
+
+                if (result.success) {
+                    showToast('اعلان با موفقیت حذف شد', 'success');
+                    const item = document.querySelector(`button[onclick*=\"${notifId}\"]`).closest('.setting-item');
+                    if (item) item.remove();
+                } else {
+                    showToast(result.message || 'خطا در حذف اعلان', 'error');
+                }
+            } catch (e) {
+                showToast('خطا در ارتباط با سرور', 'error');
+            }
         }
     </script>
 </body>
