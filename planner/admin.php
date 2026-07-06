@@ -53,6 +53,7 @@ function getSettings() {
         $default = [
             'registration_enabled' => true,
             'modules' => [
+                'home' => ['enabled' => true, 'name' => 'منوی اصلی'],
                 'planner' => ['enabled' => true, 'name' => 'پلنر تسک‌ها'],
                 'projects' => ['enabled' => true, 'name' => 'مدیریت پروژه‌ها'],
                 'lifeplan' => ['enabled' => true, 'name' => 'لایف‌پلن'],
@@ -72,6 +73,7 @@ function getSettings() {
     }
     if (!isset($settings['modules'])) {
         $settings['modules'] = [
+            'home' => ['enabled' => true, 'name' => 'منوی اصلی'],
             'planner' => ['enabled' => true, 'name' => 'پلنر تسک‌ها'],
             'projects' => ['enabled' => true, 'name' => 'مدیریت پروژه‌ها'],
             'lifeplan' => ['enabled' => true, 'name' => 'لایف‌پلن'],

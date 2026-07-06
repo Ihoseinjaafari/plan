@@ -731,6 +731,14 @@ function getEnabledModules() {
 
         <!-- دکمه‌های هدر -->
         <div class="header-actions">
+            <!-- دکمه منوی اصلی (خانه) -->
+            <?php if (isModuleEnabled('home')): ?>
+            <a href="<?= BASE_URL ?>/index.php" class="nav-btn" title="منوی اصلی">
+                <span class="icon icon-home"></span>
+                <span>منوی اصلی</span>
+            </a>
+            <?php endif; ?>
+            
             <!-- دکمه داشبورد -->
             <?php if (isModuleEnabled('dashboard')): ?>
             <a href="<?= BASE_URL ?>/dashboard" class="nav-btn" title="داشبورد">
@@ -854,6 +862,14 @@ function getEnabledModules() {
 
         <!-- آیتم‌های منو -->
         <div class="menu-items">
+            <!-- منوی اصلی -->
+            <?php if (isModuleEnabled('home')): ?>
+            <a href="<?= BASE_URL ?>/index.php">
+                <span class="icon icon-home"></span>
+                منوی اصلی
+            </a>
+            <?php endif; ?>
+            
             <!-- برنامه ریز -->
             <?php if (isModuleEnabled('planner')): ?>
             <a href="<?= BASE_URL ?>/planner/index.php">
