@@ -16,7 +16,7 @@ if (strpos($scriptName, '/lifeplus/lifeplus/') !== false) {
 }
 
 define('BASE_URL', $basePath);
-define('BASE_PATH', dirname(__DIR__));
+define('BASE_PATH', __DIR__); // مسیر فعلی که notifications.php قرار دارد
 
 // بررسی ورود کاربر
 if (!isset($_SESSION['user_id'])) {
@@ -25,11 +25,14 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // دریافت اعلان‌ها از فایل JSON
-$notificationsFile = BASE_PATH . '/data/notifications.json';
+$notificationsFile = __DIR__ . '/data/notifications.json';
 $notifications = [];
 
 if (file_exists($notificationsFile)) {
-    $notifications = json_decode(file_get_contents($notificationsFile), true);
+    $jsonContent = file_get_contents($notificationsFile);
+    $notifications = json_decode($jsonContent, true);
+    
+    // اگر فایل خالی بود یا محتوای نامعتبر داشت
     if (!is_array($notifications)) {
         $notifications = [];
     }
@@ -261,9 +264,20 @@ $page_title = 'اعلان‌ها';
                 <p>هیچ اعلانی وجود ندارد</p>
             </div>
         <?php else: ?>
-            <?php foreach ($notifications as $notif): 
-                $isUnread = !isset($_SESSION['read_notifications'][$_SESSION['user_id']]) || 
-                           !in_array($notif['id'], $_SESSION['read_notifications'][$_SESSION['user_id']]);
+            <p style="text-align: center; margin-bottom: 15px; font-size: 13px; opacity: 0.8;">
+                تعداد اعلان‌ها: <?= count($notifications) ?>
+            </p>
+            <?php 
+            // Initialize read_notifications session if not exists
+            if (!isset($_SESSION['read_notifications'])) {
+                $_SESSION['read_notifications'] = [];
+            }
+            if (!isset($_SESSION['read_notifications'][$_SESSION['user_id']])) {
+                $_SESSION['read_notifications'][$_SESSION['user_id']] = [];
+            }
+            
+            foreach ($notifications as $notif): 
+                $isUnread = !in_array($notif['id'], $_SESSION['read_notifications'][$_SESSION['user_id']]);
             ?>
                 <div class="notification-item <?= $isUnread ? 'unread' : '' ?>">
                     <div class="notification-header">
