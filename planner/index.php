@@ -1,5 +1,5 @@
 <?php
-// planner/index.php - نسخه کامل با آیکون‌های جایگزین
+// planner/index.php - نسخه کامل با مودال افقی و رفع مشکلات
 session_start();
 date_default_timezone_set('Asia/Tehran');
 
@@ -363,6 +363,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ($action === 'add') {
         $tasks = getUserTasks($userId);
         $newId = time() . rand(100, 999);
+        
+        // دریافت زمان - اگر خالی بود null قرار بده
+        $timeValue = trim($_POST['time'] ?? '');
+        if (empty($timeValue) || $timeValue === '--:--' || !preg_match('/^([0-1][0-9]|2[0-3]):([0-5][0-9])$/', $timeValue)) {
+            $timeValue = null;
+        }
+        
         $newTask = [
             'id' => $newId,
             'user_id' => $userId,
@@ -371,7 +378,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'category' => $_POST['category'] ?? 'بدون دسته',
             'project' => $_POST['project'] ?? '',
             'date' => $_POST['date'] ?? date('Y-m-d'),
-            'time' => $_POST['time'] ?? '12:00',
+            'time' => $timeValue,
             'priority' => $_POST['priority'] ?? 'medium',
             'order' => count($tasks),
             'done' => false,
@@ -427,7 +434,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['category'])) $updateData['category'] = $_POST['category'];
         if (isset($_POST['project'])) $updateData['project'] = $_POST['project'];
         if (isset($_POST['date'])) $updateData['date'] = $_POST['date'];
-        if (isset($_POST['time'])) $updateData['time'] = $_POST['time'];
+        if (isset($_POST['time'])) {
+            $timeValue = trim($_POST['time']);
+            if (empty($timeValue) || $timeValue === '--:--' || !preg_match('/^([0-1][0-9]|2[0-3]):([0-5][0-9])$/', $timeValue)) {
+                $updateData['time'] = null;
+            } else {
+                $updateData['time'] = $timeValue;
+            }
+        }
         if (isset($_POST['priority'])) $updateData['priority'] = $_POST['priority'];
         if (isset($_POST['parent_id'])) $updateData['parent_id'] = $_POST['parent_id'];
         $allTasks = updateUserTask($userId, $_POST['id'], $updateData);
@@ -519,7 +533,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $csv .= '"' . $task['category'] . '",';
             $csv .= '"' . ($task['project'] ?? '') . '",';
             $csv .= '"' . $task['date'] . '",';
-            $csv .= '"' . $task['time'] . '",';
+            $csv .= '"' . ($task['time'] ?? '') . '",';
             $csv .= '"' . $task['priority'] . '",';
             $csv .= '"' . $parentTitle . '",';
             $csv .= '"' . $status . '",';
@@ -689,42 +703,63 @@ include_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 
-    <!-- ===== مودال افزودن کار ===== -->
+    <!-- ===== مودال افزودن کار (افقی) ===== -->
     <div id="addTaskModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header"><span class="icon icon-plus-circle"></span> افزودن کار جدید</div>
-            <div class="modal-body">
-                <input type="text" id="addTitle" placeholder="عنوان کار..." required>
-                <div class="date-picker-wrapper">
-                    <input type="text" id="addDate" class="date-picker-input" placeholder="تاریخ (اختیاری)" value="">
-                    <div class="jalali-calendar" id="addDateCalendar"></div>
-                </div>
-                <div class="time-selector-group">
-                    <label><span class="icon icon-clock"></span> زمان:</label>
-                    <div class="time-selector-wrapper">
-                        <input type="range" class="time-selector" id="addTimeRange" min="0" max="1439" value="">
-                        <span class="time-display" id="addTimeDisplay">--:--</span>
+        <div class="modal-content modal-content-horizontal">
+            <div class="modal-header">
+                <span class="icon icon-plus-circle"></span> افزودن کار جدید
+            </div>
+            <div class="modal-body modal-body-horizontal">
+                <div class="horizontal-form-row">
+                    <!-- ستون چپ -->
+                    <div class="form-column-left">
+                        <input type="text" id="addTitle" placeholder="عنوان کار..." required>
+                        
+                        <div class="date-picker-wrapper">
+                            <input type="text" id="addDate" class="date-picker-input" placeholder="تاریخ (اختیاری)" value="">
+                            <div class="jalali-calendar" id="addDateCalendar"></div>
+                        </div>
+                        
+                        <div class="time-selector-group">
+                            <label><span class="icon icon-clock"></span> زمان:</label>
+                            <div class="time-selector-wrapper">
+                                <input type="range" class="time-selector" id="addTimeRange" min="0" max="1439" value="720">
+                                <span class="time-display" id="addTimeDisplay">--:--</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid var(--border-color);">
+                            <label style="display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-secondary);">
+                                <span class="icon icon-sitemap"></span> زیرتسک برای کار مادر
+                            </label>
+                            <select id="addParentTask">
+                                <option value="">بدون والد (تسک اصلی)</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <select id="addCategory"></select>
-                <select id="addProject"><option value="">بدون پروژه</option></select>
-                <select id="addPriority">
-                    <option value="high">🔴 اولویت بالا</option>
-                    <option value="medium" selected>🟡 اولویت متوسط</option>
-                    <option value="low">🟢 اولویت پایین</option>
-                </select>
-                <textarea id="addDescription" placeholder="توضیحات (اختیاری)..." rows="3"></textarea>
-
-                <div style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid var(--border-color);">
-                    <label style="display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-secondary);"><span class="icon icon-sitemap"></span> زیرتسک برای کار مادر</label>
-                    <select id="addParentTask">
-                        <option value="">بدون والد (تسک اصلی)</option>
-                    </select>
+                    
+                    <!-- ستون راست -->
+                    <div class="form-column-right">
+                        <select id="addCategory"></select>
+                        <select id="addProject">
+                            <option value="">بدون پروژه</option>
+                        </select>
+                        <select id="addPriority">
+                            <option value="high">🔴 اولویت بالا</option>
+                            <option value="medium" selected>🟡 اولویت متوسط</option>
+                            <option value="low">🟢 اولویت پایین</option>
+                        </select>
+                        <textarea id="addDescription" placeholder="توضیحات (اختیاری)..." rows="4"></textarea>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeAddTaskModal()"><span class="icon icon-close"></span> انصراف</button>
-                <button class="btn-save" id="saveAddTaskBtn"><span class="icon icon-save"></span> افزودن کار</button>
+                <button class="btn-cancel" onclick="closeAddTaskModal()">
+                    <span class="icon icon-close"></span> انصراف
+                </button>
+                <button class="btn-save" id="saveAddTaskBtn">
+                    <span class="icon icon-save"></span> افزودن کار
+                </button>
             </div>
         </div>
     </div>
@@ -738,13 +773,11 @@ include_once __DIR__ . '/../includes/header.php';
                 <select id="editCategory"></select>
                 <select id="editProject"><option value="">بدون پروژه</option></select>
 
-                <!-- Picker تاریخ شمسی برای ویرایش -->
                 <div class="date-picker-wrapper">
                     <input type="text" id="editDate" class="date-picker-input" placeholder="تاریخ" readonly>
                     <div class="jalali-calendar" id="editDateCalendar"></div>
                 </div>
 
-                <!-- انتخاب زمان با اسلایدر برای ویرایش -->
                 <div class="time-selector-group">
                     <label><span class="icon icon-clock"></span> زمان:</label>
                     <div class="time-selector-wrapper">
@@ -2036,6 +2069,73 @@ include_once __DIR__ . '/../includes/header.php';
             border-color: #e2e8f0;
         }
 
+        /* ===== مودال افقی برای افزودن تسک ===== */
+        .modal-content-horizontal {
+            max-width: 900px !important;
+            width: 95% !important;
+        }
+
+        .modal-body-horizontal {
+            padding: 25px;
+            font-family: 'Vazirmatn', 'Vazir', 'Tahoma', sans-serif !important;
+            overflow-y: auto;
+            max-height: calc(85vh - 140px);
+        }
+
+        .horizontal-form-row {
+            display: flex;
+            flex-direction: row;
+            gap: 25px;
+            align-items: flex-start;
+        }
+
+        .form-column-left,
+        .form-column-right {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .form-column-left input,
+        .form-column-left .date-picker-wrapper,
+        .form-column-left .time-selector-group,
+        .form-column-right select,
+        .form-column-right textarea {
+            width: 100%;
+            margin-bottom: 18px;
+        }
+
+        .form-column-right textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        @media (max-width: 768px) {
+            .horizontal-form-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .modal-content-horizontal {
+                max-width: 600px !important;
+                width: 90% !important;
+            }
+        }
+
+        /* ===== رفع مشکل شیشه‌ای بودن تقویم در حالت دارک ===== */
+        body:not([data-theme="light"]) .jalali-calendar {
+            background: #302b63 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        body[data-theme="light"] .jalali-calendar {
+            background: #ffffff !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: 1px solid #e2e8f0;
+        }
+
         /* ===== مودال‌ها ===== */
         .modal {
             display: none;
@@ -2718,12 +2818,17 @@ include_once __DIR__ . '/../includes/header.php';
             return {
                 getTime: function() {
                     var totalMinutes = parseInt(range.value);
+                    if (totalMinutes === 720) return null; // مقدار پیش‌فرض 12:00 رو به عنوان "بدون زمان" در نظر می‌گیریم
                     var hours = Math.floor(totalMinutes / 60);
                     var minutes = totalMinutes % 60;
                     return String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
                 },
                 setTime: function(timeStr) {
-                    if (!timeStr) return;
+                    if (!timeStr) {
+                        range.value = 720;
+                        updateDisplay();
+                        return;
+                    }
                     var parts = timeStr.split(':');
                     if (parts.length !== 2) return;
                     var hours = parseInt(parts[0]) || 0;
@@ -2733,6 +2838,10 @@ include_once __DIR__ . '/../includes/header.php';
                         range.value = totalMinutes;
                         updateDisplay();
                     }
+                },
+                clearTime: function() {
+                    range.value = 720;
+                    updateDisplay();
                 }
             };
         }
@@ -2922,7 +3031,8 @@ include_once __DIR__ . '/../includes/header.php';
         }
 
         function getTimeFromSelector(selector) {
-            return selector ? selector.getTime() : '12:00';
+            if (!selector || !selector.getTime) return null;
+            return selector.getTime();
         }
 
         // ============================================
@@ -3166,9 +3276,9 @@ include_once __DIR__ . '/../includes/header.php';
         function openAddTaskModal() {
             document.getElementById('addTitle').value = '';
             document.getElementById('addDescription').value = '';
-            document.getElementById('addDate').value = TODAY_JALALI;
+            document.getElementById('addDate').value = '';
             if (addTimeSelector) {
-                addTimeSelector.setTime('12:00');
+                addTimeSelector.clearTime();
             }
             document.getElementById('addPriority').value = 'medium';
             document.getElementById('addParentTask').value = '';
@@ -3190,7 +3300,7 @@ include_once __DIR__ . '/../includes/header.php';
             document.getElementById('addDescription').value = '';
             document.getElementById('addDate').value = TODAY_JALALI;
             if (addTimeSelector) {
-                addTimeSelector.setTime('12:00');
+                addTimeSelector.clearTime();
             }
             document.getElementById('addPriority').value = 'medium';
             document.getElementById('addParentTask').value = parentId;
@@ -3220,8 +3330,7 @@ include_once __DIR__ . '/../includes/header.php';
             if (!title) { alert('لطفاً عنوان کار را وارد کنید'); return; }
 
             var timeValue = getTimeFromSelector(addTimeSelector);
-            if (!validateTime(timeValue)) { alert('فرمت زمان صحیح نیست'); return; }
-
+            
             var jalaliDate = document.getElementById('addDate').value;
             var gregorianDate = toGregorianDate(jalaliDate) || SERVER_TODAY;
             var parentId = document.getElementById('addParentTask').value;
@@ -3232,7 +3341,7 @@ include_once __DIR__ . '/../includes/header.php';
                 category: document.getElementById('addCategory').value,
                 project: document.getElementById('addProject').value,
                 date: gregorianDate,
-                time: timeValue,
+                time: timeValue || '',
                 priority: document.getElementById('addPriority').value,
                 parent_id: parentId
             }).then(function() {
@@ -3261,7 +3370,7 @@ include_once __DIR__ . '/../includes/header.php';
             }
 
             if (editTimeSelector) {
-                editTimeSelector.setTime(task.time || '12:00');
+                editTimeSelector.setTime(task.time || '');
             }
             document.getElementById('editPriority').value = task.priority;
             document.getElementById('editDescription').value = task.description || '';
@@ -3278,9 +3387,8 @@ include_once __DIR__ . '/../includes/header.php';
 
         function saveEdit() {
             if (!currentEditId) return;
-            var timeValue = getTimeFromSelector(editTimeSelector);
-            if (!validateTime(timeValue)) { alert('فرمت زمان صحیح نیست'); return; }
-
+            var timeValue = getTimeFromSelector(editTimeSelector) || '';
+            
             var jalaliDate = document.getElementById('editDate').value;
             var gregorianDate = toGregorianDate(jalaliDate) || SERVER_TODAY;
 
