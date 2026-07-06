@@ -559,7 +559,7 @@ include_once __DIR__ . '/../includes/header.php';
                 <button class="btn-menu" onclick="location.href='habits.php'">
                     <span class="icon icon-fire"></span> عادت‌ها
                 </button>
-                <button class="btn-menu" onclick="location.href='vision/index.php'">
+                <button class="btn-menu" onclick="location.href='../vision/index.php'">
                     <span class="icon icon-eye"></span> ویژن برد
                 </button>
                 <button class="btn-menu" id="exportCsvBtn">
@@ -610,7 +610,7 @@ include_once __DIR__ . '/../includes/header.php';
                 <a href="../projects/index.php"><span class="icon icon-project"></span> پروژه‌ها</a>
                 <button onclick="openCategoryModal(); closeMobileMenu();"><span class="icon icon-tag"></span> دسته‌بندی</button>
                 <button onclick="location.href='habits.php'; closeMobileMenu();"><span class="icon icon-fire"></span> عادت‌ها</button>
-                <button onclick="location.href='vision/index.php'; closeMobileMenu();"><span class="icon icon-eye"></span> ویژن برد</button>
+                <button onclick="location.href='../vision/index.php'; closeMobileMenu();"><span class="icon icon-eye"></span> ویژن برد</button>
             </div>
         </div>
 
