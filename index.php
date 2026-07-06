@@ -996,9 +996,19 @@ $registrationEnabled = getSettings()['registration_enabled'] ?? true;
         if (confirm('آیا از خروج مطمئن هستید؟')) {
             const formData = new FormData();
             formData.append('action', 'logout');
-            fetch(window.location.href, { method: 'POST', body: formData })
-                .then(() => location.reload())
-                .catch(() => location.reload());
+            // ارسال درخواست به فایل logout.php برای اطمینان از خروج صحیح
+            fetch('planner/logout.php', { method: 'POST', body: formData })
+                .then(() => {
+                    // پاک کردن session و هدایت به صفحه ورود
+                    document.cookie.split(";").forEach(function(c) { 
+                        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                    });
+                    window.location.href = 'index.php';
+                })
+                .catch(() => {
+                    // در صورت خطا، مجدد تلاش می‌کنیم
+                    window.location.href = 'planner/logout.php';
+                });
         }
     }
 

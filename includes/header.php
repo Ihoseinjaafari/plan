@@ -1034,12 +1034,18 @@ function getEnabledModules() {
             if (confirm('آیا از خروج مطمئن هستید؟')) {
                 let formData = new FormData();
                 formData.append('action', 'logout');
-                fetch('<?= BASE_URL ?>/index.php', { method: 'POST', body: formData })
+                // ارسال درخواست به فایل logout.php برای اطمینان از خروج صحیح
+                fetch('<?= BASE_URL ?>/planner/logout.php', { method: 'POST', body: formData })
                     .then(() => {
+                        // پاک کردن session و هدایت به صفحه ورود
+                        document.cookie.split(";").forEach(function(c) { 
+                            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                        });
                         window.location.href = '<?= BASE_URL ?>/index.php';
                     })
                     .catch(() => {
-                        window.location.href = '<?= BASE_URL ?>/index.php';
+                        // در صورت خطا، مستقیماً به فایل logout.php هدایت می‌شویم
+                        window.location.href = '<?= BASE_URL ?>/planner/logout.php';
                     });
             }
         }
