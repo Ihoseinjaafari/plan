@@ -1,52 +1,56 @@
 <?php
-header('Content-Type: application/json');
+session_start();
+header('Content-Type: application/json; charset=utf-8');
 
-$dataFile = __DIR__ . '/data/vision_board.json';
-$uploadDir = __DIR__ . '/uploads/';
+// احراز هویت
+if (!isset($_SESSION['user_id']) && !isset($_SESSION['logged_in'])) {
+    echo json_encode(['success' => false, 'message' => 'لطفاً وارد شوید']);
+    exit;
+}
 
-// ایجاد پوشه‌ها در صورت عدم وجود
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-if (!is_dir(dirname($dataFile))) mkdir(dirname($dataFile), 0777, true);
-if (!file_exists($dataFile)) file_put_contents($dataFile, json_encode(['items' => []]));
+$current_user = $_SESSION['username'] ?? $_SESSION['user_id'] ?? 'user';
+$data_file = __DIR__ . '/data/vision_' . md5($current_user) . '.json';
+$upload_dir = __DIR__ . '/uploads/';
 
+// اطمینان از وجود پوشه‌ها
+if (!is_dir(__DIR__ . '/data')) {
+    mkdir(__DIR__ . '/data', 0777, true);
+}
+if (!is_dir($upload_dir)) {
+    mkdir($upload_dir, 0777, true);
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? ($_POST['action'] ?? '');
 
-if ($action === 'load') {
-    $data = json_decode(file_get_contents($dataFile), true);
-    echo json_encode(['success' => true, 'items' => $data['items'] ?? []]);
-}
-elseif ($action === 'save') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    $items = $input['items'] ?? [];
-    if (file_put_contents($dataFile, json_encode(['items' => $items], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
-        echo json_encode(['success' => true]);
+if ($method === 'GET' && $action === 'load') {
+    // بارگذاری داده‌ها
+    if (file_exists($data_file)) {
+        $data = file_get_contents($data_file);
+        $json = json_decode($data, true);
+        if ($json) {
+            echo json_encode(['success' => true, 'items' => $json]);
+        } else {
+            echo json_encode(['success' => true, 'items' => []]);
+        }
     } else {
-        echo json_encode(['success' => false, 'error' => 'خطا در ذخیره']);
+        echo json_encode(['success' => true, 'items' => []]);
     }
-}
-elseif ($action === 'upload') {
-    if (!isset($_FILES['image'])) {
-        echo json_encode(['success' => false, 'error' => 'فایلی ارسال نشده']);
-        exit;
-    }
+} elseif ($method === 'POST' && $action === 'save') {
+    // ذخیره داده‌ها
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
     
-    $file = $_FILES['image'];
-    $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    
-    if (!in_array($file['type'], $allowed)) {
-        echo json_encode(['success' => false, 'error' => 'فرمت مجاز نیست']);
-        exit;
-    }
-    
-    $filename = uniqid() . '_' . basename($file['name']);
-    $filepath = $uploadDir . $filename;
-    
-    if (move_uploaded_file($file['tmp_name'], $filepath)) {
-        echo json_encode(['success' => true, 'path' => 'uploads/' . $filename]);
+    if (isset($data['items'])) {
+        $items = $data['items'];
+        if (file_put_contents($data_file, json_encode($items, JSON_UNESCAPED_UNICODE))) {
+            echo json_encode(['success' => true, 'message' => 'ذخیره شد']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'خطا در نوشتن فایل']);
+        }
     } else {
-        echo json_encode(['success' => false, 'error' => 'خطا در آپلود']);
+        echo json_encode(['success' => false, 'message' => 'داده‌ای برای ذخیره وجود ندارد']);
     }
-}
-else {
-    echo json_encode(['success' => false, 'error' => 'عملیات نامعتبر']);
+} else {
+    echo json_encode(['success' => false, 'message' => 'درخواست نامعتبر']);
 }
