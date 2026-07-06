@@ -5,13 +5,284 @@ let itemIdCounter = 0;
 document.addEventListener('DOMContentLoaded', () => {
     loadBoard();
     setupInteract();
+    setupEventListeners();
 });
+
+// تنظیم رویدادهای دکمه‌ها و مودال‌ها
+function setupEventListeners() {
+    const addItemBtn = document.getElementById('addItemBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const addItemModal = document.getElementById('addItemModal');
+    const editItemModal = document.getElementById('editItemModal');
+    const closeButtons = document.querySelectorAll('.close-btn, .close-modal');
+    const addItemForm = document.getElementById('addItemForm');
+    const editItemForm = document.getElementById('editItemForm');
+    const contextMenu = document.getElementById('contextMenu');
+
+    // باز کردن مودال افزودن
+    if (addItemBtn) {
+        addItemBtn.addEventListener('click', () => {
+            addItemModal.classList.add('active');
+        });
+    }
+
+    // پاک کردن همه
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', clearBoard);
+    }
+
+    // بستن مودال‌ها
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.closest('.modal').classList.remove('active');
+        });
+    });
+
+    // بستن مودال با کلیک بیرون
+    window.addEventListener('click', (e) => {
+        if (e.target === addItemModal) addItemModal.classList.remove('active');
+        if (e.target === editItemModal) editItemModal.classList.remove('active');
+        if (e.target !== contextMenu) contextMenu.classList.remove('active');
+    });
+
+    // ارسال فرم افزودن
+    if (addItemForm) {
+        addItemForm.addEventListener('submit', handleAddItem);
+    }
+
+    // ارسال فرم ویرایش
+    if (editItemForm) {
+        editItemForm.addEventListener('submit', handleEditItem);
+    }
+
+    // پیش‌نمایش تصویر در فرم افزودن
+    const itemImageInput = document.getElementById('itemImage');
+    const imagePreview = document.getElementById('imagePreview');
+    if (itemImageInput && imagePreview) {
+        itemImageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.innerHTML = `<img src="${e.target.result}" alt="preview">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // پیش‌نمایش تصویر در فرم ویرایش
+    const editImageInput = document.getElementById('editImage');
+    const editImagePreview = document.getElementById('editImagePreview');
+    if (editImageInput && editImagePreview) {
+        editImageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    editImagePreview.innerHTML = `<img src="${e.target.result}" alt="preview">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // منوی زمینه (کلیک راست)
+    const board = document.getElementById('visionBoard');
+    if (board) {
+        board.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            const item = e.target.closest('.vision-item');
+            if (item) {
+                contextMenu.style.left = e.pageX + 'px';
+                contextMenu.style.top = e.pageY + 'px';
+                contextMenu.classList.add('active');
+                contextMenu.dataset.itemId = item.id;
+            }
+        });
+    }
+
+    // کلیک روی آیتم‌های منوی زمینه
+    if (contextMenu) {
+        contextMenu.addEventListener('click', function(e) {
+            const action = e.target.closest('li')?.dataset.action;
+            const itemId = contextMenu.dataset.itemId;
+            if (action && itemId) {
+                handleContextAction(action, itemId);
+                contextMenu.classList.remove('active');
+            }
+        });
+    }
+}
+
+// مدیریت عملیات منوی زمینه
+function handleContextAction(action, itemId) {
+    const id = parseInt(itemId.replace('item-', ''));
+    const item = items.find(i => i.id === id);
+    
+    if (!item) return;
+
+    switch(action) {
+        case 'edit':
+            openEditModal(item);
+            break;
+        case 'delete':
+            deleteItem(id);
+            break;
+        case 'bring-front':
+            bringToFront(id);
+            break;
+    }
+}
+
+// باز کردن مودال ویرایش
+function openEditModal(item) {
+    const editItemModal = document.getElementById('editItemModal');
+    const editItemId = document.getElementById('editItemId');
+    const editContent = document.getElementById('editContent');
+    const editImagePreview = document.getElementById('editImagePreview');
+
+    if (editItemId) editItemId.value = item.id;
+    if (editContent) editContent.value = item.content || '';
+    
+    if (editImagePreview && item.src) {
+        editImagePreview.innerHTML = `<img src="${item.src}" alt="current">`;
+    } else if (editImagePreview) {
+        editImagePreview.innerHTML = '';
+    }
+
+    editItemModal.classList.add('active');
+}
+
+// مدیریت افزودن آیتم جدید
+function handleAddItem(e) {
+    e.preventDefault();
+    const form = e.target;
+    const type = document.getElementById('itemType').value;
+    const content = document.getElementById('itemContent').value;
+    const imageFile = document.getElementById('itemImage').files[0];
+
+    if (type === 'image' || type === 'mixed') {
+        if (!imageFile) {
+            alert('لطفاً یک تصویر انتخاب کنید');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        formData.append('action', 'upload_image');
+
+        fetch('api.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const newItem = {
+                    id: Date.now(),
+                    type: type === 'image' ? 'image' : 'mixed',
+                    src: data.path,
+                    content: content,
+                    x: Math.random() * 200 + 50,
+                    y: Math.random() * 200 + 100,
+                    width: 250,
+                    height: 200
+                };
+                items.push(newItem);
+                renderItems();
+                saveBoard();
+                document.getElementById('addItemModal').classList.remove('active');
+                form.reset();
+                document.getElementById('imagePreview').innerHTML = '';
+            } else {
+                alert('خطا در آپلود: ' + data.error);
+            }
+        })
+        .catch(err => {
+            alert('خطا در ارتباط با سرور');
+            console.error(err);
+        });
+    } else {
+        // فقط متن
+        const newItem = {
+            id: Date.now(),
+            type: 'text',
+            content: content,
+            x: Math.random() * 200 + 50,
+            y: Math.random() * 200 + 100,
+            width: 200,
+            height: 150
+        };
+        items.push(newItem);
+        renderItems();
+        saveBoard();
+        document.getElementById('addItemModal').classList.remove('active');
+        form.reset();
+    }
+}
+
+// مدیریت ویرایش آیتم
+function handleEditItem(e) {
+    e.preventDefault();
+    const form = e.target;
+    const id = parseInt(document.getElementById('editItemId').value);
+    const content = document.getElementById('editContent').value;
+    const imageFile = document.getElementById('editImage').files[0];
+
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+
+    item.content = content;
+
+    if (imageFile) {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        formData.append('action', 'upload_image');
+
+        fetch('api.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                item.src = data.path;
+                renderItems();
+                saveBoard();
+                document.getElementById('editItemModal').classList.remove('active');
+                form.reset();
+                document.getElementById('editImagePreview').innerHTML = '';
+            } else {
+                alert('خطا در آپلود: ' + data.error);
+            }
+        })
+        .catch(err => {
+            alert('خطا در ارتباط با سرور');
+            console.error(err);
+        });
+    } else {
+        renderItems();
+        saveBoard();
+        document.getElementById('editItemModal').classList.remove('active');
+    }
+}
+
+// آوردن به جلو
+function bringToFront(id) {
+    const item = items.find(i => i.id === id);
+    if (item) {
+        item.zIndex = Date.now();
+        renderItems();
+        saveBoard();
+    }
+}
 
 // تنظیمات Interact.js برای جابجایی و تغییر اندازه
 function setupInteract() {
     interact('.vision-item')
         .draggable({
-            allowFrom: '.vision-item',
+            allowFrom: '.drag-handle, .vision-item',
             listeners: {
                 start (event) {
                     event.target.style.zIndex = 1000;
@@ -40,7 +311,7 @@ function setupInteract() {
             ]
         })
         .resizable({
-            edges: { bottom: true, right: true },
+            edges: { left: true, right: true, bottom: true, top: true },
             listeners: {
                 move (event) {
                     let { x, y } = event.target.dataset;
@@ -70,64 +341,6 @@ function setupInteract() {
         });
 }
 
-// آپلود تصویر
-function uploadImage(input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('image', file);
-    formData.append('action', 'upload_image');
-
-    showStatus('در حال آپلود...');
-
-    fetch('api.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            addItem({
-                id: Date.now(),
-                type: 'image',
-                src: data.path,
-                x: 50,
-                y: 100,
-                width: 200,
-                height: 150
-            });
-            showStatus('تصویر اضافه شد');
-            saveBoard();
-        } else {
-            showStatus('خطا: ' + data.error);
-        }
-    })
-    .catch(err => {
-        showStatus('خطا در ارتباط با سرور');
-        console.error(err);
-    });
-
-    input.value = '';
-}
-
-// افزودن یادداشت متنی
-function addTextNote() {
-    const text = prompt('متن انگیزشی خود را وارد کنید:');
-    if (text) {
-        addItem({
-            id: Date.now(),
-            type: 'text',
-            content: text,
-            x: 100,
-            y: 150,
-            width: 200,
-            height: 150
-        });
-        saveBoard();
-    }
-}
-
 // ایجاد آیتم جدید در بوم
 function addItem(item) {
     items.push(item);
@@ -136,7 +349,9 @@ function addItem(item) {
 
 // رندر کردن تمام آیتم‌ها
 function renderItems() {
-    const board = document.getElementById('vision-board');
+    const board = document.getElementById('visionBoard');
+    if (!board) return;
+    
     board.innerHTML = '';
 
     items.forEach(item => {
@@ -145,47 +360,35 @@ function renderItems() {
         el.id = `item-${item.id}`;
         el.style.left = '0px';
         el.style.top = '0px';
-        el.style.width = item.width + 'px';
-        el.style.height = item.height + 'px';
-        el.setAttribute('data-x', item.x);
-        el.setAttribute('data-y', item.y);
-        el.style.transform = `translate(${item.x}px, ${item.y}px)`;
+        el.style.width = (item.width || 200) + 'px';
+        el.style.height = (item.height || 150) + 'px';
+        el.setAttribute('data-x', item.x || 0);
+        el.setAttribute('data-y', item.y || 0);
+        el.style.transform = `translate(${item.x || 0}px, ${item.y || 0}px)`;
+        el.style.zIndex = item.zIndex || 1;
 
-        if (item.type === 'image') {
-            const img = document.createElement('img');
-            img.src = item.src;
-            img.draggable = false;
-            el.appendChild(img);
-        } else if (item.type === 'text') {
-            const textarea = document.createElement('textarea');
-            textarea.value = item.content;
-            textarea.onchange = () => {
-                item.content = textarea.value;
-                saveBoard();
-            };
-            el.appendChild(textarea);
+        // دسته جابجایی
+        const dragHandle = document.createElement('div');
+        dragHandle.className = 'drag-handle';
+        dragHandle.innerHTML = '<i class="fas fa-arrows-alt"></i> جابجایی';
+        el.appendChild(dragHandle);
+
+        if (item.type === 'image' || item.type === 'mixed') {
+            if (item.src) {
+                const img = document.createElement('img');
+                img.src = item.src;
+                img.draggable = false;
+                el.appendChild(img);
+            }
         }
 
-        // دکمه حذف
-        const deleteBtn = document.createElement('div');
-        deleteBtn.className = 'resize-handle';
-        deleteBtn.style.background = '#ef4444';
-        deleteBtn.style.bottom = 'auto';
-        deleteBtn.style.top = '-5px';
-        deleteBtn.style.right = 'auto';
-        deleteBtn.style.left = '-5px';
-        deleteBtn.style.cursor = 'pointer';
-        deleteBtn.innerHTML = '×';
-        deleteBtn.onclick = (e) => {
-            e.stopPropagation();
-            deleteItem(item.id);
-        };
-        el.appendChild(deleteBtn);
-
-        // دستگیره تغییر اندازه
-        const resizeHandle = document.createElement('div');
-        resizeHandle.className = 'resize-handle';
-        el.appendChild(resizeHandle);
+        if (item.content) {
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'item-content';
+            contentDiv.textContent = item.content;
+            el.appendChild(contentDiv);
+            el.classList.add('has-image');
+        }
 
         board.appendChild(el);
     });
@@ -221,8 +424,6 @@ function saveItemPosition(element) {
 
 // ذخیره کل بوم
 function saveBoard() {
-    showStatus('در حال ذخیره...');
-
     fetch('api.php', {
         method: 'POST',
         headers: {
@@ -254,7 +455,6 @@ function loadBoard() {
     .then(data => {
         if (data.success && data.items) {
             items = data.items;
-            itemIdCounter = Math.max(...items.map(i => i.id), 0) + 1;
             renderItems();
             showStatus('بارگذاری شد');
         }
@@ -275,8 +475,16 @@ function clearBoard() {
 
 // نمایش وضعیت
 function showStatus(msg) {
-    document.getElementById('statusMsg').textContent = msg;
+    // ایجاد یا دریافت المان وضعیت
+    let statusEl = document.getElementById('statusMsg');
+    if (!statusEl) {
+        statusEl = document.createElement('div');
+        statusEl.id = 'statusMsg';
+        statusEl.style.cssText = 'position:fixed;bottom:20px;left:20px;background:#333;color:white;padding:10px 20px;border-radius:8px;z-index:9999;font-family:Vazirmatn,sans-serif;';
+        document.body.appendChild(statusEl);
+    }
+    statusEl.textContent = msg;
     setTimeout(() => {
-        document.getElementById('statusMsg').textContent = 'آماده';
+        statusEl.textContent = 'آماده';
     }, 3000);
 }
