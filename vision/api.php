@@ -1,15 +1,7 @@
 <?php
-/**
- * Vision Board API Handler
- * Handles CRUD operations for vision board items
- */
-
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -17,217 +9,123 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-$dataDir = __DIR__ . '/data';
-$uploadDir = __DIR__ . '/uploads';
-$dataFile = $dataDir . '/vision_items.json';
+$dataFile = __DIR__ . '/data/vision_items.json';
+$uploadDir = __DIR__ . '/uploads/';
 
-// Ensure directories exist and are writable
-if (!file_exists($dataDir)) {
-    mkdir($dataDir, 0777, true);
-}
-if (!file_exists($uploadDir)) {
+// اطمینان از وجود پوشه‌ها
+if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0777, true);
 }
+if (!is_dir(dirname($dataFile))) {
+    mkdir(dirname($dataFile), 0777, true);
+}
 if (!file_exists($dataFile)) {
-    file_put_contents($dataFile, json_encode([]));
+    file_put_contents($dataFile, json_encode(['items' => []]));
 }
 
-// Check if directories are writable
-if (!is_writable($dataDir)) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Data directory is not writable']);
-    exit();
-}
-if (!is_writable($uploadDir)) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Upload directory is not writable']);
-    exit();
-}
-
-// Get current user ID (in real app, this would come from session/auth)
-$userId = isset($_GET['user_id']) ? $_GET['user_id'] : 'default_user';
-
-$action = isset($_GET['action']) ? $_GET['action'] : '';
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {
-    case 'get':
-        getItems($dataFile, $userId);
+    case 'load':
+        loadData();
         break;
-    case 'add':
-        addItem($dataFile, $uploadDir, $userId);
+    case 'save':
+        saveData();
         break;
-    case 'update':
-        updateItem($dataFile, $uploadDir, $userId);
-        break;
-    case 'delete':
-        deleteItem($dataFile, $userId);
-        break;
-    case 'reorder':
-        reorderItems($dataFile, $userId);
+    case 'upload':
+        uploadImage();
         break;
     default:
-        http_response_code(400);
-        echo json_encode(['error' => 'Invalid action']);
+        echo json_encode(['success' => false, 'message' => 'عملیات نامعتبر']);
 }
 
-function getItems($dataFile, $userId) {
-    $data = json_decode(file_get_contents($dataFile), true) ?: [];
-    $userItems = array_filter($data, fn($item) => $item['user_id'] === $userId);
-    echo json_encode(['success' => true, 'items' => array_values($userItems)]);
+function loadData() {
+    global $dataFile;
+    try {
+        $data = file_get_contents($dataFile);
+        $jsonData = json_decode($data, true);
+        
+        if (json_last_error() === JSON_ERROR_NONE) {
+            echo json_encode([
+                'success' => true,
+                'items' => $jsonData['items'] ?? []
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'خطا در خواندن داده‌ها',
+                'items' => []
+            ]);
+        }
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'items' => []
+        ]);
+    }
 }
 
-function addItem($dataFile, $uploadDir, $userId) {
-    $data = json_decode(file_get_contents($dataFile), true) ?: [];
-    
-    $type = $_POST['type'] ?? 'text';
-    $content = $_POST['content'] ?? '';
-    $imagePath = '';
-    
-    // Handle image upload
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (in_array($_FILES['image']['type'], $allowedTypes)) {
-            $extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-            $filename = uniqid() . '_' . time() . '.' . $extension;
-            $targetPath = $uploadDir . '/' . $filename;
-            
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-                $imagePath = 'uploads/' . $filename;
+function saveData() {
+    global $dataFile;
+    try {
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+        
+        if (json_last_error() === JSON_ERROR_NONE && isset($data['items'])) {
+            $saveData = ['items' => $data['items']];
+            if (file_put_contents($dataFile, json_encode($saveData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
+                echo json_encode(['success' => true, 'message' => 'ذخیره شد']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'خطا در نوشتن فایل']);
             }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'داده‌های نامعتبر']);
         }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
-    
-    $newItem = [
-        'id' => uniqid(),
-        'user_id' => $userId,
-        'type' => $type,
-        'content' => htmlspecialchars($content),
-        'image' => $imagePath,
-        'position' => ['x' => rand(50, 300), 'y' => rand(50, 400)],
-        'size' => ['width' => 200, 'height' => $imagePath ? 250 : 100],
-        'created_at' => date('Y-m-d H:i:s'),
-        'updated_at' => date('Y-m-d H:i:s')
-    ];
-    
-    $data[] = $newItem;
-    file_put_contents($dataFile, json_encode($data, JSON_PRETTY_PRINT));
-    
-    echo json_encode(['success' => true, 'item' => $newItem]);
 }
 
-function updateItem($dataFile, $uploadDir, $userId) {
-    $data = json_decode(file_get_contents($dataFile), true) ?: [];
-    $itemId = $_POST['id'] ?? '';
+function uploadImage() {
+    global $uploadDir;
     
-    $itemIndex = -1;
-    foreach ($data as $index => $item) {
-        if ($item['id'] === $itemId && $item['user_id'] === $userId) {
-            $itemIndex = $index;
-            break;
-        }
-    }
-    
-    if ($itemIndex === -1) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Item not found']);
+    if (!isset($_FILES['image'])) {
+        echo json_encode(['success' => false, 'message' => 'فایلی دریافت نشد']);
         return;
     }
     
-    $item = &$data[$itemIndex];
+    $file = $_FILES['image'];
     
-    if (isset($_POST['content'])) {
-        $item['content'] = htmlspecialchars($_POST['content']);
-    }
-    
-    if (isset($_POST['position'])) {
-        $item['position'] = json_decode($_POST['position'], true);
-    }
-    
-    if (isset($_POST['size'])) {
-        $item['size'] = json_decode($_POST['size'], true);
-    }
-    
-    // Handle new image upload
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (in_array($_FILES['image']['type'], $allowedTypes)) {
-            // Delete old image if exists
-            if (!empty($item['image'])) {
-                $oldPath = __DIR__ . '/../' . $item['image'];
-                if (file_exists($oldPath)) {
-                    unlink($oldPath);
-                }
-            }
-            
-            $extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-            $filename = uniqid() . '_' . time() . '.' . $extension;
-            $targetPath = $uploadDir . '/' . $filename;
-            
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-                $item['image'] = 'uploads/' . $filename;
-            }
-        }
-    }
-    
-    $item['updated_at'] = date('Y-m-d H:i:s');
-    file_put_contents($dataFile, json_encode($data, JSON_PRETTY_PRINT));
-    
-    echo json_encode(['success' => true, 'item' => $item]);
-}
-
-function deleteItem($dataFile, $userId) {
-    $data = json_decode(file_get_contents($dataFile), true) ?: [];
-    $itemId = $_GET['id'] ?? '';
-    
-    $itemIndex = -1;
-    foreach ($data as $index => $item) {
-        if ($item['id'] === $itemId && $item['user_id'] === $userId) {
-            $itemIndex = $index;
-            break;
-        }
-    }
-    
-    if ($itemIndex === -1) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Item not found']);
+    // بررسی خطا
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        echo json_encode(['success' => false, 'message' => 'خطا در آپلود: ' . $file['error']]);
         return;
     }
     
-    // Delete associated image
-    if (!empty($data[$itemIndex]['image'])) {
-        $imagePath = __DIR__ . '/../' . $data[$itemIndex]['image'];
-        if (file_exists($imagePath)) {
-            unlink($imagePath);
-        }
-    }
-    
-    array_splice($data, $itemIndex, 1);
-    file_put_contents($dataFile, json_encode($data, JSON_PRETTY_PRINT));
-    
-    echo json_encode(['success' => true]);
-}
-
-function reorderItems($dataFile, $userId) {
-    $data = json_decode(file_get_contents($dataFile), true) ?: [];
-    $positions = json_decode(file_get_contents('php://input'), true);
-    
-    if (!is_array($positions)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Invalid positions data']);
+    // بررسی نوع فایل
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!in_array($file['type'], $allowedTypes)) {
+        echo json_encode(['success' => false, 'message' => 'نوع فایل مجاز نیست']);
         return;
     }
     
-    foreach ($positions as $posData) {
-        foreach ($data as &$item) {
-            if ($item['id'] === $posData['id'] && $item['user_id'] === $userId) {
-                $item['position'] = $posData['position'];
-                $item['updated_at'] = date('Y-m-d H:i:s');
-                break;
-            }
-        }
-    }
+    // ایجاد نام منحصر به فرد
+    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $filename = uniqid('vision_') . '.' . $extension;
+    $filepath = $uploadDir . $filename;
     
-    file_put_contents($dataFile, json_encode($data, JSON_PRETTY_PRINT));
-    echo json_encode(['success' => true]);
+    // انتقال فایل
+    if (move_uploaded_file($file['tmp_name'], $filepath)) {
+        // مسیر نسبی برای نمایش در مرورگر
+        $relativePath = 'uploads/' . $filename;
+        echo json_encode([
+            'success' => true,
+            'imagePath' => $relativePath,
+            'message' => 'آپلود موفق'
+        ]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'خطا در ذخیره فایل']);
+    }
 }
 ?>
