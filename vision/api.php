@@ -92,7 +92,7 @@ function addItem($dataFile, $uploadDir, $userId) {
             $targetPath = $uploadDir . '/' . $filename;
             
             if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-                $imagePath = 'vision/uploads/' . $filename;
+                $imagePath = 'uploads/' . $filename;
             }
         }
     }
@@ -164,7 +164,7 @@ function updateItem($dataFile, $uploadDir, $userId) {
             $targetPath = $uploadDir . '/' . $filename;
             
             if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-                $item['image'] = 'vision/uploads/' . $filename;
+                $item['image'] = 'uploads/' . $filename;
             }
         }
     }
