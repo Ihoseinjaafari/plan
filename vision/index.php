@@ -41,7 +41,7 @@ $current_user = $_SESSION['username'] ?? $_SESSION['user_id'] ?? 'user';
     </style>
 </head>
 <body>
-    <?php include '../planner/header.php'; ?>
+    <?php include '../includes/header.php'; ?>
     <div class="toolbar">
         <button class="tool-btn primary" onclick="triggerImageUpload()"><span>📷</span> افزودن تصویر</button>
         <button class="tool-btn" onclick="addTextNote()"><span>📝</span> یادداشت</button>
