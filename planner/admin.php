@@ -550,6 +550,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php 
                 $modules = $settings['modules'] ?? [];
                 $moduleIcons = [
+                    'home' => 'fa-home',
                     'planner' => 'fa-tasks',
                     'projects' => 'fa-project-diagram',
                     'lifeplan' => 'fa-compass',

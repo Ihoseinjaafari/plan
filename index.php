@@ -7,6 +7,17 @@ date_default_timezone_set('Asia/Tehran');
 $settingsFile = 'data/settings.json';
 $usersFile = 'data/users.json';
 
+// ==================== بررسی فعال بودن ماژول home ====================
+if (file_exists($settingsFile)) {
+    $settings = json_decode(file_get_contents($settingsFile), true);
+    if (isset($settings['modules']['home']['enabled']) &&
+        $settings['modules']['home']['enabled'] === false) {
+        // اگر منوی اصلی غیرفعال است، مستقیماً به داشبورد هدایت شود
+        header('Location: dashboard/index.php');
+        exit;
+    }
+}
+
 // ==================== توابع ====================
 function getSettings() {
     global $settingsFile;
@@ -14,6 +25,7 @@ function getSettings() {
         $default = [
             'registration_enabled' => true,
             'modules' => [
+                'home' => ['enabled' => true],
                 'planner' => ['enabled' => true],
                 'projects' => ['enabled' => true],
                 'lifeplan' => ['enabled' => true],
@@ -33,6 +45,7 @@ function getSettings() {
     }
     if (!isset($settings['modules'])) {
         $settings['modules'] = [
+            'home' => ['enabled' => true],
             'planner' => ['enabled' => true],
             'projects' => ['enabled' => true],
             'lifeplan' => ['enabled' => true],
@@ -42,6 +55,10 @@ function getSettings() {
             'calendar' => ['enabled' => true],
             'dashboard' => ['enabled' => true]
         ];
+    }
+    // اضافه کردن ماژول home اگر وجود ندارد
+    if (!isset($settings['modules']['home'])) {
+        $settings['modules']['home'] = ['enabled' => true];
     }
     return $settings;
 }
@@ -676,6 +693,15 @@ $registrationEnabled = getSettings()['registration_enabled'] ?? true;
     </div>
     
     <?php if ($isLoggedIn && $currentUser): ?>
+        <!-- بررسی فعال بودن منوی اصلی -->
+        <?php 
+        $homeEnabled = isModuleEnabled('home');
+        if (!$homeEnabled) {
+            // اگر منوی اصلی غیرفعال است، مستقیماً به داشبورد هدایت شود
+            header('Location: dashboard/index.php');
+            exit;
+        }
+        ?>
         <!-- وضعیت کاربر -->
         <div class="user-status-bar">
             <div class="avatar-mini" style="background: <?php echo $currentUser['avatar_color'] ?? '#667eea'; ?>">
