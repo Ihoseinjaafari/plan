@@ -745,9 +745,9 @@
         function openAddTaskModal() {
             document.getElementById('addTitle').value = '';
             document.getElementById('addDescription').value = '';
-            document.getElementById('addDate').value = TODAY_JALALI;
+            document.getElementById('addDate').value = '';
             if (addTimeSelector) {
-                addTimeSelector.setTime('12:00');
+                addTimeSelector.setTime('');
             }
             document.getElementById('addPriority').value = 'medium';
             document.getElementById('addParentTask').value = '';
