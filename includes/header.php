@@ -787,9 +787,27 @@ function getEnabledModules() {
             </a>
             <?php endif; ?>
 
-            <!-- دکمه اعلان‌ها -->
-            <button class="icon-btn" id="notificationsBtn" title="اعلان‌ها">
+            <!-- دکمه اعلان‌ها با شمارنده -->
+            <?php
+            $notifCount = 0;
+            $notifFile = BASE_PATH . '/data/notifications.json';
+            if (file_exists($notifFile)) {
+                $allNotifs = json_decode(file_get_contents($notifFile), true);
+                if (is_array($allNotifs)) {
+                    $readNotifs = $_SESSION['read_notifications'][$_SESSION['user_id']] ?? [];
+                    foreach ($allNotifs as $n) {
+                        if (!in_array($n['id'], $readNotifs)) {
+                            $notifCount++;
+                        }
+                    }
+                }
+            }
+            ?>
+            <button class="icon-btn" id="notificationsBtn" title="اعلان‌ها" style="position: relative;">
                 <span class="icon icon-bell"></span>
+                <?php if ($notifCount > 0): ?>
+                    <span id="notifBadge" style="position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: bold;"><?php echo $notifCount; ?></span>
+                <?php endif; ?>
             </button>
 
             <!-- دکمه تغییر تم -->
