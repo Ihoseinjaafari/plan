@@ -691,34 +691,35 @@ include_once __DIR__ . '/../includes/header.php';
 
     <!-- ===== مودال افزودن کار ===== -->
     <div id="addTaskModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-content-horizontal">
             <div class="modal-header"><span class="icon icon-plus-circle"></span> افزودن کار جدید</div>
-            <div class="modal-body">
-                <input type="text" id="addTitle" placeholder="عنوان کار..." required>
-                <select id="addCategory"></select>
-                <select id="addProject"><option value="">بدون پروژه</option></select>
-
-                <!-- Picker تاریخ شمسی -->
-                <div class="date-picker-wrapper">
-                    <input type="text" id="addDate" class="date-picker-input" placeholder="تاریخ" value="<?php echo $todayJalali; ?>" readonly>
-                    <div class="jalali-calendar" id="addDateCalendar"></div>
-                </div>
-
-                <!-- انتخاب زمان با اسلایدر -->
-                <div class="time-selector-group">
-                    <label><span class="icon icon-clock"></span> زمان:</label>
-                    <div class="time-selector-wrapper">
-                        <input type="range" class="time-selector" id="addTimeRange" min="0" max="1439" value="720">
-                        <span class="time-display" id="addTimeDisplay">12:00</span>
+            <div class="modal-body modal-body-horizontal">
+                <div class="horizontal-form-row">
+                    <div class="form-column-left">
+                        <input type="text" id="addTitle" placeholder="عنوان کار..." required>
+                        <div class="date-picker-wrapper">
+                            <input type="text" id="addDate" class="date-picker-input" placeholder="تاریخ (اختیاری)" value="">
+                            <div class="jalali-calendar" id="addDateCalendar"></div>
+                        </div>
+                        <div class="time-selector-group">
+                            <label><span class="icon icon-clock"></span> زمان:</label>
+                            <div class="time-selector-wrapper">
+                                <input type="range" class="time-selector" id="addTimeRange" min="0" max="1439" value="">
+                                <span class="time-display" id="addTimeDisplay">--:--</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-column-right">
+                        <select id="addCategory"></select>
+                        <select id="addProject"><option value="">بدون پروژه</option></select>
+                        <select id="addPriority">
+                            <option value="high">🔴 اولویت بالا</option>
+                            <option value="medium" selected>🟡 اولویت متوسط</option>
+                            <option value="low">🟢 اولویت پایین</option>
+                        </select>
+                        <textarea id="addDescription" placeholder="توضیحات (اختیاری)..." rows="3"></textarea>
                     </div>
                 </div>
-
-                <select id="addPriority">
-                    <option value="high">🔴 اولویت بالا</option>
-                    <option value="medium" selected>🟡 اولویت متوسط</option>
-                    <option value="low">🟢 اولویت پایین</option>
-                </select>
-                <textarea id="addDescription" placeholder="توضیحات (اختیاری)..." rows="3"></textarea>
 
                 <div style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid var(--border-color);">
                     <label style="display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-secondary);"><span class="icon icon-sitemap"></span> زیرتسک برای کار مادر</label>
