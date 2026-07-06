@@ -13,9 +13,17 @@
                 <div class="filters-card" id="filtersCard">
                     <div class="filter-group">
                         <div class="date-range-group">
-                            <input type="date" id="filterDateFrom" class="date-range-input" placeholder="از تاریخ">
+                            <!-- Picker تاریخ شمسی برای فیلتر از تاریخ -->
+                            <div class="date-picker-wrapper" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+                                <input type="text" id="filterDateFrom" class="date-picker-input" placeholder="از تاریخ" readonly style="width: 100%;">
+                                <div class="jalali-calendar" id="filterDateFromCalendar"></div>
+                            </div>
                             <span>تا</span>
-                            <input type="date" id="filterDateTo" class="date-range-input" placeholder="تا تاریخ">
+                            <!-- Picker تاریخ شمسی برای فیلتر تا تاریخ -->
+                            <div class="date-picker-wrapper" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+                                <input type="text" id="filterDateTo" class="date-picker-input" placeholder="تا تاریخ" readonly style="width: 100%;">
+                                <div class="jalali-calendar" id="filterDateToCalendar"></div>
+                            </div>
                             <button class="apply-date-range" id="applyDateRangeBtn"><span class="icon icon-check"></span> اعمال بازه</button>
                         </div>
                         <select id="filterPriority" class="filter-select">
