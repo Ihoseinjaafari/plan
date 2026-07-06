@@ -50,12 +50,39 @@ function getAllTasks() {
 function getSettings() {
     global $settingsFile;
     if (!file_exists($settingsFile)) {
-        $default = ['registration_enabled' => true];
+        $default = [
+            'registration_enabled' => true,
+            'modules' => [
+                'planner' => ['enabled' => true, 'name' => 'پلنر تسک‌ها'],
+                'projects' => ['enabled' => true, 'name' => 'مدیریت پروژه‌ها'],
+                'lifeplan' => ['enabled' => true, 'name' => 'لایف‌پلن'],
+                'vision' => ['enabled' => true, 'name' => 'ویژن برد'],
+                'finance' => ['enabled' => true, 'name' => 'مدیریت مالی'],
+                'health' => ['enabled' => true, 'name' => 'سلامت'],
+                'calendar' => ['enabled' => true, 'name' => 'تقویم شمسی'],
+                'dashboard' => ['enabled' => true, 'name' => 'داشبورد']
+            ]
+        ];
         file_put_contents($settingsFile, json_encode($default, JSON_PRETTY_PRINT));
         return $default;
     }
     $settings = json_decode(file_get_contents($settingsFile), true);
-    return is_array($settings) ? $settings : ['registration_enabled' => true];
+    if (!is_array($settings)) {
+        $settings = ['registration_enabled' => true];
+    }
+    if (!isset($settings['modules'])) {
+        $settings['modules'] = [
+            'planner' => ['enabled' => true, 'name' => 'پلنر تسک‌ها'],
+            'projects' => ['enabled' => true, 'name' => 'مدیریت پروژه‌ها'],
+            'lifeplan' => ['enabled' => true, 'name' => 'لایف‌پلن'],
+            'vision' => ['enabled' => true, 'name' => 'ویژن برد'],
+            'finance' => ['enabled' => true, 'name' => 'مدیریت مالی'],
+            'health' => ['enabled' => true, 'name' => 'سلامت'],
+            'calendar' => ['enabled' => true, 'name' => 'تقویم شمسی'],
+            'dashboard' => ['enabled' => true, 'name' => 'داشبورد']
+        ];
+    }
+    return $settings;
 }
 
 function saveSettings($settings) {
@@ -93,6 +120,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $settings['registration_enabled'] = !($settings['registration_enabled'] ?? true);
         saveSettings($settings);
         $response = ['success' => true, 'enabled' => $settings['registration_enabled']];
+    }
+    elseif ($action === 'toggle_module') {
+        $moduleId = $_POST['module_id'] ?? '';
+        $settings = getSettings();
+        
+        if (isset($settings['modules'][$moduleId])) {
+            $settings['modules'][$moduleId]['enabled'] = !($settings['modules'][$moduleId]['enabled'] ?? true);
+            saveSettings($settings);
+            $response = ['success' => true, 'enabled' => $settings['modules'][$moduleId]['enabled']];
+        } else {
+            $response = ['success' => false, 'message' => 'ماژول یافت نشد'];
+        }
     }
     elseif ($action === 'delete_user') {
         $userId = $_POST['user_id'] ?? '';
@@ -481,7 +520,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <!-- تنظیمات ثبت‌نام -->
         <div class="admin-card">
-            <h2><i class="fas fa-cog"></i> تنظیمات</h2>
+            <h2><i class="fas fa-cog"></i> تنظیمات کلی</h2>
             <div class="setting-item">
                 <div class="info">
                     <div class="icon <?php echo $registrationEnabled ? 'enabled' : 'disabled'; ?>">
@@ -500,6 +539,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <i class="fas <?php echo $registrationEnabled ? 'fa-toggle-on' : 'fa-toggle-off'; ?>"></i>
                     <?php echo $registrationEnabled ? 'غیرفعال‌سازی' : 'فعال‌سازی'; ?>
                 </button>
+            </div>
+        </div>
+        
+        <!-- مدیریت ماژول‌ها -->
+        <div class="admin-card">
+            <h2><i class="fas fa-th-large"></i> مدیریت بخش‌های سایت</h2>
+            <p style="margin-bottom: 15px; color: #666; font-size: 13px;">می‌توانید هر بخش از سایت را به صورت جداگانه فعال یا غیرفعال کنید. کاربران فقط بخش‌های فعال را خواهند دید.</p>
+            <div id="modulesList">
+                <?php 
+                $modules = $settings['modules'] ?? [];
+                $moduleIcons = [
+                    'planner' => 'fa-tasks',
+                    'projects' => 'fa-project-diagram',
+                    'lifeplan' => 'fa-compass',
+                    'vision' => 'fa-eye',
+                    'finance' => 'fa-wallet',
+                    'health' => 'fa-heartbeat',
+                    'calendar' => 'fa-calendar-alt',
+                    'dashboard' => 'fa-chart-line'
+                ];
+                foreach ($modules as $moduleId => $module): 
+                    $icon = $moduleIcons[$moduleId] ?? 'fa-cube';
+                    $enabled = $module['enabled'] ?? true;
+                    $name = $module['name'] ?? ucfirst($moduleId);
+                ?>
+                <div class="setting-item" style="margin-bottom: 10px;">
+                    <div class="info">
+                        <div class="icon <?php echo $enabled ? 'enabled' : 'disabled'; ?>" style="width: 35px; height: 35px; font-size: 16px;">
+                            <i class="fas <?php echo $icon; ?>"></i>
+                        </div>
+                        <div class="text">
+                            <div class="title"><?php echo htmlspecialchars($name); ?></div>
+                            <div class="desc">
+                                <?php echo $enabled ? '✅ فعال' : '❌ غیرفعال'; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="toggle-btn <?php echo $enabled ? 'enabled' : 'disabled'; ?>" 
+                            data-module-id="<?php echo htmlspecialchars($moduleId); ?>"
+                            onclick="toggleModule('<?php echo htmlspecialchars($moduleId); ?>')">
+                        <i class="fas <?php echo $enabled ? 'fa-toggle-on' : 'fa-toggle-off'; ?>"></i>
+                        <?php echo $enabled ? 'غیرفعال' : 'فعال'; ?>
+                    </button>
+                </div>
+                <?php endforeach; ?>
             </div>
         </div>
         
@@ -616,6 +700,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (e) {
                 showToast('خطا در ارتباط با سرور', 'error');
             }
+        }
+        
+        async function toggleModule(moduleId) {
+            const btn = document.querySelector(`button[data-module-id="${moduleId}"]`);
+            if (!btn) return;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال تغییر...';
+            
+            try {
+                let formData = new FormData();
+                formData.append('action', 'toggle_module');
+                formData.append('module_id', moduleId);
+                
+                let response = await fetch(window.location.href, { method: 'POST', body: formData });
+                let result = await response.json();
+                
+                if (result.success) {
+                    const enabled = result.enabled;
+                    const iconDiv = btn.parentElement.querySelector('.icon');
+                    const descDiv = btn.parentElement.querySelector('.desc');
+                    
+                    if (enabled) {
+                        iconDiv.className = 'icon enabled';
+                        iconDiv.innerHTML = '<i class="fas fa-check"></i>';
+                        btn.className = 'toggle-btn enabled';
+                        btn.innerHTML = '<i class="fas fa-toggle-on"></i> غیرفعال';
+                        descDiv.textContent = '✅ فعال';
+                        showToast('بخش فعال شد', 'success');
+                    } else {
+                        iconDiv.className = 'icon disabled';
+                        iconDiv.innerHTML = '<i class="fas fa-times"></i>';
+                        btn.className = 'toggle-btn disabled';
+                        btn.innerHTML = '<i class="fas fa-toggle-off"></i> فعال';
+                        descDiv.textContent = '❌ غیرفعال';
+                        showToast('بخش غیرفعال شد', 'success');
+                    }
+                } else {
+                    showToast(result.message || 'خطا در تغییر وضعیت', 'error');
+                }
+            } catch (e) {
+                showToast('خطا در ارتباط با سرور', 'error');
+            }
+            
+            btn.disabled = false;
         }
     </script>
 </body>
