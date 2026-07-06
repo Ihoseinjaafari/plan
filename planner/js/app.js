@@ -489,6 +489,24 @@
             });
             datePickers['editDateCalendar'] = editPicker;
 
+            // Picker برای فیلتر تاریخ از
+            var filterFromPicker = new JalaliDatePicker('filterDateFrom', 'filterDateFromCalendar', {
+                defaultDate: '',
+                onSelect: function(dateStr) {
+                    document.getElementById('filterDateFrom').value = dateStr;
+                }
+            });
+            datePickers['filterDateFromCalendar'] = filterFromPicker;
+
+            // Picker برای فیلتر تاریخ تا
+            var filterToPicker = new JalaliDatePicker('filterDateTo', 'filterDateToCalendar', {
+                defaultDate: '',
+                onSelect: function(dateStr) {
+                    document.getElementById('filterDateTo').value = dateStr;
+                }
+            });
+            datePickers['filterDateToCalendar'] = filterToPicker;
+
             window.datePickers = datePickers;
         }
 
@@ -516,7 +534,10 @@
             if (currentFilter === 'completed') {
                 filtered = filtered.filter(function(t) { return t.done === true; });
                 if (filters.dateFrom && filters.dateTo) {
-                    filtered = filtered.filter(function(t) { return t.date >= filters.dateFrom && t.date <= filters.dateTo; });
+                    // تبدیل تاریخ‌های شمسی فیلتر به میلادی برای مقایسه
+                    var fromDateGreg = toGregorianDate(filters.dateFrom);
+                    var toDateGreg = toGregorianDate(filters.dateTo);
+                    filtered = filtered.filter(function(t) { return t.date >= fromDateGreg && t.date <= toDateGreg; });
                 }
                 if (filters.priority) filtered = filtered.filter(function(t) { return t.priority === filters.priority; });
                 if (filters.category) filtered = filtered.filter(function(t) { return t.category === filters.category; });
@@ -1029,6 +1050,7 @@
             var fromDate = document.getElementById('filterDateFrom').value;
             var toDate = document.getElementById('filterDateTo').value;
             if (fromDate && toDate) {
+                // تبدیل تاریخ شمسی به میلادی برای مقایسه
                 filters.dateFrom = fromDate;
                 filters.dateTo = toDate;
                 renderTasks();
