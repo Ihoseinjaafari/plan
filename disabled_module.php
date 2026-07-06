@@ -6,8 +6,15 @@ session_start();
 // دریافت نام ماژول از پارامتر URL
 $module_name = isset($_GET['module']) ? $_GET['module'] : 'section';
 
+// اگر ماژول home بود، مستقیماً به داشبورد هدایت شود (بدون نمایش صفحه غیرفعال)
+if ($module_name === 'home') {
+    header('Location: ' . BASE_URL . '/dashboard/index.php');
+    exit;
+}
+
 // لیست نام‌های فارسی ماژول‌ها
 $module_names = [
+    'home' => 'منوی اصلی',
     'planner' => 'پلنر تسک‌ها',
     'projects' => 'مدیریت پروژه‌ها',
     'lifeplan' => 'لایف‌پلن',
