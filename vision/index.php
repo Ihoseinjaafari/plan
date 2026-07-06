@@ -22,7 +22,7 @@ $current_user = $_SESSION['username'] ?? $_SESSION['user_id'] ?? 'user';
         :root { --primary-color: #4f46e5; --bg-color: #f3f4f6; }
         body { font-family: 'Vazirmatn', sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; overflow: hidden; }
         #vision-board-container { width: 100vw; height: calc(100vh - 80px); position: relative; overflow: auto; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; background-color: #f8fafc; }
-        .toolbar { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; gap: 15px; z-index: 1000; align-items: center; }
+        .toolbar { position: fixed; top: 110px; left: 50%; transform: translateX(-50%); background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; gap: 15px; z-index: 1000; align-items: center; }
         .tool-btn { background: #f3f4f6; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-family: 'Vazirmatn', sans-serif; font-weight: bold; color: #374151; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
         .tool-btn:hover { background: #e5e7eb; transform: translateY(-2px); }
         .tool-btn.primary { background: var(--primary-color); color: white; }
@@ -193,7 +193,14 @@ $current_user = $_SESSION['username'] ?? $_SESSION['user_id'] ?? 'user';
             }).catch(err => console.error('Error loading:', err));
         }
 
-        function clearBoard() { if(confirm('آیا مطمئن هستید؟ تمام آیتم‌ها پاک خواهند شد.')) { boardContainer.innerHTML = ''; items = []; saveBoard(); } }
+        function clearBoard() { 
+            if(confirm('آیا مطمئن هستید؟ تمام آیتم‌ها پاک خواهند شد.')) { 
+                boardContainer.innerHTML = ''; 
+                items = []; 
+                saveBoard(); 
+            } 
+        }
+        
         function showStatus(msg) { statusMsg.textContent = msg; }
     </script>
 </body>
