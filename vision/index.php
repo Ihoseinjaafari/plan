@@ -1,4 +1,15 @@
 <?php
+// ==================== بررسی فعال بودن ماژول ====================
+$settingsFile = __DIR__ . '/../data/settings.json';
+if (file_exists($settingsFile)) {
+    $settings = json_decode(file_get_contents($settingsFile), true);
+    if (isset($settings['modules']['vision']['enabled']) && 
+        $settings['modules']['vision']['enabled'] === false) {
+        header('Location: ../disabled_module.php?module=vision');
+        exit;
+    }
+}
+
 session_start();
 
 // احراز هویت: اگر کاربر لاگین نکرده، به صفحه ورود هدایت شود

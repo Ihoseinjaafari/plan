@@ -32,6 +32,43 @@ if (!defined('BASE_PATH')) {
 
 // تنظیم عنوان صفحه
 if (!isset($page_title)) $page_title = 'Life+';
+
+// ==================== تابع بررسی فعال بودن ماژول‌ها ====================
+function isModuleEnabled($moduleName) {
+    $settingsFile = BASE_PATH . '/data/settings.json';
+    if (!file_exists($settingsFile)) {
+        return true; // اگر فایل تنظیمات نبود، همه ماژول‌ها فعال باشند
+    }
+    
+    $settings = json_decode(file_get_contents($settingsFile), true);
+    if (!isset($settings['modules'][$moduleName])) {
+        return true; // اگر ماژول در تنظیمات نبود، فعال فرض شود
+    }
+    
+    return isset($settings['modules'][$moduleName]['enabled']) && 
+           $settings['modules'][$moduleName]['enabled'] === true;
+}
+
+// ==================== دریافت لیست ماژول‌های فعال ====================
+function getEnabledModules() {
+    $settingsFile = BASE_PATH . '/data/settings.json';
+    if (!file_exists($settingsFile)) {
+        return ['planner', 'projects', 'lifeplan', 'vision', 'finance', 'health', 'calendar', 'dashboard'];
+    }
+    
+    $settings = json_decode(file_get_contents($settingsFile), true);
+    $enabledModules = [];
+    
+    if (isset($settings['modules'])) {
+        foreach ($settings['modules'] as $key => $module) {
+            if (isset($module['enabled']) && $module['enabled'] === true) {
+                $enabledModules[] = $key;
+            }
+        }
+    }
+    
+    return $enabledModules;
+}
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -695,40 +732,52 @@ if (!isset($page_title)) $page_title = 'Life+';
         <!-- دکمه‌های هدر -->
         <div class="header-actions">
             <!-- دکمه داشبورد -->
+            <?php if (isModuleEnabled('dashboard')): ?>
             <a href="<?= BASE_URL ?>/dashboard" class="nav-btn" title="داشبورد">
                 <span class="icon icon-home"></span>
                 <span>داشبورد</span>
             </a>
+            <?php endif; ?>
             
             <!-- دکمه لایف‌ پلن -->
+            <?php if (isModuleEnabled('lifeplan')): ?>
             <a href="<?= BASE_URL ?>/lifeplan/index.php" class="nav-btn" title="لایف‌ پلن">
                 <span class="icon icon-lifeplan"></span>
                 <span>لایف‌ پلن</span>
             </a>
+            <?php endif; ?>
 
             <!-- دکمه مدیریت مالی -->
+            <?php if (isModuleEnabled('finance')): ?>
             <a href="<?= BASE_URL ?>/finance/index.php" class="nav-btn" title="مدیریت مالی">
                 <span class="icon icon-chart"></span>
                 <span>مالی</span>
             </a>
+            <?php endif; ?>
 
             <!-- دکمه تقویم -->
+            <?php if (isModuleEnabled('calendar')): ?>
             <a href="<?= BASE_URL ?>/calendar/index.php" class="nav-btn" title="تقویم">
                 <span class="icon icon-calendar"></span>
                 <span>تقویم</span>
             </a>
+            <?php endif; ?>
 
             <!-- دکمه پروژه‌ها -->
+            <?php if (isModuleEnabled('projects')): ?>
             <a href="<?= BASE_URL ?>/projects/index.php" class="nav-btn" title="پروژه‌ها">
                 <span class="icon icon-project"></span>
                 <span>پروژه‌ها</span>
             </a>
+            <?php endif; ?>
             
             <!-- دکمه پلنر -->
+            <?php if (isModuleEnabled('planner')): ?>
             <a href="<?= BASE_URL ?>/planner/index.php" class="nav-btn" title="پلنر">
                 <span class="icon icon-fire"></span>
                 <span>پلنر</span>
             </a>
+            <?php endif; ?>
 
             <!-- دکمه اعلان‌ها -->
             <button class="icon-btn" id="notificationsBtn" title="اعلان‌ها">
@@ -806,34 +855,44 @@ if (!isset($page_title)) $page_title = 'Life+';
         <!-- آیتم‌های منو -->
         <div class="menu-items">
             <!-- برنامه ریز -->
+            <?php if (isModuleEnabled('planner')): ?>
             <a href="<?= BASE_URL ?>/planner/index.php">
                 <span class="icon icon-fire"></span>
                 برنامه‌ریز
             </a>
+            <?php endif; ?>
 
             <!-- لایف پلن -->
+            <?php if (isModuleEnabled('lifeplan')): ?>
             <a href="<?= BASE_URL ?>/lifeplan/index.php">
                 <span class="icon icon-lifeplan"></span>
                 لایف‌ پلن
             </a>
+            <?php endif; ?>
 
             <!-- مدیریت مالی -->
+            <?php if (isModuleEnabled('finance')): ?>
             <a href="<?= BASE_URL ?>/finance/index.php">
                 <span class="icon icon-chart"></span>
                 مدیریت مالی
             </a>
+            <?php endif; ?>
 
             <!-- پروژه‌ها -->
+            <?php if (isModuleEnabled('projects')): ?>
             <a href="<?= BASE_URL ?>/projects/index.php">
                 <span class="icon icon-project"></span>
                 پروژه‌ها
             </a>
+            <?php endif; ?>
 
             <!-- تقویم -->
+            <?php if (isModuleEnabled('calendar')): ?>
             <a href="<?= BASE_URL ?>/calendar/index.php">
                 <span class="icon icon-calendar"></span>
                 تقویم
             </a>
+            <?php endif; ?>
 
             <!-- خروج -->
             <?php if (isset($_SESSION['user_id'])): ?>
