@@ -3,6 +3,17 @@
 session_start();
 date_default_timezone_set('Asia/Tehran');
 
+// ==================== بررسی فعال بودن ماژول ====================
+$settingsFile = __DIR__ . '/../data/settings.json';
+if (file_exists($settingsFile)) {
+    $settings = json_decode(file_get_contents($settingsFile), true);
+    if (isset($settings['modules']['finance']['enabled']) && 
+        $settings['modules']['finance']['enabled'] === false) {
+        header('Location: ../disabled_module.php?module=finance');
+        exit;
+    }
+}
+
 // ==================== بررسی احراز هویت ====================
 $usersFile = __DIR__ . '/../data/users.json';
 

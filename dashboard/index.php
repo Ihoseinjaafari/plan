@@ -5,6 +5,17 @@
 session_start();
 date_default_timezone_set('Asia/Tehran');
 
+// ==================== بررسی فعال بودن ماژول ====================
+$settingsFile = __DIR__ . '/../data/settings.json';
+if (file_exists($settingsFile)) {
+    $settings = json_decode(file_get_contents($settingsFile), true);
+    if (isset($settings['modules']['dashboard']['enabled']) && 
+        $settings['modules']['dashboard']['enabled'] === false) {
+        header('Location: ../disabled_module.php?module=dashboard');
+        exit;
+    }
+}
+
 // ==================== تنظیم عنوان صفحه برای هدر ====================
 $page_title = 'داشبورد مدیریت زندگی';
 
