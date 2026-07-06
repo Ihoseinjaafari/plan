@@ -4,6 +4,9 @@
  * Handles CRUD operations for vision board items
  */
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -18,7 +21,7 @@ $dataDir = __DIR__ . '/data';
 $uploadDir = __DIR__ . '/uploads';
 $dataFile = $dataDir . '/vision_items.json';
 
-// Ensure directories exist
+// Ensure directories exist and are writable
 if (!file_exists($dataDir)) {
     mkdir($dataDir, 0777, true);
 }
@@ -27,6 +30,18 @@ if (!file_exists($uploadDir)) {
 }
 if (!file_exists($dataFile)) {
     file_put_contents($dataFile, json_encode([]));
+}
+
+// Check if directories are writable
+if (!is_writable($dataDir)) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Data directory is not writable']);
+    exit();
+}
+if (!is_writable($uploadDir)) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Upload directory is not writable']);
+    exit();
 }
 
 // Get current user ID (in real app, this would come from session/auth)
