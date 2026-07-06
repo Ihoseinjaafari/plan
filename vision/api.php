@@ -41,7 +41,7 @@ if ($method === 'GET' && $action === 'load') {
     $input = file_get_contents('php://input');
     $data = json_decode($input, true);
     
-    if (!isset($data['user']) || $data['user'] !== $current_user) {
+    if (!isset($data['user'])) {
         echo json_encode(['success' => false, 'message' => 'کاربر نامعتبر است']);
         exit;
     }
@@ -55,6 +55,29 @@ if ($method === 'GET' && $action === 'load') {
         }
     } else {
         echo json_encode(['success' => false, 'message' => 'داده‌ای برای ذخیره وجود ندارد']);
+    }
+} elseif ($method === 'POST' && $action === 'upload_image') {
+    // آپلود تصویر
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['image'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
+        if (!in_array($ext, $allowed)) {
+            echo json_encode(['success' => false, 'error' => 'فرمت فایل مجاز نیست']);
+            exit;
+        }
+        
+        $filename = uniqid() . '_' . time() . '.' . $ext;
+        $filepath = $upload_dir . $filename;
+        
+        if (move_uploaded_file($file['tmp_name'], $filepath)) {
+            echo json_encode(['success' => true, 'path' => 'uploads/' . $filename]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'خطا در ذخیره فایل']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'error' => 'فایلی انتخاب نشده است']);
     }
 } else {
     echo json_encode(['success' => false, 'message' => 'درخواست نامعتبر: ' . $method . ' - ' . $action]);
