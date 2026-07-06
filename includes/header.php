@@ -723,7 +723,7 @@ function getEnabledModules() {
     <header class="header" id="mainHeader">
         <!-- لوگو و عنوان -->
         <h1>
-            <a href="<?= BASE_URL ?>/index.php">
+            <a href="<?= BASE_URL ?>/auth/login.php">
                 <span class="icon icon-seedling"></span>
                 <?= htmlspecialchars($page_title) ?>
             </a>
@@ -733,7 +733,7 @@ function getEnabledModules() {
         <div class="header-actions">
             <!-- دکمه منوی اصلی (خانه) -->
             <?php if (isModuleEnabled('home')): ?>
-            <a href="<?= BASE_URL ?>/index.php" class="nav-btn" title="منوی اصلی">
+            <a href="<?= BASE_URL ?>/auth/login.php" class="nav-btn" title="منوی اصلی">
                 <span class="icon icon-home"></span>
                 <span>منوی اصلی</span>
             </a>
@@ -864,7 +864,7 @@ function getEnabledModules() {
         <div class="menu-items">
             <!-- منوی اصلی -->
             <?php if (isModuleEnabled('home')): ?>
-            <a href="<?= BASE_URL ?>/index.php">
+            <a href="<?= BASE_URL ?>/auth/login.php">
                 <span class="icon icon-home"></span>
                 منوی اصلی
             </a>
@@ -1041,7 +1041,7 @@ function getEnabledModules() {
                         document.cookie.split(";").forEach(function(c) { 
                             document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
                         });
-                        window.location.href = '<?= BASE_URL ?>/index.php';
+                        window.location.href = '<?= BASE_URL ?>/auth/login.php';
                     })
                     .catch(() => {
                         // در صورت خطا، مستقیماً به فایل logout.php هدایت می‌شویم
