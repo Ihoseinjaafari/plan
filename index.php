@@ -11,12 +11,44 @@ $usersFile = 'data/users.json';
 function getSettings() {
     global $settingsFile;
     if (!file_exists($settingsFile)) {
-        $default = ['registration_enabled' => true];
+        $default = [
+            'registration_enabled' => true,
+            'modules' => [
+                'planner' => ['enabled' => true],
+                'projects' => ['enabled' => true],
+                'lifeplan' => ['enabled' => true],
+                'vision' => ['enabled' => true],
+                'finance' => ['enabled' => true],
+                'health' => ['enabled' => true],
+                'calendar' => ['enabled' => true],
+                'dashboard' => ['enabled' => true]
+            ]
+        ];
         file_put_contents($settingsFile, json_encode($default, JSON_PRETTY_PRINT));
         return $default;
     }
     $settings = json_decode(file_get_contents($settingsFile), true);
-    return is_array($settings) ? $settings : ['registration_enabled' => true];
+    if (!is_array($settings)) {
+        $settings = ['registration_enabled' => true];
+    }
+    if (!isset($settings['modules'])) {
+        $settings['modules'] = [
+            'planner' => ['enabled' => true],
+            'projects' => ['enabled' => true],
+            'lifeplan' => ['enabled' => true],
+            'vision' => ['enabled' => true],
+            'finance' => ['enabled' => true],
+            'health' => ['enabled' => true],
+            'calendar' => ['enabled' => true],
+            'dashboard' => ['enabled' => true]
+        ];
+    }
+    return $settings;
+}
+
+function isModuleEnabled($moduleId) {
+    $settings = getSettings();
+    return $settings['modules'][$moduleId]['enabled'] ?? true;
 }
 
 function getAllUsers() {
@@ -661,6 +693,7 @@ $registrationEnabled = getSettings()['registration_enabled'] ?? true;
         <!-- منوی اصلی -->
         <div class="main-menu">
             <!-- Planner -->
+            <?php if (isModuleEnabled('planner')): ?>
             <a href="planner/index.php" class="menu-card planner">
                 <span class="badge">فعال</span>
                 <div class="card-icon"><i class="fas fa-tasks"></i></div>
@@ -668,38 +701,67 @@ $registrationEnabled = getSettings()['registration_enabled'] ?? true;
                 <p>برنامه‌ریزی روزانه، مدیریت تسک‌ها و پروژه‌ها</p>
                 <span class="card-arrow"><i class="fas fa-arrow-left"></i> ورود</span>
             </a>
+            <?php endif; ?>
 
             <!-- LifePlan -->
+            <?php if (isModuleEnabled('lifeplan')): ?>
             <a href="lifeplan/index.php" class="menu-card lifeplan">
                 <div class="card-icon"><i class="fas fa-compass"></i></div>
                 <h3>🧭 LifePlan</h3>
                 <p>برنامه‌ریزی بلندمدت، اهداف و چشم‌انداز زندگی</p>
                 <span class="card-arrow"><i class="fas fa-arrow-left"></i> ورود</span>
             </a>
+            <?php endif; ?>
 
             <!-- مدیریت مالی -->
+            <?php if (isModuleEnabled('finance')): ?>
             <a href="finance/index.php" class="menu-card finance">
                 <div class="card-icon"><i class="fas fa-wallet"></i></div>
                 <h3>💰 مدیریت مالی</h3>
                 <p>حسابداری شخصی، مدیریت هزینه و درآمد</p>
                 <span class="card-arrow"><i class="fas fa-arrow-left"></i> ورود</span>
             </a>
+            <?php endif; ?>
 
             <!-- پروژه‌ها -->
+            <?php if (isModuleEnabled('projects')): ?>
             <a href="projects/index.php" class="menu-card projects">
                 <div class="card-icon"><i class="fas fa-project-diagram"></i></div>
                 <h3>📊 پروژه‌ها</h3>
                 <p>مدیریت پروژه‌های شخصی و تیمی</p>
                 <span class="card-arrow"><i class="fas fa-arrow-left"></i> ورود</span>
             </a>
+            <?php endif; ?>
 
             <!-- تقویم -->
+            <?php if (isModuleEnabled('calendar')): ?>
             <a href="/calendar/index.php" class="menu-card calendar">
                 <div class="card-icon"><i class="fas fa-calendar-alt"></i></div>
                 <h3>📅 تقویم</h3>
                 <p>تقویم شمسی با نمایش تسک‌ها</p>
                 <span class="card-arrow"><i class="fas fa-arrow-left"></i> ورود</span>
             </a>
+            <?php endif; ?>
+
+            <!-- ویژن برد -->
+            <?php if (isModuleEnabled('vision')): ?>
+            <a href="vision/index.php" class="menu-card vision">
+                <div class="card-icon"><i class="fas fa-eye"></i></div>
+                <h3>🎯 ویژن برد</h3>
+                <p>تصویرسازی اهداف و رویاهای شما</p>
+                <span class="card-arrow"><i class="fas fa-arrow-left"></i> ورود</span>
+            </a>
+            <?php endif; ?>
+
+            <!-- سلامت -->
+            <?php if (isModuleEnabled('health')): ?>
+            <a href="health/index.php" class="menu-card health">
+                <div class="card-icon"><i class="fas fa-heartbeat"></i></div>
+                <h3>❤️ سلامت</h3>
+                <p>مدیریت سلامت و تناسب اندام</p>
+                <span class="card-arrow"><i class="fas fa-arrow-left"></i> ورود</span>
+            </a>
+            <?php endif; ?>
 
             <!-- پروفایل -->
             <a href="profile.php" class="menu-card profile">
