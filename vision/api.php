@@ -5,11 +5,10 @@ header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
+    exit(0);
 }
 
-$dataFile = __DIR__ . '/data/vision_items.json';
+$dataFile = __DIR__ . '/data/vision_board.json';
 $uploadDir = __DIR__ . '/uploads/';
 
 // اطمینان از وجود پوشه‌ها
@@ -23,109 +22,57 @@ if (!file_exists($dataFile)) {
     file_put_contents($dataFile, json_encode(['items' => []]));
 }
 
-$action = $_GET['action'] ?? $_POST['action'] ?? '';
+$action = $_GET['action'] ?? ($_POST['action'] ?? '');
 
 switch ($action) {
-    case 'load':
-        loadData();
-        break;
-    case 'save':
-        saveData();
-        break;
-    case 'upload':
-        uploadImage();
-        break;
-    default:
-        echo json_encode(['success' => false, 'message' => 'عملیات نامعتبر']);
-}
-
-function loadData() {
-    global $dataFile;
-    try {
-        $data = file_get_contents($dataFile);
-        $jsonData = json_decode($data, true);
-        
-        if (json_last_error() === JSON_ERROR_NONE) {
-            echo json_encode([
-                'success' => true,
-                'items' => $jsonData['items'] ?? []
-            ]);
-        } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'خطا در خواندن داده‌ها',
-                'items' => []
-            ]);
-        }
-    } catch (Exception $e) {
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage(),
-            'items' => []
-        ]);
-    }
-}
-
-function saveData() {
-    global $dataFile;
-    try {
-        $input = file_get_contents('php://input');
-        $data = json_decode($input, true);
-        
-        if (json_last_error() === JSON_ERROR_NONE && isset($data['items'])) {
-            $saveData = ['items' => $data['items']];
-            if (file_put_contents($dataFile, json_encode($saveData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
-                echo json_encode(['success' => true, 'message' => 'ذخیره شد']);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'خطا در نوشتن فایل']);
-            }
-        } else {
-            echo json_encode(['success' => false, 'message' => 'داده‌های نامعتبر']);
-        }
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-    }
-}
-
-function uploadImage() {
-    global $uploadDir;
-    
-    if (!isset($_FILES['image'])) {
-        echo json_encode(['success' => false, 'message' => 'فایلی دریافت نشد']);
-        return;
-    }
-    
-    $file = $_FILES['image'];
-    
-    // بررسی خطا
-    if ($file['error'] !== UPLOAD_ERR_OK) {
-        echo json_encode(['success' => false, 'message' => 'خطا در آپلود: ' . $file['error']]);
-        return;
-    }
-    
-    // بررسی نوع فایل
-    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!in_array($file['type'], $allowedTypes)) {
-        echo json_encode(['success' => false, 'message' => 'نوع فایل مجاز نیست']);
-        return;
-    }
-    
-    // ایجاد نام منحصر به فرد
-    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = uniqid('vision_') . '.' . $extension;
-    $filepath = $uploadDir . $filename;
-    
-    // انتقال فایل
-    if (move_uploaded_file($file['tmp_name'], $filepath)) {
-        // مسیر نسبی برای نمایش در مرورگر
-        $relativePath = 'uploads/' . $filename;
+    case 'load_board':
+        $data = json_decode(file_get_contents($dataFile), true);
         echo json_encode([
             'success' => true,
-            'imagePath' => $relativePath,
-            'message' => 'آپلود موفق'
+            'items' => $data['items'] ?? []
         ]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'خطا در ذخیره فایل']);
-    }
+        break;
+
+    case 'save_board':
+        $input = json_decode(file_get_contents('php://input'), true);
+        $items = $input['items'] ?? [];
+        
+        $data = ['items' => $items];
+        if (file_put_contents($dataFile, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'خطا در ذخیره‌سازی']);
+        }
+        break;
+
+    case 'upload_image':
+        if (!isset($_FILES['image'])) {
+            echo json_encode(['success' => false, 'error' => 'فایلی ارسال نشده']);
+            break;
+        }
+
+        $file = $_FILES['image'];
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        
+        if (!in_array($file['type'], $allowedTypes)) {
+            echo json_encode(['success' => false, 'error' => 'فرمت فایل مجاز نیست']);
+            break;
+        }
+
+        $filename = uniqid() . '_' . basename($file['name']);
+        $filepath = $uploadDir . $filename;
+
+        if (move_uploaded_file($file['tmp_name'], $filepath)) {
+            echo json_encode([
+                'success' => true,
+                'path' => 'uploads/' . $filename
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'خطا در آپلود فایل']);
+        }
+        break;
+
+    default:
+        echo json_encode(['success' => false, 'error' => 'عملیات نامعتبر']);
+        break;
 }
-?>
