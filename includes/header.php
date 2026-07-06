@@ -790,11 +790,19 @@ function getEnabledModules() {
             <!-- دکمه اعلان‌ها با شمارنده -->
             <?php
             $notifCount = 0;
-            $notifFile = BASE_PATH . '/data/notifications.json';
+            $notifFile = __DIR__ . '/../data/notifications.json';
             if (file_exists($notifFile)) {
-                $allNotifs = json_decode(file_get_contents($notifFile), true);
+                $jsonContent = file_get_contents($notifFile);
+                $allNotifs = json_decode($jsonContent, true);
                 if (is_array($allNotifs)) {
-                    $readNotifs = $_SESSION['read_notifications'][$_SESSION['user_id']] ?? [];
+                    // Initialize session if needed
+                    if (!isset($_SESSION['read_notifications'])) {
+                        $_SESSION['read_notifications'] = [];
+                    }
+                    if (!isset($_SESSION['read_notifications'][$_SESSION['user_id']])) {
+                        $_SESSION['read_notifications'][$_SESSION['user_id']] = [];
+                    }
+                    $readNotifs = $_SESSION['read_notifications'][$_SESSION['user_id']];
                     foreach ($allNotifs as $n) {
                         if (!in_array($n['id'], $readNotifs)) {
                             $notifCount++;
