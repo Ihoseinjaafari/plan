@@ -1,472 +1,200 @@
+<?php
+session_start();
+
+// احراز هویت: اگر کاربر لاگین نکرده، به صفحه ورود هدایت شود
+if (!isset($_SESSION['user_id']) && !isset($_SESSION['logged_in'])) {
+    header('Location: ../planner/login.php');
+    exit;
+}
+
+$current_user = $_SESSION['username'] ?? $_SESSION['user_id'] ?? 'user';
+?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ویژن برد | Vision Board</title>
-    <!-- فونت وزیر -->
+    <title>ویژن برد - تابلو آرزوها</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <!-- کتابخانه Interact.js برای جابجایی و تغییر اندازه -->
+    <link rel="stylesheet" href="../planner/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Vazirmatn', sans-serif;
-            background: #f0f2f5;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* نوار ابزار */
-        #toolbar {
-            height: 60px;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            padding: 0 20px;
-            z-index: 1000;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'Vazirmatn', sans-serif;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .btn-primary { background: #4f46e5; color: white; }
-        .btn-primary:hover { background: #4338ca; }
-        
-        .btn-success { background: #10b981; color: white; }
-        .btn-success:hover { background: #059669; }
-        
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-danger:hover { background: #dc2626; }
-
-        /* بوم */
-        #vision-board {
-            flex: 1;
-            position: relative;
-            overflow: auto;
-            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-            background-size: 25px 25px;
-        }
-
-        /* آیتم‌ها */
-        .vision-item {
-            position: absolute;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            touch-action: none;
-            user-select: none;
-            min-width: 120px;
-            min-height: 120px;
-            border: 2px solid transparent;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .vision-item:hover, .vision-item.dragging {
-            border-color: #4f46e5;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-            z-index: 999 !important;
-        }
-
-        .vision-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            pointer-events: none;
-            display: block;
-            border-radius: 6px;
-        }
-
-        .vision-item textarea {
-            width: 100%;
-            height: 100%;
-            border: none;
-            resize: none;
-            padding: 12px;
-            font-family: 'Vazirmatn', sans-serif;
-            font-size: 14px;
-            background: transparent;
-            outline: none;
-        }
-
-        /* دستگیره‌ها */
-        .resize-handle {
-            position: absolute;
-            bottom: -6px;
-            right: -6px;
-            width: 24px;
-            height: 24px;
-            background: #4f46e5;
-            border-radius: 50%;
-            cursor: nwse-resize;
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 1000;
-        }
-
-        .vision-item:hover .resize-handle,
-        .vision-item.dragging .resize-handle {
-            opacity: 1;
-        }
-
-        /* دکمه حذف */
-        .delete-btn {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            width: 26px;
-            height: 26px;
-            background: #ef4444;
-            color: white;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 24px;
-            font-weight: bold;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .vision-item:hover .delete-btn,
-        .vision-item.dragging .delete-btn {
-            opacity: 1;
-        }
-
-        /* هدر برای دراگ کردن نوت‌ها */
-        .note-header {
-            height: 28px;
-            background: #f3f4f6;
-            border-bottom: 1px solid #e5e7eb;
-            cursor: grab;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6b7280;
-            font-size: 12px;
-            border-radius: 6px 6px 0 0;
-        }
-
-        /* لودینگ */
-        #loading {
-            position: fixed;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 24px;
-            display: none;
-            z-index: 2000;
-        }
-
-        /*Toast*/
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #10b981;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            z-index: 3000;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        /* Input file مخفی */
+        :root { --primary-color: #4f46e5; --bg-color: #f3f4f6; }
+        body { font-family: 'Vazirmatn', sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; overflow: hidden; }
+        #vision-board-container { width: 100vw; height: calc(100vh - 80px); position: relative; overflow: auto; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; background-color: #f8fafc; }
+        .toolbar { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; gap: 15px; z-index: 1000; align-items: center; }
+        .tool-btn { background: #f3f4f6; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-family: 'Vazirmatn', sans-serif; font-weight: bold; color: #374151; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
+        .tool-btn:hover { background: #e5e7eb; transform: translateY(-2px); }
+        .tool-btn.primary { background: var(--primary-color); color: white; }
+        .tool-btn.primary:hover { background: #4338ca; }
+        .tool-btn.danger { background: #ef4444; color: white; }
+        .vision-item { position: absolute; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: move; user-select: none; touch-action: none; min-width: 100px; min-height: 100px; display: flex; flex-direction: column; overflow: visible; border: 1px solid transparent; }
+        .vision-item.selected { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(79,70,229,0.3); }
+        .vision-item img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; border-radius: 8px; }
+        .vision-item textarea { width: 100%; height: 100%; border: none; background: transparent; resize: none; padding: 10px; font-family: 'Vazirmatn', sans-serif; font-size: 14px; outline: none; text-align: center; }
+        .delete-btn { position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 16px; z-index: 10; }
+        .vision-item:hover .delete-btn { display: flex; }
+        .resize-handle { position: absolute; bottom: -5px; right: -5px; width: 15px; height: 15px; background: var(--primary-color); border-radius: 50%; cursor: nwse-resize; display: none; }
+        .vision-item:hover .resize-handle { display: block; }
         #file-input { display: none; }
+        #status-msg { font-size: 0.9rem; color: #059669; margin-right: 10px; }
     </style>
 </head>
 <body>
-    <!-- نوار ابزار -->
-    <div id="toolbar">
-        <button class="btn btn-primary" onclick="triggerFileInput()">
-            📷 افزودن تصویر
-        </button>
-        <button class="btn btn-primary" onclick="addNote()">
-            📝 افزودن یادداشت
-        </button>
-        <div style="flex:1;"></div>
-        <button class="btn btn-success" onclick="saveBoard()">
-            💾 ذخیره
-        </button>
-        <button class="btn btn-danger" onclick="clearBoard()">
-            🗑️ پاکسازی
-        </button>
+    <?php include '../planner/header.php'; ?>
+    <div class="toolbar">
+        <button class="tool-btn primary" onclick="triggerImageUpload()"><span>📷</span> افزودن تصویر</button>
+        <button class="tool-btn" onclick="addTextNote()"><span>📝</span> یادداشت</button>
+        <div style="width: 1px; height: 20px; background: #ddd; margin: 0 5px;"></div>
+        <button class="tool-btn primary" onclick="saveBoard()"><span>💾</span> ذخیره تغییرات</button>
+        <button class="tool-btn danger" onclick="clearBoard()"><span>🗑️</span> پاک کردن همه</button>
+        <span id="status-msg"></span>
     </div>
-
-    <!-- لودینگ -->
-    <div id="loading">در حال پردازش...</div>
-
-    <!-- بوم -->
-    <div id="vision-board"></div>
-
-    <!-- اینپوت فایل -->
-    <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(this)">
-
+    <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)">
+    <div id="vision-board-container"></div>
     <script>
+        const boardContainer = document.getElementById('vision-board-container');
+        const statusMsg = document.getElementById('status-msg');
         let items = [];
-        let board = document.getElementById('vision-board');
-        let zIndex = 100;
+        let currentUserId = '<?php echo $current_user; ?>';
 
-        // بارگذاری اولیه
-        window.addEventListener('DOMContentLoaded', () => {
-            loadBoard();
-            setupInteract();
-        });
+        document.addEventListener('DOMContentLoaded', () => { loadBoard(); setupInteract(); });
 
-        // تنظیم Interact.js
         function setupInteract() {
-            interact('.vision-item')
-                .draggable({
-                    listeners: {
-                        move(event) {
-                            const target = event.target;
-                            let x = parseFloat(target.dataset.x || 0) + event.dx;
-                            let y = parseFloat(target.dataset.y || 0) + event.dy;
-                            
-                            target.style.transform = `translate(${x}px, ${y}px)`;
-                            target.dataset.x = x;
-                            target.dataset.y = y;
-                            target.classList.add('dragging');
-                        },
-                        end(event) {
-                            event.target.classList.remove('dragging');
-                            updateItemData(event.target);
-                            debouncedSave();
-                        }
-                    },
-                    modifiers: [
-                        interact.modifiers.restrictRect({
-                            restriction: 'parent',
-                            endOnly: true
-                        })
-                    ]
-                })
-                .resizable({
-                    edges: { right: true, bottom: true },
-                    listeners: {
-                        move(event) {
-                            let x = parseFloat(event.target.dataset.x || 0);
-                            let y = parseFloat(event.target.dataset.y || 0);
-                            
-                            event.target.style.width = event.rect.width + 'px';
-                            event.target.style.height = event.rect.height + 'px';
-                            event.target.style.transform = `translate(${x}px, ${y}px)`;
-                            
-                            event.target.dataset.x = x;
-                            event.target.dataset.y = y;
-                            event.target.classList.add('dragging');
-                        },
-                        end(event) {
-                            event.target.classList.remove('dragging');
-                            updateItemData(event.target);
-                            debouncedSave();
-                        }
-                    },
-                    modifiers: [
-                        interact.modifiers.restrictSize({
-                            min: { width: 100, height: 100 }
-                        })
-                    ],
-                    inertia: true
-                })
-                .on('tap', function(event) {
-                    zIndex++;
-                    event.currentTarget.style.zIndex = zIndex;
-                });
-        }
-
-        // افزودن تصویر
-        function triggerFileInput() {
-            document.getElementById('file-input').click();
-        }
-
-        function handleFileSelect(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                const formData = new FormData();
-                formData.append('image', file);
-                formData.append('action', 'upload');
-                
-                showLoading(true);
-                
-                fetch('api.php', { method: 'POST', body: formData })
-                    .then(res => res.json())
-                    .then(data => {
-                        showLoading(false);
-                        if (data.success) {
-                            createItem('image', data.path, 50, 50, 300, 300);
-                            saveBoard();
-                        } else {
-                            alert('خطا: ' + (data.error || 'نامشخص'));
-                        }
-                    })
-                    .catch(err => {
-                        showLoading(false);
-                        alert('خطا در ارتباط با سرور');
-                        console.error(err);
-                    });
-                
-                input.value = '';
-            }
-        }
-
-        // افزودن یادداشت
-        function addNote() {
-            createItem('note', 'یادداشت جدید...', 50, 50, 250, 200);
-            saveBoard();
-        }
-
-        // ساخت آیتم
-        function createItem(type, content, x, y, w, h) {
-            const id = 'item-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-            
-            const div = document.createElement('div');
-            div.className = 'vision-item';
-            div.id = id;
-            div.dataset.type = type;
-            div.dataset.x = x;
-            div.dataset.y = y;
-            div.style.width = w + 'px';
-            div.style.height = h + 'px';
-            div.style.zIndex = ++zIndex;
-            div.style.transform = `translate(${x}px, ${y}px)`;
-            
-            let html = `<div class="delete-btn" onclick="removeItem('${id}')">×</div>`;
-            html += `<div class="resize-handle"></div>`;
-            
-            if (type === 'image') {
-                html += `<img src="${content}" draggable="false">`;
-            } else {
-                html += `<div class="note-header">جابجایی</div>`;
-                html += `<textarea>${content}</textarea>`;
-            }
-            
-            div.innerHTML = html;
-            board.appendChild(div);
-            
-            items.push({ id, type, content, x, y, w, h, z: zIndex });
-        }
-
-        // حذف آیتم
-        function removeItem(id) {
-            if (!confirm('حذف شود؟')) return;
-            const el = document.getElementById(id);
-            if (el) el.remove();
-            items = items.filter(i => i.id !== id);
-            saveBoard();
-        }
-
-        // پاک کردن همه
-        function clearBoard() {
-            if (!confirm('همه موارد پاک شوند؟')) return;
-            board.innerHTML = '';
-            items = [];
-            saveBoard();
-        }
-
-        // بروزرسانی داده‌های آیتم
-        function updateItemData(el) {
-            const item = items.find(i => i.id === el.id);
-            if (!item) return;
-            
-            item.x = parseFloat(el.dataset.x || 0);
-            item.y = parseFloat(el.dataset.y || 0);
-            item.w = parseFloat(el.style.width) || item.w;
-            item.h = parseFloat(el.style.height) || item.h;
-            item.z = parseInt(el.style.zIndex) || item.z;
-            
-            if (item.type === 'note') {
-                const txt = el.querySelector('textarea');
-                if (txt) item.content = txt.value;
-            }
-        }
-
-        // ذخیره
-        function saveBoard() {
-            // بروزرسانی همه نوت‌ها
-            document.querySelectorAll('.vision-item[data-type="note"]').forEach(el => updateItemData(el));
-            
-            showLoading(true);
-            fetch('api.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'save', items })
-            })
-            .then(res => res.json())
-            .then(data => {
-                showLoading(false);
-                if (data.success) showToast('ذخیره شد!');
-                else alert('خطا در ذخیره‌سازی');
-            })
-            .catch(() => {
-                showLoading(false);
-                alert('خطا در ارتباط');
+            interact('.vision-item').draggable({
+                listeners: {
+                    move (event) {
+                        const target = event.target;
+                        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+                        target.style.transform = `translate(${x}px, ${y}px)`;
+                        target.setAttribute('data-x', x);
+                        target.setAttribute('data-y', y);
+                    }
+                },
+                modifiers: [interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true })]
+            }).resizable({
+                edges: { left: true, right: true, bottom: true, top: true },
+                listeners: {
+                    move: function (event) {
+                        let { x, y } = event.target.dataset;
+                        x = (parseFloat(x) || 0) + event.deltaRect.left;
+                        y = (parseFloat(y) || 0) + event.deltaRect.top;
+                        Object.assign(event.target.style, { width: `${event.rect.width}px`, height: `${event.rect.height}px`, transform: `translate(${x}px, ${y}px)` });
+                        Object.assign(event.target.dataset, { x, y });
+                    }
+                },
+                modifiers: [interact.modifiers.restrictSize({ min: { width: 100, height: 100 } }), interact.modifiers.restrictEdges({ outer: 'parent' })]
+            }).on('tap', function (event) {
+                document.querySelectorAll('.vision-item').forEach(el => el.classList.remove('selected'));
+                event.currentTarget.classList.add('selected');
             });
         }
 
-        // ذخیره با تاخیر
-        let saveTimer;
-        function debouncedSave() {
-            clearTimeout(saveTimer);
-            saveTimer = setTimeout(saveBoard, 800);
+        function triggerImageUpload() { document.getElementById('file-input').click(); }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) { createImageItem(e.target.result); };
+            reader.readAsDataURL(file);
+            event.target.value = '';
         }
 
-        // بارگذاری
+        function createImageItem(src, x = 50, y = 50, width = 300, height = 200) {
+            const id = 'item-' + Date.now();
+            const item = document.createElement('div');
+            item.className = 'vision-item';
+            item.id = id;
+            item.style.width = width + 'px';
+            item.style.height = height + 'px';
+            item.style.transform = `translate(${x}px, ${y}px)`;
+            item.setAttribute('data-x', x);
+            item.setAttribute('data-y', y);
+            item.dataset.type = 'image';
+            item.dataset.src = src;
+            item.innerHTML = `<img src="${src}" draggable="false"><button class="delete-btn" onclick="removeItem('${id}')">×</button><div class="resize-handle"></div>`;
+            boardContainer.appendChild(item);
+            items.push({ id, type: 'image', src, x, y, width, height });
+        }
+
+        function addTextNote() {
+            const id = 'item-' + Date.now();
+            const x = 100 + Math.random() * 50;
+            const y = 100 + Math.random() * 50;
+            const width = 250;
+            const height = 150;
+            const item = document.createElement('div');
+            item.className = 'vision-item';
+            item.id = id;
+            item.style.width = width + 'px';
+            item.style.height = height + 'px';
+            item.style.transform = `translate(${x}px, ${y}px)`;
+            item.setAttribute('data-x', x);
+            item.setAttribute('data-y', y);
+            item.dataset.type = 'text';
+            item.dataset.content = 'یادداشت جدید...';
+            item.innerHTML = `<textarea placeholder="متن انگیزشی خود را بنویسید...">یادداشت جدید...</textarea><button class="delete-btn" onclick="removeItem('${id}')">×</button><div class="resize-handle"></div>`;
+            const textarea = item.querySelector('textarea');
+            textarea.addEventListener('input', (e) => { item.dataset.content = e.target.value; });
+            boardContainer.appendChild(item);
+            items.push({ id, type: 'text', content: 'یادداشت جدید...', x, y, width, height });
+        }
+
+        function removeItem(id) { const el = document.getElementById(id); if (el) el.remove(); items = items.filter(i => i.id !== id); }
+
+        function saveBoard() {
+            showStatus('در حال ذخیره...');
+            items = [];
+            document.querySelectorAll('.vision-item').forEach(el => {
+                const x = parseFloat(el.getAttribute('data-x')) || 0;
+                const y = parseFloat(el.getAttribute('data-y')) || 0;
+                const width = el.offsetWidth;
+                const height = el.offsetHeight;
+                const itemData = { id: el.id, type: el.dataset.type, x, y, width, height };
+                if (el.dataset.type === 'image') { itemData.src = el.dataset.src; }
+                else if (el.dataset.type === 'text') { itemData.content = el.querySelector('textarea').value; }
+                items.push(itemData);
+            });
+            fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save', user: currentUserId, items: items }) })
+            .then(res => res.json()).then(data => {
+                if (data.success) { showStatus('ذخیره شد! ✅'); setTimeout(() => showStatus(''), 2000); }
+                else { showStatus('خطا در ذخیره: ' + data.message); }
+            }).catch(err => { console.error(err); showStatus('خطای ارتباط با سرور'); });
+        }
+
         function loadBoard() {
-            showLoading(true);
-            fetch('api.php?action=load')
-                .then(res => res.json())
-                .then(data => {
-                    showLoading(false);
-                    if (data.success && data.items) {
-                        items = data.items;
-                        board.innerHTML = '';
-                        items.forEach(it => createItem(it.type, it.content, it.x, it.y, it.w, it.h));
-                    }
-                })
-                .catch(() => showLoading(false));
+            fetch(`api.php?action=load&user=${currentUserId}`).then(res => res.json()).then(data => {
+                if (data.success && data.items) {
+                    items = data.items;
+                    boardContainer.innerHTML = '';
+                    items.forEach(item => {
+                        if (item.type === 'image') { createImageItem(item.src, item.x, item.y, item.width, item.height); }
+                        else if (item.type === 'text') {
+                            const id = item.id;
+                            const el = document.createElement('div');
+                            el.className = 'vision-item';
+                            el.id = id;
+                            el.style.width = item.width + 'px';
+                            el.style.height = item.height + 'px';
+                            el.style.transform = `translate(${item.x}px, ${item.y}px)`;
+                            el.setAttribute('data-x', item.x);
+                            el.setAttribute('data-y', item.y);
+                            el.dataset.type = 'text';
+                            el.innerHTML = `<textarea>${item.content || ''}</textarea><button class="delete-btn" onclick="removeItem('${id}')">×</button><div class="resize-handle"></div>`;
+                            const textarea = el.querySelector('textarea');
+                            textarea.addEventListener('input', (e) => { el.dataset.content = e.target.value; });
+                            boardContainer.appendChild(el);
+                        }
+                    });
+                    setupInteract();
+                }
+            }).catch(err => console.error('Error loading:', err));
         }
 
-        // نمایش لودینگ
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
-        }
-
-        // Toast
-        function showToast(msg) {
-            const t = document.createElement('div');
-            t.className = 'toast';
-            t.textContent = msg;
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 2500);
-        }
+        function clearBoard() { if(confirm('آیا مطمئن هستید؟ تمام آیتم‌ها پاک خواهند شد.')) { boardContainer.innerHTML = ''; items = []; saveBoard(); } }
+        function showStatus(msg) { statusMsg.textContent = msg; }
     </script>
 </body>
 </html>
