@@ -227,10 +227,10 @@ class VisionBoard {
         let contentHtml = '';
         
         if (item.type === 'image' && item.image) {
-            contentHtml = `<img src="../${item.image}" class="vision-item-image" alt="Vision item">`;
+            contentHtml = `<img src="${item.image}" class="vision-item-image" alt="Vision item">`;
         } else if (item.type === 'mixed' && item.image) {
             contentHtml = `
-                <img src="../${item.image}" class="vision-item-image" alt="Vision item">
+                <img src="${item.image}" class="vision-item-image" alt="Vision item">
                 <div class="vision-item-text">${item.content}</div>
             `;
         } else {
@@ -291,8 +291,15 @@ class VisionBoard {
         this.draggedItem.classList.remove('dragging');
         
         const boardRect = this.board.getBoundingClientRect();
-        const newX = this.draggedItem.offsetLeft;
-        const newY = this.draggedItem.offsetTop;
+        const draggedRect = this.draggedItem.getBoundingClientRect();
+        
+        // Calculate new position relative to board
+        const newX = draggedRect.left - boardRect.left;
+        const newY = draggedRect.top - boardRect.top;
+        
+        // Apply the new position
+        this.draggedItem.style.left = newX + 'px';
+        this.draggedItem.style.top = newY + 'px';
         
         // Save new position
         this.savePosition(item.id, { x: newX, y: newY });
@@ -380,7 +387,7 @@ class VisionBoard {
         document.getElementById('editItemId').value = item.id;
         document.getElementById('editContent').value = item.content || '';
         document.getElementById('editImagePreview').innerHTML = item.image 
-            ? `<img src="../${item.image}" alt="Current image">` 
+            ? `<img src="${item.image}" alt="Current image">` 
             : '';
         
         this.editItemModal.classList.add('active');
