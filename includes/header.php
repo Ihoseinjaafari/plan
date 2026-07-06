@@ -53,7 +53,7 @@ function isModuleEnabled($moduleName) {
 function getEnabledModules() {
     $settingsFile = BASE_PATH . '/data/settings.json';
     if (!file_exists($settingsFile)) {
-        return ['planner', 'projects', 'lifeplan', 'vision', 'finance', 'health', 'calendar', 'dashboard'];
+        return ['home', 'planner', 'projects', 'lifeplan', 'vision', 'finance', 'health', 'calendar', 'dashboard'];
     }
     
     $settings = json_decode(file_get_contents($settingsFile), true);
