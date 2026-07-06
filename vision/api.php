@@ -40,21 +40,17 @@ if ($method === 'GET' && $action === 'load') {
     // ذخیره داده‌ها
     $input = file_get_contents('php://input');
     $data = json_decode($input, true);
-    
-    if (!isset($data['user'])) {
-        echo json_encode(['success' => false, 'message' => 'کاربر نامعتبر است']);
+
+    if (!isset($data['items']) || !is_array($data['items'])) {
+        echo json_encode(['success' => false, 'message' => 'داده‌های نامعتبر']);
         exit;
     }
-    
-    if (isset($data['items'])) {
-        $items = $data['items'];
-        if (file_put_contents($data_file, json_encode($items, JSON_UNESCAPED_UNICODE))) {
-            echo json_encode(['success' => true, 'message' => 'ذخیره شد']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'خطا در نوشتن فایل']);
-        }
+
+    $items = $data['items'];
+    if (file_put_contents($data_file, json_encode($items, JSON_UNESCAPED_UNICODE))) {
+        echo json_encode(['success' => true, 'message' => 'ذخیره شد']);
     } else {
-        echo json_encode(['success' => false, 'message' => 'داده‌ای برای ذخیره وجود ندارد']);
+        echo json_encode(['success' => false, 'message' => 'خطا در نوشتن فایل']);
     }
 } elseif ($method === 'POST' && $action === 'upload_image') {
     // آپلود تصویر
@@ -62,15 +58,15 @@ if ($method === 'GET' && $action === 'load') {
         $file = $_FILES['image'];
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        
+
         if (!in_array($ext, $allowed)) {
             echo json_encode(['success' => false, 'error' => 'فرمت فایل مجاز نیست']);
             exit;
         }
-        
+
         $filename = uniqid() . '_' . time() . '.' . $ext;
         $filepath = $upload_dir . $filename;
-        
+
         if (move_uploaded_file($file['tmp_name'], $filepath)) {
             echo json_encode(['success' => true, 'path' => 'uploads/' . $filename]);
         } else {
