@@ -1,18 +1,1 @@
-```
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-
-# Environment
-.env
-.env.local
-.env.*
-
-# Editors
-.vscode/
-.idea/
-
-# Original rules preserved
-dashboard/error_log
-```
+Nothing needs to be added to .gitignore since only a PHP source file was modified and no build artifacts, dependencies, or temporary files were detected in the changes.
