@@ -1424,176 +1424,6 @@ include __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
-            <!-- 1. کار و بهره‌وری (تسک‌های امروز) -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-briefcase work-color"></i> کار و بهره‌وری</div>
-                    <a href="../planner/index.php" class="btn-primary btn-sm"><i class="fas fa-plus"></i></a>
-                </div>
-                <div class="card-content">
-                    <?php
-                    $todayTasks = getTasksForDate($current_jy, $current_jm, $current_jd);
-                    $displayTasks = array_slice($todayTasks, 0, 5);
-                    ?>
-                    <?php if (empty($displayTasks)): ?>
-                        <div class="empty-state">هیچ وظیفه‌ای برای امروز ثبت نشده است.</div>
-                    <?php else: ?>
-                        <?php foreach ($displayTasks as $task): ?>
-                            <div class="list-item">
-                                <div class="item-info">
-                                    <span class="check <?php echo ($task['done'] ?? false) ? 'done' : ''; ?>">
-                                        <?php if ($task['done'] ?? false): ?><i class="fas fa-check"></i><?php endif; ?>
-                                    </span>
-                                    <span class="item-title <?php echo ($task['done'] ?? false) ? 'done' : ''; ?>">
-                                        <?php echo htmlspecialchars($task['title']); ?>
-                                    </span>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                        <?php if (count($todayTasks) > 5): ?>
-                            <div style="text-align:center; margin-top:8px; font-size:12px; color:var(--text-muted);">
-                                + <?php echo count($todayTasks) - 5; ?> وظیفه دیگر
-                            </div>
-                        <?php endif; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- 2. مالی -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-wallet finance-color"></i> مالی</div>
-                    <button class="btn-primary btn-sm" onclick="openModal('expense')"><i class="fas fa-plus"></i></button>
-                </div>
-                <div class="card-content">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:5px;">
-                        <span>💰 کل هزینه‌ها: <strong><?php echo number_format($totalExpenses); ?></strong> تومان</span>
-                        <span>🎯 هدف: <strong><?php echo number_format($finance['savings_goal'] ?? 0); ?></strong></span>
-                    </div>
-                    <?php 
-                    $expenses = array_slice($finance['expenses'] ?? [], -4);
-                    if (empty($expenses)): ?>
-                        <div class="empty-state">هیچ هزینه‌ای ثبت نشده است.</div>
-                    <?php else: ?>
-                        <?php foreach ($expenses as $expense): ?>
-                            <div class="list-item">
-                                <span><?php echo htmlspecialchars($expense['title']); ?></span>
-                                <span><strong><?php echo number_format($expense['amount']); ?></strong> تومان</span>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- 3. سلامت -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-heartbeat health-color"></i> سلامت</div>
-                </div>
-                <div class="card-content">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                        <div>
-                            <label style="font-size:13px; color:var(--text-muted);">👣 گام</label>
-                            <input type="number" value="<?php echo $health['steps'] ?? 0; ?>" 
-                                   onchange="updateHealth('steps', this.value)" 
-                                   style="width:100%; padding:8px; border-radius:10px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);">
-                        </div>
-                        <div>
-                            <label style="font-size:13px; color:var(--text-muted);">💧 آب</label>
-                            <input type="number" value="<?php echo $health['water'] ?? 0; ?>" 
-                                   onchange="updateHealth('water', this.value)"
-                                   style="width:100%; padding:8px; border-radius:10px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);">
-                        </div>
-                        <div>
-                            <label style="font-size:13px; color:var(--text-muted);">😴 خواب</label>
-                            <input type="number" value="<?php echo $health['sleep'] ?? 0; ?>" 
-                                   onchange="updateHealth('sleep', this.value)"
-                                   style="width:100%; padding:8px; border-radius:10px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);">
-                        </div>
-                        <div>
-                            <label style="font-size:13px; color:var(--text-muted);">🏋️ ورزش</label>
-                            <input type="text" value="<?php echo htmlspecialchars($health['workout'] ?? ''); ?>" 
-                                   placeholder="مثلاً: ۲۰ دقیقه دویدن"
-                                   onchange="updateHealth('workout', this.value)"
-                                   style="width:100%; padding:8px; border-radius:10px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. عادت‌ها -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-graduation-cap learning-color"></i> عادت‌ها</div>
-                    <button class="btn-primary btn-sm" onclick="openModal('habit')"><i class="fas fa-plus"></i></button>
-                </div>
-                <div class="card-content">
-                    <?php 
-                    $displayHabits = array_slice($habits, -5);
-                    if (empty($displayHabits)): ?>
-                        <div class="empty-state">هیچ عادتی ثبت نشده است.</div>
-                    <?php else: ?>
-                        <?php foreach ($displayHabits as $habit): ?>
-                            <div class="list-item" data-id="<?php echo $habit['id']; ?>">
-                                <div class="item-info">
-                                    <span class="check <?php echo ($habit['done'] ?? false) ? 'done' : ''; ?>" onclick="toggleHabit('<?php echo $habit['id']; ?>')">
-                                        <?php if ($habit['done'] ?? false): ?><i class="fas fa-check"></i><?php endif; ?>
-                                    </span>
-                                    <span class="item-title <?php echo ($habit['done'] ?? false) ? 'done' : ''; ?>">
-                                        <?php echo htmlspecialchars($habit['name']); ?>
-                                    </span>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- 5. روابط -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-users relationships-color"></i> روابط</div>
-                    <button class="btn-primary btn-sm" onclick="openModal('contact')"><i class="fas fa-plus"></i></button>
-                </div>
-                <div class="card-content">
-                    <?php 
-                    $displayContacts = array_slice($contacts, -5);
-                    if (empty($displayContacts)): ?>
-                        <div class="empty-state">هیچ مخاطبی ثبت نشده است.</div>
-                    <?php else: ?>
-                        <?php foreach ($displayContacts as $contact): ?>
-                            <div class="list-item">
-                                <span><strong><?php echo htmlspecialchars($contact['name']); ?></strong> 
-                                    <span style="font-size:12px; color:var(--text-muted);">(<?php echo htmlspecialchars($contact['relation']); ?>)</span>
-                                </span>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- 6. تفریح -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-music leisure-color"></i> تفریح</div>
-                </div>
-                <div class="card-content">
-                    <div style="margin-bottom:12px;">
-                        <label style="font-size:13px; color:var(--text-muted);">🎵 پلی‌لیست</label>
-                        <input type="text" value="<?php echo htmlspecialchars($leisure['playlist'] ?? ''); ?>" 
-                               placeholder="لینک یا نام پلی‌لیست..."
-                               onchange="updateLeisure('playlist', this.value)"
-                               style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary); margin-top:5px;">
-                    </div>
-                    <div>
-                        <label style="font-size:13px; color:var(--text-muted);">⏱️ زمان استراحت (دقیقه)</label>
-                        <input type="number" value="<?php echo $leisure['relax_time'] ?? 0; ?>" 
-                               onchange="updateLeisure('relax_time', this.value)"
-                               style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary); margin-top:5px;">
-                    </div>
-                </div>
-            </div>
-
         </div>
 
         <!-- ===== سایدبار تقویم ===== -->
@@ -2350,7 +2180,77 @@ if (isset($_POST['ajax']) && $_POST['ajax'] == '1') {
         if (!is_array($lifeData)) $lifeData = [];
     }
     
+    // بارگذاری پروژه‌ها
+    $allProjects = [];
+    if (file_exists($projectsFile)) {
+        $allProjects = json_decode(file_get_contents($projectsFile), true);
+        if (!is_array($allProjects)) $allProjects = [];
+    }
+    
     switch ($action) {
+        case 'add_project':
+            $projectName = $_POST['name'] ?? '';
+            $projectDesc = $_POST['description'] ?? '';
+            $projectColor = $_POST['color'] ?? '#667eea';
+            
+            if (empty($projectName)) {
+                $response['success'] = false;
+                $response['message'] = 'نام پروژه الزامی است.';
+                break;
+            }
+            
+            $project = [
+                'id' => uniqid(),
+                'user_id' => $userId,
+                'name' => htmlspecialchars($projectName),
+                'description' => htmlspecialchars($projectDesc),
+                'color' => $projectColor,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+            
+            if (!file_exists($projectsFile) || !is_array($allProjects)) {
+                $allProjects = [];
+            }
+            $allProjects[] = $project;
+            file_put_contents($projectsFile, json_encode($allProjects, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            $response['success'] = true;
+            break;
+            
+        case 'delete_project':
+            $projectId = $_POST['project_id'] ?? '';
+            
+            if (empty($projectId)) {
+                $response['success'] = false;
+                $response['message'] = 'شناسه پروژه نامعتبر است.';
+                break;
+            }
+            
+            if (!file_exists($projectsFile) || !is_array($allProjects)) {
+                $response['success'] = false;
+                $response['message'] = 'فایل پروژه‌ها یافت نشد.';
+                break;
+            }
+            
+            $found = false;
+            $updatedProjects = [];
+            foreach ($allProjects as $p) {
+                if (($p['id'] ?? '') == $projectId && ($p['user_id'] ?? '') == $userId) {
+                    $found = true;
+                } else {
+                    $updatedProjects[] = $p;
+                }
+            }
+            
+            if (!$found) {
+                $response['success'] = false;
+                $response['message'] = 'پروژه یافت نشد.';
+            } else {
+                file_put_contents($projectsFile, json_encode($updatedProjects, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                $response['success'] = true;
+            }
+            break;
+        
         case 'add_expense':
             $expense = [
                 'id' => uniqid(),
@@ -2418,7 +2318,7 @@ if (isset($_POST['ajax']) && $_POST['ajax'] == '1') {
             break;
     }
     
-    if ($response['success']) {
+    if ($response['success'] && !in_array($action, ['add_project', 'delete_project'])) {
         file_put_contents($lifeDataFile, json_encode($lifeData, JSON_PRETTY_PRINT));
     }
     
