@@ -222,7 +222,7 @@ if ($selectedDate) {
 $totalTasks = count($userTasks);
 $doneTasks = count(array_filter($userTasks, function($t) { return $t['done'] ?? false; }));
 $pendingTasks = $totalTasks - $doneTasks;
-$totalExpenses = array_sum(array_column($finance['expenses'] ?? [], 'amount')));
+$totalExpenses = array_sum(array_column($finance['expenses'] ?? [], 'amount'));
 $totalHabits = count($habits);
 $doneHabits = count(array_filter($habits, function($h) { return $h['done'] ?? false; }));
 $totalContacts = count($contacts);
