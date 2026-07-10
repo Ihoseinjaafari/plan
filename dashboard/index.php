@@ -54,6 +54,7 @@ $dataDir = __DIR__ . '/../data/';
 if (!is_dir($dataDir)) mkdir($dataDir, 0777, true);
 
 $tasksFile = $dataDir . 'tasks.json';
+$projectsFile = $dataDir . 'projects.json';
 $lifeDataFile = $dataDir . 'life_data_' . $userId . '.json';
 
 // ==================== خواندن تسک‌ها ====================
@@ -66,6 +67,42 @@ if (file_exists($tasksFile)) {
 $userTasks = array_values(array_filter($allTasks, function($task) use ($userId) {
     return ($task['user_id'] ?? '') == $userId;
 }));
+
+// ==================== خواندن پروژه‌ها ====================
+$allProjects = [];
+if (file_exists($projectsFile)) {
+    $allProjects = json_decode(file_get_contents($projectsFile), true);
+    if (!is_array($allProjects)) $allProjects = [];
+}
+
+$userProjects = array_values(array_filter($allProjects, function($project) use ($userId) {
+    return ($project['user_id'] ?? '') == $userId;
+}));
+
+// محاسبه پیشرفت هر پروژه
+function getProjectProgress($projectId, $userTasks) {
+    $projectTasks = array_values(array_filter($userTasks, function($t) use ($projectId) {
+        return ($t['project_id'] ?? '') == $projectId;
+    }));
+    
+    if (empty($projectTasks)) {
+        return ['total' => 0, 'done' => 0, 'pending' => 0, 'percent' => 0];
+    }
+    
+    $total = count($projectTasks);
+    $done = count(array_filter($projectTasks, function($t) {
+        return $t['done'] == true;
+    }));
+    $pending = $total - $done;
+    return ['total' => $total, 'done' => $done, 'pending' => $pending, 'percent' => $total > 0 ? round(($done / $total) * 100) : 0];
+}
+
+// افزودن اطلاعات پیشرفت به پروژه‌ها
+foreach ($userProjects as &$project) {
+    $progress = getProjectProgress($project['id'], $userTasks);
+    $project['_progress'] = $progress;
+}
+unset($project);
 
 // ==================== خواندن دیتای زندگی ====================
 $lifeData = [];
@@ -531,11 +568,106 @@ include __DIR__ . '/../includes/header.php';
     .card-title .learning-color { color: var(--color-learning); }
     .card-title .relationships-color { color: var(--color-relationships); }
     .card-title .leisure-color { color: var(--color-leisure); }
+    .card-title .projects-color { color: #f9d423; }
 
     .card-content {
         font-size: 14px;
         color: var(--text-secondary);
         line-height: 1.7;
+    }
+
+    /* ===== کارت پروژه ===== */
+    .project-card {
+        background: var(--bg-input);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 10px;
+        transition: all 0.3s;
+        border: 1px solid var(--border-color);
+    }
+
+    .project-card:hover {
+        background: var(--bg-card-hover);
+        border-color: rgba(249, 212, 35, 0.3);
+    }
+
+    .project-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .project-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .project-color-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .project-actions {
+        display: flex;
+        gap: 4px;
+    }
+
+    .btn-project-action {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 6px;
+        transition: all 0.3s;
+        font-size: 12px;
+    }
+
+    .btn-project-action:hover {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+
+    .project-progress-container {
+        margin-top: 8px;
+    }
+
+    .project-progress-bar {
+        width: 100%;
+        height: 8px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .project-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #f9d423, #ff4e50);
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+
+    .project-progress-text {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    .empty-projects {
+        text-align: center;
+        padding: 20px 10px;
+        color: var(--text-muted);
+        font-size: 13px;
     }
 
     .card-content .empty-state {
@@ -1254,6 +1386,44 @@ include __DIR__ . '/../includes/header.php';
                 </button>
             </div>
 
+            <!-- 0. پروژه‌ها -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-folder-open projects-color"></i> پروژه‌ها</div>
+                    <button class="btn-primary btn-sm" onclick="openProjectModal()"><i class="fas fa-plus"></i></button>
+                </div>
+                <div class="card-content">
+                    <?php if (empty($userProjects)): ?>
+                        <div class="empty-projects">هیچ پروژه‌ای وجود ندارد.</div>
+                    <?php else: ?>
+                        <?php foreach ($userProjects as $project): ?>
+                            <div class="project-card">
+                                <div class="project-header">
+                                    <div class="project-name">
+                                        <span class="project-color-dot" style="background: <?php echo htmlspecialchars($project['color'] ?? '#667eea'); ?>;"></span>
+                                        <?php echo htmlspecialchars($project['name']); ?>
+                                    </div>
+                                    <div class="project-actions">
+                                        <button class="btn-project-action" onclick="deleteProject('<?php echo $project['id']; ?>')" title="حذف پروژه">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="project-progress-container">
+                                    <div class="project-progress-bar">
+                                        <div class="project-progress-fill" style="width: <?php echo $project['_progress']['percent']; ?>%;"></div>
+                                    </div>
+                                    <div class="project-progress-text">
+                                        <span><?php echo $project['_progress']['done']; ?> از <?php echo $project['_progress']['total']; ?> تسک</span>
+                                        <span><?php echo $project['_progress']['percent']; ?>%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+
             <!-- 1. کار و بهره‌وری (تسک‌های امروز) -->
             <div class="card">
                 <div class="card-header">
@@ -1929,6 +2099,17 @@ include __DIR__ . '/../includes/header.php';
                     </select>
                 `;
                 break;
+            case 'project':
+                title.textContent = 'افزودن پروژه جدید';
+                html = `
+                    <label>نام پروژه</label>
+                    <input type="text" id="projectName" placeholder="مثلاً: یادگیری زبان انگلیسی">
+                    <label>توضیحات</label>
+                    <textarea id="projectDesc" placeholder="توضیحات پروژه..." rows="2"></textarea>
+                    <label>رنگ پروژه</label>
+                    <input type="color" id="projectColor" value="#667eea" style="width:100%; height:40px; border:none; border-radius:8px;">
+                `;
+                break;
             default:
                 return;
         }
@@ -2022,9 +2203,65 @@ include __DIR__ . '/../includes/header.php';
                     }
                 });
                 break;
+            case 'project':
+                const projectName = document.getElementById('projectName')?.value;
+                if (!projectName) { showToast('نام پروژه را وارد کنید.', 'error'); return; }
+                
+                const projectData = new FormData();
+                projectData.append('ajax', '1');
+                projectData.append('action', 'add_project');
+                projectData.append('name', projectName);
+                projectData.append('description', document.getElementById('projectDesc')?.value || '');
+                projectData.append('color', document.getElementById('projectColor')?.value || '#667eea');
+                
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: projectData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('پروژه افزوده شد.', 'success');
+                        closeModal();
+                        setTimeout(() => location.reload(), 500);
+                    } else {
+                        showToast(data.message || 'خطا در افزودن پروژه', 'error');
+                    }
+                });
+                break;
             default:
                 return;
         }
+    }
+
+    // ============================================
+    // توابع مدیریت پروژه
+    // ============================================
+    function openProjectModal() {
+        openModal('project');
+    }
+
+    function deleteProject(projectId) {
+        if (!confirm('آیا از حذف این پروژه اطمینان دارید؟')) return;
+        
+        const formData = new FormData();
+        formData.append('ajax', '1');
+        formData.append('action', 'delete_project');
+        formData.append('project_id', projectId);
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('پروژه حذف شد.', 'success');
+                setTimeout(() => location.reload(), 500);
+            } else {
+                showToast(data.message || 'خطا در حذف پروژه', 'error');
+            }
+        });
     }
 
     // ============================================
