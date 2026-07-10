@@ -194,6 +194,12 @@ if (!$jy || !$jm || $jm < 1 || $jm > 12) {
     list($jy, $jm, $jd) = gregorian_to_jalali($gy, $gm, $gd);
 }
 
+// ==================== محاسبه ماه‌های قبل و بعد ====================
+$prev_m = ($jm == 1) ? 12 : $jm - 1;
+$prev_y = ($jm == 1) ? $jy - 1 : $jy;
+$next_m = ($jm == 12) ? 1 : $jm + 1;
+$next_y = ($jm == 12) ? $jy + 1 : $jy;
+
 list($c_gy, $c_gm, $c_gd) = explode('-', date('Y-m-d'));
 list($current_jy, $current_jm, $current_jd) = gregorian_to_jalali($c_gy, $c_gm, $c_gd);
 
@@ -216,16 +222,10 @@ if ($selectedDate) {
 $totalTasks = count($userTasks);
 $doneTasks = count(array_filter($userTasks, function($t) { return $t['done'] ?? false; }));
 $pendingTasks = $totalTasks - $doneTasks;
-$totalExpenses = array_sum(array_column($finance['expenses'] ?? [], 'amount'));
+$totalExpenses = array_sum(array_column($finance['expenses'] ?? [], 'amount')));
 $totalHabits = count($habits);
 $doneHabits = count(array_filter($habits, function($h) { return $h['done'] ?? false; }));
 $totalContacts = count($contacts);
-
-// ==================== محاسبه ماه‌های قبل و بعد ====================
-$prev_m = ($jm == 1) ? 12 : $jm - 1;
-$prev_y = ($jm == 1) ? $jy - 1 : $jy;
-$next_m = ($jm == 12) ? 1 : $jm + 1;
-$next_y = ($jm == 12) ? $jy + 1 : $jy;
 
 // ==================== هدر یکپارچه ====================
 include __DIR__ . '/../includes/header.php';
