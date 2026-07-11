@@ -1521,7 +1521,14 @@ include __DIR__ . '/../includes/header.php';
                             ?>
                                 <div class="today-task-item">
                                     <div class="task-main-info">
-                                        <span class="task-status-dot <?= ($task['done'] ?? false) ? 'done' : 'pending' ?>"></span>
+                                        <label class="task-checkbox-wrapper">
+                                            <input type="checkbox" 
+                                                   class="task-done-checkbox" 
+                                                   data-task-id="<?= htmlspecialchars($task['id']) ?>" 
+                                                   <?= ($task['done'] ?? false) ? 'checked' : '' ?> 
+                                                   onchange="toggleTaskDone(this)">
+                                            <span class="custom-checkbox"></span>
+                                        </label>
                                         <span class="task-title <?= ($task['done'] ?? false) ? 'done' : '' ?>">
                                             <?= htmlspecialchars($task['title']) ?>
                                         </span>
