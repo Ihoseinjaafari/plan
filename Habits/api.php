@@ -293,6 +293,185 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'today_jalali' => getJalaliDate()
         ];
     }
+    // ==================== یادآورها ====================
+    elseif ($action === 'create_reminder' || $action === 'update_reminder') {
+        $remindersFile = __DIR__ . '/../data/reminders.json';
+        if (!file_exists($remindersFile)) file_put_contents($remindersFile, json_encode([]));
+        
+        $allReminders = json_decode(file_get_contents($remindersFile), true) ?? [];
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if ($action === 'create_reminder') {
+            $newReminder = [
+                'id' => time() . rand(1000, 9999),
+                'user_id' => $input['user_id'],
+                'title' => htmlspecialchars($input['title']),
+                'description' => htmlspecialchars($input['description'] ?? ''),
+                'time' => $input['time'],
+                'days' => json_encode($input['days']),
+                'enabled' => $input['enabled'],
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            $allReminders[] = $newReminder;
+        } else {
+            foreach ($allReminders as &$reminder) {
+                if ($reminder['id'] == $input['id']) {
+                    $reminder['title'] = htmlspecialchars($input['title']);
+                    $reminder['description'] = htmlspecialchars($input['description'] ?? '');
+                    $reminder['time'] = $input['time'];
+                    $reminder['days'] = json_encode($input['days']);
+                    $reminder['enabled'] = $input['enabled'];
+                    break;
+                }
+            }
+        }
+        
+        file_put_contents($remindersFile, json_encode($allReminders, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        $response = ['success' => true];
+    }
+    elseif ($action === 'delete_reminder') {
+        $remindersFile = __DIR__ . '/../data/reminders.json';
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (file_exists($remindersFile)) {
+            $allReminders = json_decode(file_get_contents($remindersFile), true) ?? [];
+            $allReminders = array_values(array_filter($allReminders, function($r) use ($input) {
+                return ($r['id'] ?? '') != $input['id'];
+            }));
+            file_put_contents($remindersFile, json_encode($allReminders, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        }
+        $response = ['success' => true];
+    }
+    // ==================== روتین‌ها ====================
+    elseif ($action === 'create_routine' || $action === 'update_routine') {
+        $routinesFile = __DIR__ . '/../data/routines.json';
+        if (!file_exists($routinesFile)) file_put_contents($routinesFile, json_encode([]));
+        
+        $allRoutines = json_decode(file_get_contents($routinesFile), true) ?? [];
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if ($action === 'create_routine') {
+            $newRoutine = [
+                'id' => time() . rand(1000, 9999),
+                'user_id' => $input['user_id'],
+                'title' => htmlspecialchars($input['title']),
+                'time_slot' => $input['time_slot'],
+                'habits' => json_encode($input['habits'] ?? []),
+                'completed' => false,
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            $allRoutines[] = $newRoutine;
+        } else {
+            foreach ($allRoutines as &$routine) {
+                if ($routine['id'] == $input['id']) {
+                    $routine['title'] = htmlspecialchars($input['title']);
+                    $routine['time_slot'] = $input['time_slot'];
+                    $routine['habits'] = json_encode($input['habits'] ?? []);
+                    break;
+                }
+            }
+        }
+        
+        file_put_contents($routinesFile, json_encode($allRoutines, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        $response = ['success' => true];
+    }
+    elseif ($action === 'toggle_routine') {
+        $routinesFile = __DIR__ . '/../data/routines.json';
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (file_exists($routinesFile)) {
+            $allRoutines = json_decode(file_get_contents($routinesFile), true) ?? [];
+            foreach ($allRoutines as &$routine) {
+                if ($routine['id'] == $input['id']) {
+                    $routine['completed'] = $input['completed'];
+                    break;
+                }
+            }
+            file_put_contents($routinesFile, json_encode($allRoutines, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        }
+        $response = ['success' => true];
+    }
+    elseif ($action === 'delete_routine') {
+        $routinesFile = __DIR__ . '/../data/routines.json';
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (file_exists($routinesFile)) {
+            $allRoutines = json_decode(file_get_contents($routinesFile), true) ?? [];
+            $allRoutines = array_values(array_filter($allRoutines, function($r) use ($input) {
+                return ($r['id'] ?? '') != $input['id'];
+            }));
+            file_put_contents($routinesFile, json_encode($allRoutines, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        }
+        $response = ['success' => true];
+    }
+    // ==================== جلسات تمرکز ====================
+    elseif ($action === 'log_focus_session') {
+        $focusSessionsFile = __DIR__ . '/../data/focus_sessions.json';
+        if (!file_exists($focusSessionsFile)) file_put_contents($focusSessionsFile, json_encode([]));
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $allSessions = json_decode(file_get_contents($focusSessionsFile), true) ?? [];
+        
+        $newSession = [
+            'id' => time() . rand(1000, 9999),
+            'user_id' => $input['user_id'],
+            'duration' => (int)$input['duration'],
+            'mode' => $input['mode'],
+            'date' => date('Y-m-d'),
+            'time' => date('H:i'),
+            'timestamp' => date('Y-m-d H:i:s')
+        ];
+        $allSessions[] = $newSession;
+        
+        file_put_contents($focusSessionsFile, json_encode($allSessions, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        $response = ['success' => true];
+    }
+    
+    echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// ==================== درخواست‌های GET ====================
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $action = $_GET['action'] ?? '';
+    $response = ['success' => false];
+    
+    if ($action === 'get_habits') {
+        $habits = getUserHabits($userId);
+        foreach ($habits as &$habit) {
+            $habit['streak'] = getHabitStreak($userId, $habit['id']);
+            $habit['completion_rate'] = getHabitCompletionRate($userId, $habit['id']);
+        }
+        $response = ['success' => true, 'habits' => $habits];
+    }
+    elseif ($action === 'get_reminder') {
+        $remindersFile = __DIR__ . '/../data/reminders.json';
+        $reminderId = $_GET['id'] ?? '';
+        
+        if (file_exists($remindersFile)) {
+            $allReminders = json_decode(file_get_contents($remindersFile), true) ?? [];
+            foreach ($allReminders as $reminder) {
+                if ($reminder['id'] == $reminderId && $reminder['user_id'] == $userId) {
+                    $response = ['success' => true, 'reminder' => $reminder];
+                    break;
+                }
+            }
+        }
+    }
+    elseif ($action === 'get_routine') {
+        $routinesFile = __DIR__ . '/../data/routines.json';
+        $routineId = $_GET['id'] ?? '';
+        
+        if (file_exists($routinesFile)) {
+            $allRoutines = json_decode(file_get_contents($routinesFile), true) ?? [];
+            foreach ($allRoutines as $routine) {
+                if ($routine['id'] == $routineId && $routine['user_id'] == $userId) {
+                    $response = ['success' => true, 'routine' => $routine];
+                    break;
+                }
+            }
+        }
+    }
     
     echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     exit;
