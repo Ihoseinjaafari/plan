@@ -55,7 +55,27 @@ if (!is_dir($dataDir)) mkdir($dataDir, 0777, true);
 
 $tasksFile = $dataDir . 'tasks.json';
 $projectsFile = $dataDir . 'projects.json';
+$dashboardProjectsFile = $dataDir . 'dashboard_projects_' . $userId . '.json';
 $lifeDataFile = $dataDir . 'life_data_' . $userId . '.json';
+
+// ==================== خواندن پروژه‌های انتخاب شده برای داشبورد ====================
+$dashboardProjects = [];
+if (file_exists($dashboardProjectsFile)) {
+    $dashboardProjects = json_decode(file_get_contents($dashboardProjectsFile), true);
+    if (!is_array($dashboardProjects)) $dashboardProjects = [];
+}
+
+// ==================== خواندن همه پروژه‌ها از فایل اصلی ====================
+$allProjects = [];
+if (file_exists($projectsFile)) {
+    $allProjects = json_decode(file_get_contents($projectsFile), true);
+    if (!is_array($allProjects)) $allProjects = [];
+}
+
+// فیلتر پروژه‌های کاربر فعلی
+$userProjects = array_values(array_filter($allProjects, function($project) use ($userId) {
+    return ($project['user_id'] ?? '') == $userId;
+}));
 
 // ==================== خواندن تسک‌ها ====================
 $allTasks = [];
@@ -68,57 +88,47 @@ $userTasks = array_values(array_filter($allTasks, function($task) use ($userId) 
     return ($task['user_id'] ?? '') == $userId;
 }));
 
-// ==================== خواندن پروژه‌ها ====================
-$allProjects = [];
-if (file_exists($projectsFile)) {
-    $allProjects = json_decode(file_get_contents($projectsFile), true);
-    if (!is_array($allProjects)) $allProjects = [];
-}
-
-$userProjects = array_values(array_filter($allProjects, function($project) use ($userId) {
-    return ($project['user_id'] ?? '') == $userId;
-}));
-
-// محاسبه پیشرفت هر پروژه
+// ==================== تابع محاسبه پیشرفت پروژه (نسخه اصلاح شده با دیباگ) ====================
 function getProjectProgress($projectId, $userTasks) {
-    $projectTasks = array_values(array_filter($userTasks, function($t) use ($projectId) {
-        return ($t['project_id'] ?? '') == $projectId;
+    // دیباگ: نمایش آی دی پروژه و تعداد تسک‌ها
+    error_log("Checking project ID: " . $projectId);
+    error_log("Total user tasks: " . count($userTasks));
+    
+    // پیدا کردن تسک‌های مربوط به این پروژه
+    $projectTasks = array_values(array_filter($userTasks, function($task) use ($projectId) {
+        // بررسی می‌کنیم که project_id در تسک با id پروژه برابر باشد
+        $hasProjectId = isset($task['project_id']) && $task['project_id'] == $projectId;
+        
+        // دیباگ: نمایش تسک‌هایی که project_id دارند
+        if (isset($task['project_id'])) {
+            error_log("Task has project_id: " . $task['project_id'] . " - Title: " . ($task['title'] ?? ''));
+        }
+        
+        return $hasProjectId;
     }));
+    
+    // دیباگ: نمایش تعداد تسک‌های پیدا شده
+    error_log("Found tasks for project: " . count($projectTasks));
     
     if (empty($projectTasks)) {
         return ['total' => 0, 'done' => 0, 'pending' => 0, 'percent' => 0];
     }
     
     $total = count($projectTasks);
-    $done = count(array_filter($projectTasks, function($t) {
-        return $t['done'] == true;
+    $done = count(array_filter($projectTasks, function($task) {
+        return isset($task['done']) && $task['done'] == true;
     }));
     $pending = $total - $done;
-    return ['total' => $total, 'done' => $done, 'pending' => $pending, 'percent' => $total > 0 ? round(($done / $total) * 100) : 0];
+    $percent = $total > 0 ? round(($done / $total) * 100) : 0;
+    
+    return [
+        'total' => $total,
+        'done' => $done,
+        'pending' => $pending,
+        'percent' => $percent
+    ];
 }
 
-// افزودن اطلاعات پیشرفت به پروژه‌ها
-foreach ($userProjects as &$project) {
-    $progress = getProjectProgress($project['id'], $userTasks);
-    $project['_progress'] = $progress;
-}
-unset($project);
-
-// ==================== خواندن دیتای زندگی ====================
-$lifeData = [];
-if (file_exists($lifeDataFile)) {
-    $lifeData = json_decode(file_get_contents($lifeDataFile), true);
-    if (!is_array($lifeData)) $lifeData = [];
-}
-
-// مقدار پیش‌فرض برای بخش‌ها
-$finance = $lifeData['finance'] ?? ['expenses' => [], 'savings_goal' => 10000000];
-$health = $lifeData['health'] ?? ['steps' => 0, 'water' => 0, 'sleep' => 0, 'workout' => ''];
-$habits = $lifeData['habits'] ?? [];
-$contacts = $lifeData['contacts'] ?? [];
-$leisure = $lifeData['leisure'] ?? ['playlist' => '', 'relax_time' => 0];
-
-// ==================== توابع تبدیل تاریخ ====================
 function gregorian_to_jalali($gy, $gm, $gd, $mod = '') {
     $g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
     $gy2 = ($gm > 2) ? ($gy + 1) : $gy;
@@ -163,7 +173,6 @@ function jalali_to_gregorian($jy, $jm, $jd, $mod = '') {
     return ($mod == '') ? [$gy, $gm, $gd] : $gy . $mod . $gm . $mod . $gd;
 }
 
-// ==================== دریافت تسک‌های یک روز ====================
 function getTasksForDate($year, $month, $day) {
     global $userTasks;
     $jalaliDateStr = sprintf("%04d-%02d-%02d", $year, $month, $day);
@@ -184,6 +193,28 @@ function getTasksForDate($year, $month, $day) {
     
     return array_values($filtered);
 }
+
+// افزودن اطلاعات پیشرفت به پروژه‌ها
+foreach ($userProjects as &$project) {
+    $progress = getProjectProgress($project['id'], $userTasks);
+    $project['_progress'] = $progress;
+    $project['_selected'] = in_array($project['id'], $dashboardProjects);
+}
+unset($project);
+
+// ==================== خواندن دیتای زندگی ====================
+$lifeData = [];
+if (file_exists($lifeDataFile)) {
+    $lifeData = json_decode(file_get_contents($lifeDataFile), true);
+    if (!is_array($lifeData)) $lifeData = [];
+}
+
+// مقدار پیش‌فرض برای بخش‌ها
+$finance = $lifeData['finance'] ?? ['expenses' => [], 'savings_goal' => 10000000];
+$health = $lifeData['health'] ?? ['steps' => 0, 'water' => 0, 'sleep' => 0, 'workout' => ''];
+$habits = $lifeData['habits'] ?? [];
+$contacts = $lifeData['contacts'] ?? [];
+$leisure = $lifeData['leisure'] ?? ['playlist' => '', 'relax_time' => 0];
 
 // ==================== پارامترهای تقویم ====================
 $jy = isset($_GET['y']) ? (int)$_GET['y'] : null;
@@ -220,20 +251,18 @@ if ($selectedDate) {
 
 // ==================== آمار ====================
 $totalTasks = count($userTasks);
-$doneTasks = count(array_filter($userTasks, function($t) { return $t['done'] ?? false; }));
+$doneTasks = count(array_filter($userTasks, function($t) { return isset($t['done']) && $t['done'] == true; }));
 $pendingTasks = $totalTasks - $doneTasks;
 $totalExpenses = array_sum(array_column($finance['expenses'] ?? [], 'amount'));
 $totalHabits = count($habits);
-$doneHabits = count(array_filter($habits, function($h) { return $h['done'] ?? false; }));
+$doneHabits = count(array_filter($habits, function($h) { return isset($h['done']) && $h['done'] == true; }));
 $totalContacts = count($contacts);
+$selectedProjects = array_filter($userProjects, function($p) { return isset($p['_selected']) && $p['_selected'] == true; });
 
 // ==================== هدر یکپارچه ====================
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<!-- ============================================
-     استایل‌های اختصاصی داشبورد
-     ============================================ -->
 <style>
     /* ============================================
        متغیرهای CSS
@@ -489,33 +518,8 @@ include __DIR__ . '/../includes/header.php';
         margin-top: 4px;
     }
 
-    /* ===== دکمه اضافه کردن ===== */
-    .add-fab {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        border: none;
-        font-size: 28px;
-        cursor: pointer;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        transition: all 0.3s ease;
-        z-index: 100;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .add-fab:hover {
-        transform: scale(1.1);
-    }
-
     /* ============================================
-       دکشبورد: کارت‌های اصلی
+       دکشبورد: دو ستون اصلی
        ============================================ */
     .dashboard-grid {
         display: grid;
@@ -524,13 +528,131 @@ include __DIR__ . '/../includes/header.php';
         align-items: start;
     }
 
-    .cards-grid {
+    /* بخش اصلی با دو ستون داخلی */
+    .dashboard-main {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: 1fr 2fr;
         gap: 20px;
+        align-items: start;
     }
 
-    .card {
+    /* ===== کارت تایمر ===== */
+    .countdown-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .countdown-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(102,126,234,0.3);
+    }
+
+    .countdown-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .countdown-title span#countdownTitleSpan {
+        cursor: text;
+        border-bottom: 1px dashed transparent;
+        transition: border-color 0.2s;
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+
+    .countdown-title span#countdownTitleSpan:hover,
+    .countdown-title span#countdownTitleSpan:focus {
+        border-bottom-color: var(--primary-color);
+        background-color: rgba(0, 0, 0, 0.02);
+        outline: none;
+    }
+
+    .btn-edit-title {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 4px;
+        font-size: 14px;
+        opacity: 0.6;
+        transition: all 0.2s;
+    }
+
+    .btn-edit-title:hover {
+        opacity: 1;
+        color: var(--primary-color);
+        transform: scale(1.1);
+    }
+
+    /* تایمر - 6 ستون در یک ردیف */
+    .countdown-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 6px;
+    }
+
+    .countdown-item {
+        background: var(--bg-input);
+        border-radius: 10px;
+        padding: 8px 4px;
+        transition: all 0.3s;
+        text-align: center;
+    }
+
+    .countdown-item:hover {
+        background: var(--bg-card-hover);
+    }
+
+    .countdown-value {
+        font-size: 16px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea, #f5576c);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .countdown-label {
+        font-size: 9px;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .btn-set-date {
+        margin-top: 12px;
+        background: var(--bg-input);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        padding: 8px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 12px;
+        font-family: inherit;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-set-date:hover {
+        background: var(--bg-card-hover);
+        border-color: #667eea;
+    }
+
+    /* ===== بخش پروژه‌ها ===== */
+    .projects-section {
         background: var(--bg-card);
         border-radius: 16px;
         padding: 18px 20px;
@@ -538,21 +660,20 @@ include __DIR__ . '/../includes/header.php';
         transition: all 0.3s ease;
     }
 
-    .card:hover {
+    .projects-section:hover {
         border-color: rgba(102,126,234,0.3);
-        background: var(--bg-card-hover);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px var(--shadow-hover);
     }
 
-    .card-header {
+    .projects-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 12px;
+        flex-wrap: wrap;
+        gap: 8px;
     }
 
-    .card-title {
+    .projects-title {
         font-size: 16px;
         font-weight: 600;
         color: var(--text-primary);
@@ -561,27 +682,69 @@ include __DIR__ . '/../includes/header.php';
         gap: 8px;
     }
 
-    .card-title i { font-size: 18px; }
-    .card-title .work-color { color: var(--color-work); }
-    .card-title .finance-color { color: var(--color-finance); }
-    .card-title .health-color { color: var(--color-health); }
-    .card-title .learning-color { color: var(--color-learning); }
-    .card-title .relationships-color { color: var(--color-relationships); }
-    .card-title .leisure-color { color: var(--color-leisure); }
-    .card-title .projects-color { color: #f9d423; }
-
-    .card-content {
-        font-size: 14px;
-        color: var(--text-secondary);
-        line-height: 1.7;
+    .projects-title i {
+        color: #f9d423;
     }
 
-    /* ===== کارت پروژه ===== */
+    .projects-title .count-badge {
+        font-size: 12px;
+        background: var(--bg-input);
+        padding: 2px 10px;
+        border-radius: 12px;
+        color: var(--text-muted);
+        font-weight: normal;
+    }
+
+    .btn-select-projects {
+        background: var(--bg-input);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        padding: 4px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 12px;
+        font-family: inherit;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+
+    .btn-select-projects:hover {
+        background: var(--bg-card-hover);
+        border-color: #667eea;
+        color: var(--text-primary);
+    }
+
+    /* لیست پروژه‌های انتخاب شده */
+    .selected-projects-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .selected-projects-grid::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .selected-projects-grid::-webkit-scrollbar-track {
+        background: var(--bg-input);
+        border-radius: 4px;
+    }
+
+    .selected-projects-grid::-webkit-scrollbar-thumb {
+        background: #667eea;
+        border-radius: 4px;
+    }
+
     .project-card {
         background: var(--bg-input);
         border-radius: 12px;
         padding: 12px;
-        margin-bottom: 10px;
         transition: all 0.3s;
         border: 1px solid var(--border-color);
     }
@@ -612,25 +775,21 @@ include __DIR__ . '/../includes/header.php';
         height: 10px;
         border-radius: 50%;
         display: inline-block;
+        flex-shrink: 0;
     }
 
-    .project-actions {
-        display: flex;
-        gap: 4px;
-    }
-
-    .btn-project-action {
-        background: transparent;
+    .project-remove-btn {
+        background: none;
         border: none;
         color: var(--text-muted);
         cursor: pointer;
-        padding: 4px;
+        padding: 4px 8px;
         border-radius: 6px;
         transition: all 0.3s;
-        font-size: 12px;
+        font-size: 14px;
     }
 
-    .btn-project-action:hover {
+    .project-remove-btn:hover {
         background: rgba(220, 53, 69, 0.2);
         color: #dc3545;
     }
@@ -663,80 +822,114 @@ include __DIR__ . '/../includes/header.php';
         margin-top: 4px;
     }
 
-    .empty-projects {
+    .empty-projects-msg {
         text-align: center;
-        padding: 20px 10px;
+        padding: 30px 10px;
         color: var(--text-muted);
         font-size: 13px;
     }
 
-    .card-content .empty-state {
-        text-align: center;
-        padding: 20px 10px;
-        color: var(--text-muted);
-        font-size: 13px;
+    .empty-projects-msg i {
+        font-size: 32px;
+        display: block;
+        margin-bottom: 10px;
+        opacity: 0.3;
     }
 
-    /* ===== لیست آیتم‌ها ===== */
-    .list-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 12px;
-        border-radius: 10px;
+    .empty-projects-msg .hint {
+        font-size: 12px;
+        color: var(--text-light);
+        margin-top: 8px;
+    }
+
+    /* ===== مودال انتخاب پروژه ===== */
+    .project-picker-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        max-height: 300px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .project-picker-grid::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .project-picker-grid::-webkit-scrollbar-track {
         background: var(--bg-input);
-        margin-bottom: 6px;
-        transition: all 0.3s;
+        border-radius: 4px;
     }
 
-    .list-item:hover {
-        background: var(--bg-card-hover);
+    .project-picker-grid::-webkit-scrollbar-thumb {
+        background: #667eea;
+        border-radius: 4px;
     }
 
-    .list-item .item-info {
+    .project-picker-item {
         display: flex;
         align-items: center;
-        gap: 10px;
-        flex: 1;
-        flex-wrap: wrap;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--bg-input);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid transparent;
     }
 
-    .list-item .item-info .check {
-        cursor: pointer;
-        width: 20px;
-        height: 20px;
-        min-width: 20px;
-        border: 2px solid var(--border-color);
+    .project-picker-item:hover {
+        background: var(--bg-card-hover);
+        border-color: var(--border-color);
+    }
+
+    .project-picker-item.selected {
+        border-color: #28a745;
+        background: rgba(40, 167, 69, 0.1);
+    }
+
+    .project-picker-item .picker-dot {
+        width: 14px;
+        height: 14px;
         border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .project-picker-item .picker-info {
+        flex: 1;
+    }
+
+    .project-picker-item .picker-name {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .project-picker-item .picker-progress {
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+
+    .project-picker-item .picker-check {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid var(--border-color);
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
         transition: all 0.3s;
         background: transparent;
-        color: transparent;
     }
 
-    .list-item .item-info .check.done {
+    .project-picker-item.selected .picker-check {
         background: #28a745;
         border-color: #28a745;
+    }
+
+    .project-picker-item .picker-check i {
+        font-size: 12px;
         color: white;
-    }
-
-    .list-item .item-info .item-title {
-        font-size: 14px;
-        color: var(--text-secondary);
-        word-break: break-word;
-    }
-
-    .list-item .item-info .item-title.done {
-        text-decoration: line-through;
-        color: var(--text-muted);
-    }
-
-    .list-item .item-actions {
-        display: flex;
-        gap: 6px;
-        flex-shrink: 0;
     }
 
     /* ============================================
@@ -921,128 +1114,6 @@ include __DIR__ . '/../includes/header.php';
         border: 2px solid #f1c40f;
     }
 
-    /* کارت روزشمار */
-    .countdown-card {
-        background: var(--bg-card);
-        border-radius: 16px;
-        padding: 20px;
-        border: 1px solid var(--border-color);
-        text-align: center;
-        margin-bottom: 20px;
-        transition: all 0.3s ease;
-    }
-
-    .countdown-card:hover {
-        transform: translateY(-3px);
-        border-color: rgba(102,126,234,0.3);
-    }
-
-    .countdown-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    .countdown-title span#countdownTitleSpan {
-        cursor: text;
-        border-bottom: 1px dashed transparent;
-        transition: border-color 0.2s;
-        padding: 2px 4px;
-        border-radius: 4px;
-    }
-
-    .countdown-title span#countdownTitleSpan:hover,
-    .countdown-title span#countdownTitleSpan:focus {
-        border-bottom-color: var(--primary-color);
-        background-color: rgba(0, 0, 0, 0.02);
-        outline: none;
-    }
-
-    .btn-edit-title {
-        background: none;
-        border: none;
-        color: var(--text-secondary);
-        cursor: pointer;
-        padding: 4px;
-        font-size: 14px;
-        opacity: 0.6;
-        transition: all 0.2s;
-    }
-
-    .btn-edit-title:hover {
-        opacity: 1;
-        color: var(--primary-color);
-        transform: scale(1.1);
-    }
-
-
-    .countdown-grid {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        gap: 8px;
-    }
-
-    .countdown-item {
-        background: var(--bg-input);
-        border-radius: 12px;
-        padding: 10px 6px;
-        transition: all 0.3s;
-        text-align: center;
-    }
-
-    .countdown-item:hover {
-        background: var(--bg-card-hover);
-    }
-
-    .countdown-value {
-        font-size: 18px;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea, #f5576c);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .countdown-label {
-        font-size: 10px;
-        color: var(--text-muted);
-        margin-top: 4px;
-    }
-
-    .btn-set-date {
-        margin-top: 12px;
-        background: var(--bg-input);
-        color: var(--text-secondary);
-        border: 1px solid var(--border-color);
-        padding: 8px 16px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: 12px;
-        font-family: inherit;
-        transition: all 0.3s;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .btn-set-date:hover {
-        background: var(--bg-card-hover);
-        border-color: #667eea;
-    }
-
-    .calendar-mini-table td .task-dot-mini {
-        display: block;
-        width: 4px;
-        height: 4px;
-        border-radius: 50%;
-        background: #f5576c;
-        margin: 1px auto 0;
-    }
-
     /* ===== سایدبار تسک‌های روز ===== */
     .day-tasks-section {
         margin-top: 12px;
@@ -1147,7 +1218,7 @@ include __DIR__ . '/../includes/header.php';
         border: 1px solid var(--border-color);
         border-radius: 25px;
         padding: 30px;
-        max-width: 500px;
+        max-width: 520px;
         width: 90%;
         max-height: 90vh;
         overflow-y: auto;
@@ -1277,21 +1348,19 @@ include __DIR__ . '/../includes/header.php';
             position: static;
             order: -1;
         }
+        .dashboard-main {
+            grid-template-columns: 1fr 1fr;
+        }
     }
 
     @media (max-width: 768px) {
         body { padding: 0; }
         .container { padding: 0 10px 10px; }
-        .cards-grid { grid-template-columns: 1fr; }
+        .dashboard-main {
+            grid-template-columns: 1fr;
+        }
         .stats-grid { grid-template-columns: repeat(2, 1fr); }
         .stat-number { font-size: 22px; }
-        .add-fab {
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            font-size: 24px;
-        }
         .calendar-sidebar-header .nav-links a {
             font-size: 11px;
             padding: 2px 6px;
@@ -1302,15 +1371,25 @@ include __DIR__ . '/../includes/header.php';
             line-height: 20px;
             font-size: 11px;
         }
+        .countdown-grid {
+            grid-template-columns: repeat(6, 1fr);
+        }
+        .countdown-value {
+            font-size: 14px;
+        }
+        .countdown-label {
+            font-size: 8px;
+        }
     }
 
     @media (max-width: 480px) {
         .stats-grid { grid-template-columns: 1fr 1fr; }
-        .card-title { font-size: 14px; }
         .calendar-sidebar-body .mini-nav .month-title { font-size: 12px; }
         .calendar-mini-table th { font-size: 9px; }
         .calendar-mini-table td { font-size: 10px; padding: 2px 0; }
         .calendar-mini-table td .day-num { width: 18px; height: 18px; line-height: 18px; font-size: 10px; }
+        .countdown-value { font-size: 12px; }
+        .countdown-label { font-size: 7px; }
     }
 </style>
 
@@ -1342,10 +1421,10 @@ include __DIR__ . '/../includes/header.php';
     <!-- ===== دکشبورد ===== -->
     <div class="dashboard-grid">
 
-        <!-- ===== کارت‌های اصلی ===== -->
-        <div class="cards-grid">
+        <!-- ===== بخش اصلی (دو ستونی) ===== -->
+        <div class="dashboard-main">
 
-            <!-- کارت روزشمار -->
+            <!-- ===== ستون چپ: تایمر ===== -->
             <div class="countdown-card">
                 <div class="countdown-title">
                     <i class="fas fa-hourglass-half"></i>
@@ -1354,7 +1433,7 @@ include __DIR__ . '/../includes/header.php';
                         <i class="fas fa-pen"></i>
                     </button>
                 </div>
-                <div class="countdown-grid" id="countdownGrid">
+                <div class="countdown-grid">
                     <div class="countdown-item">
                         <div class="countdown-value" id="yearsRemaining">-</div>
                         <div class="countdown-label">سال</div>
@@ -1386,40 +1465,51 @@ include __DIR__ . '/../includes/header.php';
                 </button>
             </div>
 
-            <!-- 0. پروژه‌ها -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><i class="fas fa-folder-open projects-color"></i> پروژه‌ها</div>
-                    <button class="btn-primary btn-sm" onclick="openProjectModal()"><i class="fas fa-plus"></i></button>
+            <!-- ===== ستون راست: پروژه‌ها ===== -->
+            <div class="projects-section">
+                <div class="projects-header">
+                    <div class="projects-title">
+                        <i class="fas fa-folder-open"></i>
+                        پروژه‌ها
+                        <span class="count-badge"><?php echo count($selectedProjects); ?> عدد</span>
+                    </div>
+                    <button class="btn-select-projects" onclick="openProjectPickerModal()">
+                        <i class="fas fa-plus-circle"></i>
+                        انتخاب پروژه
+                    </button>
                 </div>
                 <div class="card-content">
-                    <?php if (empty($userProjects)): ?>
-                        <div class="empty-projects">هیچ پروژه‌ای وجود ندارد.</div>
+                    <?php if (empty($selectedProjects)): ?>
+                        <div class="empty-projects-msg">
+                            <i class="fas fa-folder-open"></i>
+                            هیچ پروژه‌ای انتخاب نشده است.
+                            <div class="hint">برای اضافه کردن، روی دکمه "انتخاب پروژه" کلیک کنید.</div>
+                        </div>
                     <?php else: ?>
-                        <?php foreach ($userProjects as $project): ?>
-                            <div class="project-card">
-                                <div class="project-header">
-                                    <div class="project-name">
-                                        <span class="project-color-dot" style="background: <?php echo htmlspecialchars($project['color'] ?? '#667eea'); ?>;"></span>
-                                        <?php echo htmlspecialchars($project['name']); ?>
-                                    </div>
-                                    <div class="project-actions">
-                                        <button class="btn-project-action" onclick="deleteProject('<?php echo $project['id']; ?>')" title="حذف پروژه">
-                                            <i class="fas fa-trash"></i>
+                        <div class="selected-projects-grid">
+                            <?php foreach ($selectedProjects as $project): ?>
+                                <div class="project-card">
+                                    <div class="project-header">
+                                        <div class="project-name">
+                                            <span class="project-color-dot" style="background: <?php echo htmlspecialchars($project['color'] ?? '#667eea'); ?>;"></span>
+                                            <?php echo htmlspecialchars($project['name']); ?>
+                                        </div>
+                                        <button class="project-remove-btn" onclick="removeProjectFromDashboard('<?php echo $project['id']; ?>')" title="حذف از داشبورد">
+                                            <i class="fas fa-times"></i>
                                         </button>
                                     </div>
-                                </div>
-                                <div class="project-progress-container">
-                                    <div class="project-progress-bar">
-                                        <div class="project-progress-fill" style="width: <?php echo $project['_progress']['percent']; ?>%;"></div>
+                                    <div class="project-progress-container">
+                                        <div class="project-progress-bar">
+                                            <div class="project-progress-fill" style="width: <?php echo $project['_progress']['percent']; ?>%;"></div>
+                                        </div>
+                                        <div class="project-progress-text">
+                                            <span><?php echo $project['_progress']['done']; ?> از <?php echo $project['_progress']['total']; ?> تسک</span>
+                                            <span><?php echo $project['_progress']['percent']; ?>%</span>
+                                        </div>
                                     </div>
-                                    <div class="project-progress-text">
-                                        <span><?php echo $project['_progress']['done']; ?> از <?php echo $project['_progress']['total']; ?> تسک</span>
-                                        <span><?php echo $project['_progress']['percent']; ?>%</span>
-                                    </div>
                                 </div>
-                            </div>
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -1530,24 +1620,48 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-    <!-- ===== دکمه افزودن ===== -->
-<button class="add-fab" onclick="openModal('task')" title="افزودن تسک جدید">
-    <i class="fas fa-plus"></i>
-</button>
-
-<!-- ===== مودال ===== -->
-<div class="modal" id="lifeModal">
+<!-- ===== مودال انتخاب پروژه ===== -->
+<div class="modal" id="projectPickerModal">
     <div class="modal-content">
         <div class="modal-header">
-            <i class="fas fa-plus-circle"></i>
-            <span id="modalTitle">عنوان</span>
+            <i class="fas fa-folder-open"></i>
+            <span>انتخاب پروژه‌ها</span>
         </div>
-        <div class="modal-body" id="modalBody">
-            <!-- محتوای داینامیک -->
+        <div class="modal-body">
+            <p style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">
+                روی هر پروژه کلیک کنید تا به داشبورد اضافه یا حذف شود.
+            </p>
+            <?php if (empty($userProjects)): ?>
+                <div class="empty-projects-msg">
+                    <i class="fas fa-folder-open"></i>
+                    هیچ پروژه‌ای وجود ندارد.
+                    <div class="hint">
+                        <a href="../projects/index.php" style="color:#667eea; text-decoration:none;">
+                            به بخش پروژه‌ها بروید
+                        </a>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="project-picker-grid" id="projectPickerGrid">
+                    <?php foreach ($userProjects as $project): ?>
+                        <div class="project-picker-item <?php echo $project['_selected'] ? 'selected' : ''; ?>" 
+                             onclick="toggleProjectSelection('<?php echo $project['id']; ?>')"
+                             data-project-id="<?php echo $project['id']; ?>">
+                            <span class="picker-dot" style="background: <?php echo htmlspecialchars($project['color'] ?? '#667eea'); ?>;"></span>
+                            <div class="picker-info">
+                                <div class="picker-name"><?php echo htmlspecialchars($project['name']); ?></div>
+                                <div class="picker-progress"><?php echo $project['_progress']['percent']; ?>% پیشرفت</div>
+                            </div>
+                            <div class="picker-check">
+                                <i class="fas fa-check" style="display: <?php echo $project['_selected'] ? 'block' : 'none'; ?>;"></i>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
         <div class="modal-footer">
-            <button class="btn-cancel" onclick="closeModal()">انصراف</button>
-            <button class="btn-save" id="modalSaveBtn" onclick="saveModal()">ذخیره</button>
+            <button class="btn-cancel" onclick="closeProjectPickerModal()">بستن</button>
         </div>
     </div>
 </div>
@@ -1579,6 +1693,23 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<!-- ===== مودال افزودن (برای هزینه، عادت، مخاطب) ===== -->
+<div class="modal" id="lifeModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-plus-circle"></i>
+            <span id="modalTitle">عنوان</span>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- محتوای داینامیک -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal()">انصراف</button>
+            <button class="btn-save" id="modalSaveBtn" onclick="saveModal()">ذخیره</button>
+        </div>
+    </div>
+</div>
+
 <!-- ===== Toast ===== -->
 <div class="toast" id="toast"></div>
 
@@ -1586,12 +1717,10 @@ include __DIR__ . '/../includes/header.php';
     // ============================================
     // متغیرها
     // ============================================
-    let currentModalType = '';
-    
-    // متغیرهای روزشمار
     let pickerYear = null;
     let pickerMonth = null;
     let selectedTargetDate = null;
+    let currentModalType = '';
 
     // ============================================
     // توابع کمکی تبدیل تاریخ
@@ -1657,7 +1786,6 @@ include __DIR__ . '/../includes/header.php';
             selectedTargetDate = JSON.parse(saved);
             updateCountdownDisplay();
         }
-        // بارگذاری عنوان روزشمار
         loadCountdownTitle();
     }
 
@@ -1681,7 +1809,6 @@ include __DIR__ . '/../includes/header.php';
     function editCountdownTitle() {
         const span = document.getElementById('countdownTitleSpan');
         span.focus();
-        // انتخاب متن برای ویرایش آسان‌تر
         const range = document.createRange();
         range.selectNodeContents(span);
         const sel = window.getSelection();
@@ -1718,15 +1845,11 @@ include __DIR__ . '/../includes/header.php';
             return;
         }
         
-        // محاسبه دقیق سال، ماه، روز، ساعت، دقیقه و ثانیه
         let remainingMs = diffTime;
-        
         const seconds = Math.floor((remainingMs / 1000) % 60);
         const minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
         const hours = Math.floor((remainingMs / (1000 * 60 * 60)) % 24);
-        
         let remainingDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
-        
         let years = Math.floor(remainingDays / 365);
         remainingDays %= 365;
         let months = Math.floor(remainingDays / 30);
@@ -1740,7 +1863,6 @@ include __DIR__ . '/../includes/header.php';
         document.getElementById('secondsRemaining').textContent = seconds.toLocaleString('fa-IR');
     }
 
-    // بروزرسانی هر ثانیه
     setInterval(updateCountdownDisplay, 1000);
 
     function openCountdownModal() {
@@ -1748,7 +1870,6 @@ include __DIR__ . '/../includes/header.php';
         const input = document.getElementById('targetDateJalali');
         const picker = document.getElementById('jalaliCalendarPicker');
         
-        // بارگذاری تاریخ ذخیره شده یا استفاده از تاریخ امروز
         if (selectedTargetDate) {
             input.value = `${selectedTargetDate.y}/${selectedTargetDate.m.toString().padStart(2,'0')}/${selectedTargetDate.d.toString().padStart(2,'0')}`;
             pickerYear = selectedTargetDate.y;
@@ -1839,12 +1960,10 @@ include __DIR__ . '/../includes/header.php';
         renderPickerCalendar();
     }
 
-    // بستن مودال با کلیک بیرون
     document.getElementById('countdownModal').addEventListener('click', function(e) {
         if (e.target === this) closeCountdownModal();
     });
 
-    // بارگذاری اولیه روزشمار
     loadTargetDate();
 
     // ============================================
@@ -1859,7 +1978,217 @@ include __DIR__ . '/../includes/header.php';
     }
 
     // ============================================
-    // مودال
+    // مدیریت انتخاب پروژه (از مودال)
+    // ============================================
+    function openProjectPickerModal() {
+        document.getElementById('projectPickerModal').classList.add('show');
+    }
+
+    function closeProjectPickerModal() {
+        document.getElementById('projectPickerModal').classList.remove('show');
+    }
+
+    function toggleProjectSelection(projectId) {
+        const item = document.querySelector(`.project-picker-item[data-project-id="${projectId}"]`);
+        const isSelected = item.classList.contains('selected');
+        const newState = !isSelected;
+        
+        // به‌روزرسانی فوری UI در مودال
+        if (newState) {
+            item.classList.add('selected');
+            item.querySelector('.picker-check i').style.display = 'block';
+        } else {
+            item.classList.remove('selected');
+            item.querySelector('.picker-check i').style.display = 'none';
+        }
+        
+        const formData = new FormData();
+        formData.append('ajax', '1');
+        formData.append('action', 'toggle_dashboard_project');
+        formData.append('project_id', projectId);
+        formData.append('checked', newState ? '1' : '0');
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast(newState ? '✅ پروژه به داشبورد اضافه شد.' : '❌ پروژه از داشبورد حذف شد.', 'success');
+                
+                // ===== به‌روزرسانی لیست پروژه‌های داشبورد بدون رفرش =====
+                const formData2 = new FormData();
+                formData2.append('ajax', '1');
+                formData2.append('action', 'get_selected_projects');
+                
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData2
+                })
+                .then(res => res.json())
+                .then(projectsData => {
+                    if (projectsData.success && projectsData.projects !== undefined) {
+                        // به‌روزرسانی تعداد
+                        const countBadge = document.querySelector('.projects-title .count-badge');
+                        if (countBadge) {
+                            countBadge.textContent = projectsData.count + ' عدد';
+                        }
+                        
+                        const section = document.querySelector('.projects-section .card-content');
+                        
+                        if (projectsData.projects.length === 0) {
+                            if (section) {
+                                section.innerHTML = `
+                                    <div class="empty-projects-msg">
+                                        <i class="fas fa-folder-open"></i>
+                                        هیچ پروژه‌ای انتخاب نشده است.
+                                        <div class="hint">برای اضافه کردن، روی دکمه "انتخاب پروژه" کلیک کنید.</div>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            let html = '<div class="selected-projects-grid">';
+                            projectsData.projects.forEach(project => {
+                                const progress = project._progress || { done: 0, total: 0, percent: 0 };
+                                html += `
+                                    <div class="project-card">
+                                        <div class="project-header">
+                                            <div class="project-name">
+                                                <span class="project-color-dot" style="background: ${project.color || '#667eea'};"></span>
+                                                ${project.name}
+                                            </div>
+                                            <button class="project-remove-btn" onclick="removeProjectFromDashboard('${project.id}')" title="حذف از داشبورد">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                        <div class="project-progress-container">
+                                            <div class="project-progress-bar">
+                                                <div class="project-progress-fill" style="width: ${progress.percent}%;"></div>
+                                            </div>
+                                            <div class="project-progress-text">
+                                                <span>${progress.done} از ${progress.total} تسک</span>
+                                                <span>${progress.percent}%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            html += '</div>';
+                            
+                            if (section) {
+                                section.innerHTML = html;
+                            }
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.log('Error updating projects:', err);
+                });
+            } else {
+                // برگرداندن وضعیت قبلی در صورت خطا
+                if (newState) {
+                    item.classList.remove('selected');
+                    item.querySelector('.picker-check i').style.display = 'none';
+                } else {
+                    item.classList.add('selected');
+                    item.querySelector('.picker-check i').style.display = 'block';
+                }
+                showToast(data.message || 'خطا در تغییر وضعیت پروژه', 'error');
+            }
+        })
+        .catch(err => {
+            // برگرداندن وضعیت قبلی در صورت خطا
+            if (newState) {
+                item.classList.remove('selected');
+                item.querySelector('.picker-check i').style.display = 'none';
+            } else {
+                item.classList.add('selected');
+                item.querySelector('.picker-check i').style.display = 'block';
+            }
+            showToast('خطا در ارتباط با سرور', 'error');
+        });
+    }
+
+    function removeProjectFromDashboard(projectId) {
+        if (!confirm('آیا از حذف این پروژه از داشبورد اطمینان دارید؟')) return;
+        
+        // پیدا کردن کارت پروژه و حذف آن از UI
+        const projectCards = document.querySelectorAll('.project-card');
+        let targetCard = null;
+        projectCards.forEach(card => {
+            const removeBtn = card.querySelector('.project-remove-btn');
+            if (removeBtn && removeBtn.getAttribute('onclick').includes(projectId)) {
+                targetCard = card;
+            }
+        });
+        
+        // حذف کارت از UI (با انیمیشن)
+        if (targetCard) {
+            targetCard.style.transition = 'all 0.3s ease';
+            targetCard.style.opacity = '0';
+            targetCard.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                if (targetCard && targetCard.parentNode) {
+                    targetCard.remove();
+                    const countBadge = document.querySelector('.projects-title .count-badge');
+                    const remainingCards = document.querySelectorAll('.project-card');
+                    if (countBadge) {
+                        countBadge.textContent = remainingCards.length + ' عدد';
+                    }
+                    if (remainingCards.length === 0) {
+                        const section = document.querySelector('.projects-section .card-content');
+                        if (section) {
+                            section.innerHTML = `
+                                <div class="empty-projects-msg">
+                                    <i class="fas fa-folder-open"></i>
+                                    هیچ پروژه‌ای انتخاب نشده است.
+                                    <div class="hint">برای اضافه کردن، روی دکمه "انتخاب پروژه" کلیک کنید.</div>
+                                </div>
+                            `;
+                        }
+                    }
+                }
+            }, 300);
+        }
+        
+        const formData = new FormData();
+        formData.append('ajax', '1');
+        formData.append('action', 'toggle_dashboard_project');
+        formData.append('project_id', projectId);
+        formData.append('checked', '0');
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('❌ پروژه از داشبورد حذف شد.', 'success');
+                const modalItem = document.querySelector(`.project-picker-item[data-project-id="${projectId}"]`);
+                if (modalItem) {
+                    modalItem.classList.remove('selected');
+                    modalItem.querySelector('.picker-check i').style.display = 'none';
+                }
+            } else {
+                showToast(data.message || 'خطا در حذف پروژه', 'error');
+                location.reload();
+            }
+        })
+        .catch(err => {
+            showToast('خطا در ارتباط با سرور', 'error');
+            location.reload();
+        });
+    }
+
+    // بستن مودال با کلیک بیرون
+    document.getElementById('projectPickerModal').addEventListener('click', function(e) {
+        if (e.target === this) closeProjectPickerModal();
+    });
+
+    // ============================================
+    // مودال افزودن (هزینه، عادت، مخاطب)
     // ============================================
     function openModal(type) {
         currentModalType = type;
@@ -1869,26 +2198,6 @@ include __DIR__ . '/../includes/header.php';
 
         let html = '';
         switch(type) {
-            case 'task':
-                title.textContent = 'افزودن تسک جدید (به پلنر)';
-                html = `
-                    <label>عنوان تسک</label>
-                    <input type="text" id="taskTitle" placeholder="مثلاً: تکمیل گزارش پروژه">
-                    <label>توضیحات</label>
-                    <textarea id="taskDesc" placeholder="توضیحات بیشتر..." rows="2"></textarea>
-                    <label>تاریخ</label>
-                    <input type="date" id="taskDate" value="<?php echo date('Y-m-d'); ?>">
-                    <label>اولویت</label>
-                    <select id="taskPriority">
-                        <option value="high">بالا</option>
-                        <option value="medium" selected>متوسط</option>
-                        <option value="low">پایین</option>
-                    </select>
-                    <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">
-                        <i class="fas fa-info-circle"></i> این تسک در <a href="../planner/index.php" style="color:#667eea;">پلنر</a> ذخیره می‌شود
-                    </p>
-                `;
-                break;
             case 'expense':
                 title.textContent = 'ثبت هزینه جدید';
                 html = `
@@ -1929,17 +2238,6 @@ include __DIR__ . '/../includes/header.php';
                     </select>
                 `;
                 break;
-            case 'project':
-                title.textContent = 'افزودن پروژه جدید';
-                html = `
-                    <label>نام پروژه</label>
-                    <input type="text" id="projectName" placeholder="مثلاً: یادگیری زبان انگلیسی">
-                    <label>توضیحات</label>
-                    <textarea id="projectDesc" placeholder="توضیحات پروژه..." rows="2"></textarea>
-                    <label>رنگ پروژه</label>
-                    <input type="color" id="projectColor" value="#667eea" style="width:100%; height:40px; border:none; border-radius:8px;">
-                `;
-                break;
             default:
                 return;
         }
@@ -1956,12 +2254,6 @@ include __DIR__ . '/../includes/header.php';
         const type = currentModalType;
         
         switch(type) {
-            case 'task':
-                const title = document.getElementById('taskTitle')?.value;
-                if (!title) { showToast('عنوان تسک را وارد کنید.', 'error'); return; }
-                // هدایت به پلنر برای افزودن تسک
-                window.location.href = '../planner/index.php';
-                break;
             case 'expense':
                 const expenseTitle = document.getElementById('expenseTitle')?.value;
                 const amount = document.getElementById('expenseAmount')?.value;
@@ -2033,137 +2325,30 @@ include __DIR__ . '/../includes/header.php';
                     }
                 });
                 break;
-            case 'project':
-                const projectName = document.getElementById('projectName')?.value;
-                if (!projectName) { showToast('نام پروژه را وارد کنید.', 'error'); return; }
-                
-                const projectData = new FormData();
-                projectData.append('ajax', '1');
-                projectData.append('action', 'add_project');
-                projectData.append('name', projectName);
-                projectData.append('description', document.getElementById('projectDesc')?.value || '');
-                projectData.append('color', document.getElementById('projectColor')?.value || '#667eea');
-                
-                fetch(window.location.href, {
-                    method: 'POST',
-                    body: projectData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast('پروژه افزوده شد.', 'success');
-                        closeModal();
-                        setTimeout(() => location.reload(), 500);
-                    } else {
-                        showToast(data.message || 'خطا در افزودن پروژه', 'error');
-                    }
-                });
-                break;
             default:
                 return;
         }
     }
 
-    // ============================================
-    // توابع مدیریت پروژه
-    // ============================================
-    function openProjectModal() {
-        openModal('project');
-    }
-
-    function deleteProject(projectId) {
-        if (!confirm('آیا از حذف این پروژه اطمینان دارید؟')) return;
-        
-        const formData = new FormData();
-        formData.append('ajax', '1');
-        formData.append('action', 'delete_project');
-        formData.append('project_id', projectId);
-        
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showToast('پروژه حذف شد.', 'success');
-                setTimeout(() => location.reload(), 500);
-            } else {
-                showToast(data.message || 'خطا در حذف پروژه', 'error');
-            }
-        });
-    }
-
-    // ============================================
-    // توابع AJAX
-    // ============================================
-    function toggleHabit(id) {
-        const formData = new FormData();
-        formData.append('ajax', '1');
-        formData.append('action', 'toggle_habit');
-        formData.append('habit_id', id);
-
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showToast('وضعیت عادت تغییر کرد.', 'success');
-                setTimeout(() => location.reload(), 300);
-            }
-        });
-    }
-
-    function updateHealth(field, value) {
-        const formData = new FormData();
-        formData.append('ajax', '1');
-        formData.append('action', 'update_health');
-        formData.append('field', field);
-        formData.append('value', value);
-
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) showToast('ذخیره شد.', 'success');
-        });
-    }
-
-    function updateLeisure(field, value) {
-        const formData = new FormData();
-        formData.append('ajax', '1');
-        formData.append('action', 'update_leisure');
-        formData.append('field', field);
-        formData.append('value', value);
-
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) showToast('ذخیره شد.', 'success');
-        });
-    }
-
-    // ============================================
-    // بستن مودال
-    // ============================================
     document.getElementById('lifeModal').addEventListener('click', function(e) {
         if (e.target === this) closeModal();
     });
 
+    // ============================================
+    // بستن مودال‌ها با ESC
+    // ============================================
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeModal();
+        if (e.key === 'Escape') {
+            closeProjectPickerModal();
+            closeCountdownModal();
+            closeModal();
+        }
     });
 
     console.log('🚀 داشبورد مدیریت زندگی بارگذاری شد!');
     console.log('📅 امروز:', '<?= $month_names[$current_jm] ?> <?= $current_jd ?> <?= $current_jy ?>');
     console.log('📋 کل تسک‌ها:', <?= $totalTasks ?>);
+    console.log('📁 پروژه‌های انتخاب شده:', <?= count($selectedProjects) ?>);
 </script>
 
 <?php
@@ -2180,45 +2365,90 @@ if (isset($_POST['ajax']) && $_POST['ajax'] == '1') {
         if (!is_array($lifeData)) $lifeData = [];
     }
     
-    // بارگذاری پروژه‌ها
+    // بارگذاری پروژه‌های انتخاب شده
+    $dashboardProjects = [];
+    if (file_exists($dashboardProjectsFile)) {
+        $dashboardProjects = json_decode(file_get_contents($dashboardProjectsFile), true);
+        if (!is_array($dashboardProjects)) $dashboardProjects = [];
+    }
+    
+    // ===== تعریف مجدد متغیرها برای استفاده در AJAX =====
     $allProjects = [];
     if (file_exists($projectsFile)) {
         $allProjects = json_decode(file_get_contents($projectsFile), true);
         if (!is_array($allProjects)) $allProjects = [];
     }
     
+    $userProjects = array_values(array_filter($allProjects, function($project) use ($userId) {
+        return ($project['user_id'] ?? '') == $userId;
+    }));
+    
+    $allTasks = [];
+    if (file_exists($tasksFile)) {
+        $allTasks = json_decode(file_get_contents($tasksFile), true);
+        if (!is_array($allTasks)) $allTasks = [];
+    }
+    
+    $userTasks = array_values(array_filter($allTasks, function($task) use ($userId) {
+        return ($task['user_id'] ?? '') == $userId;
+    }));
+    
+// ===== تعریف تابع getProjectProgress در بخش AJAX (نسخه اصلاح شده با دیباگ) =====
+function getProjectProgressAjax($projectId, $userTasks) {
+    // دیباگ: نمایش آی دی پروژه و تعداد تسک‌ها
+    error_log("AJAX - Checking project ID: " . $projectId);
+    error_log("AJAX - Total user tasks: " . count($userTasks));
+    
+    $projectTasks = array_values(array_filter($userTasks, function($task) use ($projectId) {
+        $hasProjectId = isset($task['project_id']) && $task['project_id'] == $projectId;
+        
+        // دیباگ: نمایش تسک‌هایی که project_id دارند
+        if (isset($task['project_id'])) {
+            error_log("AJAX - Task has project_id: " . $task['project_id'] . " - Title: " . ($task['title'] ?? ''));
+        }
+        
+        return $hasProjectId;
+    }));
+    
+    error_log("AJAX - Found tasks for project: " . count($projectTasks));
+    
+    if (empty($projectTasks)) {
+        return ['total' => 0, 'done' => 0, 'pending' => 0, 'percent' => 0];
+    }
+    
+    $total = count($projectTasks);
+    $done = count(array_filter($projectTasks, function($task) {
+        return isset($task['done']) && $task['done'] == true;
+    }));
+    $pending = $total - $done;
+    $percent = $total > 0 ? round(($done / $total) * 100) : 0;
+    
+    return [
+        'total' => $total,
+        'done' => $done,
+        'pending' => $pending,
+        'percent' => $percent
+    ];
+}
+    
     switch ($action) {
-        case 'add_project':
-            $projectName = $_POST['name'] ?? '';
-            $projectDesc = $_POST['description'] ?? '';
-            $projectColor = $_POST['color'] ?? '#667eea';
-            
-            if (empty($projectName)) {
-                $response['success'] = false;
-                $response['message'] = 'نام پروژه الزامی است.';
-                break;
+        case 'get_selected_projects':
+            $selectedProjects = [];
+            foreach ($userProjects as $project) {
+                if (in_array($project['id'], $dashboardProjects)) {
+                    $progress = getProjectProgressAjax($project['id'], $userTasks);
+                    $project['_progress'] = $progress;
+                    $selectedProjects[] = $project;
+                }
             }
-            
-            $project = [
-                'id' => uniqid(),
-                'user_id' => $userId,
-                'name' => htmlspecialchars($projectName),
-                'description' => htmlspecialchars($projectDesc),
-                'color' => $projectColor,
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
-            ];
-            
-            if (!file_exists($projectsFile) || !is_array($allProjects)) {
-                $allProjects = [];
-            }
-            $allProjects[] = $project;
-            file_put_contents($projectsFile, json_encode($allProjects, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
             $response['success'] = true;
+            $response['projects'] = $selectedProjects;
+            $response['count'] = count($selectedProjects);
             break;
             
-        case 'delete_project':
+        case 'toggle_dashboard_project':
             $projectId = $_POST['project_id'] ?? '';
+            $checked = $_POST['checked'] ?? '0';
             
             if (empty($projectId)) {
                 $response['success'] = false;
@@ -2226,31 +2456,20 @@ if (isset($_POST['ajax']) && $_POST['ajax'] == '1') {
                 break;
             }
             
-            if (!file_exists($projectsFile) || !is_array($allProjects)) {
-                $response['success'] = false;
-                $response['message'] = 'فایل پروژه‌ها یافت نشد.';
-                break;
-            }
-            
-            $found = false;
-            $updatedProjects = [];
-            foreach ($allProjects as $p) {
-                if (($p['id'] ?? '') == $projectId && ($p['user_id'] ?? '') == $userId) {
-                    $found = true;
-                } else {
-                    $updatedProjects[] = $p;
+            if ($checked == '1') {
+                if (!in_array($projectId, $dashboardProjects)) {
+                    $dashboardProjects[] = $projectId;
                 }
+            } else {
+                $dashboardProjects = array_values(array_filter($dashboardProjects, function($id) use ($projectId) {
+                    return $id != $projectId;
+                }));
             }
             
-            if (!$found) {
-                $response['success'] = false;
-                $response['message'] = 'پروژه یافت نشد.';
-            } else {
-                file_put_contents($projectsFile, json_encode($updatedProjects, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-                $response['success'] = true;
-            }
+            file_put_contents($dashboardProjectsFile, json_encode($dashboardProjects, JSON_PRETTY_PRINT));
+            $response['success'] = true;
             break;
-        
+            
         case 'add_expense':
             $expense = [
                 'id' => uniqid(),
@@ -2318,7 +2537,7 @@ if (isset($_POST['ajax']) && $_POST['ajax'] == '1') {
             break;
     }
     
-    if ($response['success'] && !in_array($action, ['add_project', 'delete_project'])) {
+    if ($response['success'] && !in_array($action, ['toggle_dashboard_project', 'get_selected_projects'])) {
         file_put_contents($lifeDataFile, json_encode($lifeData, JSON_PRETTY_PRINT));
     }
     
