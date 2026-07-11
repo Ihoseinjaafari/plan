@@ -1521,7 +1521,7 @@ include __DIR__ . '/../includes/header.php';
             <div class="calendar-sidebar-header">
                 <h3><i class="fas fa-calendar-alt"></i> تقویم</h3>
                 <div class="nav-links">
-                    <a href="?y=<?= $jy ?>&m=<?= $jm ?>" title="رفرش"><i class="fas fa-sync-alt"></i></a>
+                    <a href="?y=<?= $current_jy ?>&m=<?= $current_jm ?>" title="رفرش"><i class="fas fa-sync-alt"></i></a>
                     <a href="../planner/index.php" title="پلنر"><i class="fas fa-external-link-alt"></i></a>
                 </div>
             </div>
