@@ -1408,30 +1408,6 @@ include __DIR__ . '/../includes/header.php';
 </style>
 
 <div class="container">
-    <!-- ===== آمار ===== -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-number"><?php echo $totalTasks; ?></div>
-            <div class="stat-label">📋 کل تسک‌ها</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number"><?php echo $doneTasks; ?></div>
-            <div class="stat-label">✅ انجام شده</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number"><?php echo $pendingTasks; ?></div>
-            <div class="stat-label">⏳ در انتظار</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number"><?php echo number_format($totalExpenses); ?></div>
-            <div class="stat-label">💰 هزینه کل</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number"><?php echo $doneHabits . '/' . $totalHabits; ?></div>
-            <div class="stat-label">📚 عادت‌ها</div>
-        </div>
-    </div>
-
     <!-- ===== دکشبورد ===== -->
     <div class="dashboard-grid">
 
@@ -2032,6 +2008,45 @@ include __DIR__ . '/../includes/header.php';
         document.getElementById('projectPickerModal').classList.remove('show');
     }
 
+    function toggleTaskDone(checkbox) {
+        const taskId = checkbox.dataset.taskId;
+        const isChecked = checkbox.checked;
+        
+        const formData = new FormData();
+        formData.append('ajax', '1');
+        formData.append('action', 'toggle_task_done');
+        formData.append('task_id', taskId);
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // به‌روزرسانی استایل تسک
+                const taskItem = checkbox.closest('.today-task-item');
+                const taskTitle = taskItem.querySelector('.task-title');
+                
+                if (data.done) {
+                    taskTitle.classList.add('done');
+                    showToast('✅ تسک انجام شد.', 'success');
+                } else {
+                    taskTitle.classList.remove('done');
+                    showToast('🔄 تسک در حالت انجام نشده قرار گرفت.', 'info');
+                }
+            } else {
+                checkbox.checked = !isChecked;
+                showToast('❌ خطا: ' + (data.message || 'عملیات ناموفق بود'), 'error');
+            }
+        })
+        .catch(err => {
+            console.error('Error toggling task:', err);
+            checkbox.checked = !isChecked;
+            showToast('❌ خطا در ارتباط با سرور', 'error');
+        });
+    }
+
     function toggleProjectSelection(projectId) {
         const item = document.querySelector(`.project-picker-item[data-project-id="${projectId}"]`);
         const isSelected = item.classList.contains('selected');
@@ -2581,9 +2596,43 @@ function getProjectProgressAjax($projectId, $userTasks) {
             $lifeData['contacts'][] = $contact;
             $response['success'] = true;
             break;
+            
+        case 'toggle_task_done':
+            $taskId = $_POST['task_id'] ?? '';
+            if (empty($taskId)) {
+                $response['success'] = false;
+                $response['message'] = 'شناسه تسک نامعتبر است';
+                break;
+            }
+            
+            $allTasks = [];
+            if (file_exists($tasksFile)) {
+                $allTasks = json_decode(file_get_contents($tasksFile), true);
+                if (!is_array($allTasks)) $allTasks = [];
+            }
+            
+            $taskFound = false;
+            foreach ($allTasks as &$task) {
+                if (($task['id'] ?? '') == $taskId) {
+                    $task['done'] = !($task['done'] ?? false);
+                    $taskFound = true;
+                    $response['success'] = true;
+                    $response['done'] = $task['done'];
+                    break;
+                }
+            }
+            unset($task);
+            
+            if (!$taskFound) {
+                $response['success'] = false;
+                $response['message'] = 'تسک یافت نشد';
+            } else {
+                file_put_contents($tasksFile, json_encode($allTasks, JSON_PRETTY_PRINT));
+            }
+            break;
     }
     
-    if ($response['success'] && !in_array($action, ['toggle_dashboard_project', 'get_selected_projects'])) {
+    if ($response['success'] && !in_array($action, ['toggle_dashboard_project', 'get_selected_projects', 'toggle_task_done'])) {
         file_put_contents($lifeDataFile, json_encode($lifeData, JSON_PRETTY_PRINT));
     }
     
