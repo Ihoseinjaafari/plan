@@ -1,14 +1,45 @@
 {
     "registration_enabled": false,
     "modules": {
-        "home": {"enabled": true, "name": "منوی اصلی"},
-        "planner": {"enabled": true, "name": "پلنر تسک‌ها"},
-        "projects": {"enabled": true, "name": "مدیریت پروژه‌ها"},
-        "lifeplan": {"enabled": true, "name": "لایف‌پلن"},
-        "vision": {"enabled": true, "name": "ویژن برد"},
-        "finance": {"enabled": true, "name": "مدیریت مالی"},
-        "health": {"enabled": true, "name": "سلامت"},
-        "calendar": {"enabled": true, "name": "تقویم شمسی"},
-        "dashboard": {"enabled": true, "name": "داشبورد"}
+        "home": {
+            "enabled": true,
+            "name": "منوی اصلی"
+        },
+        "planner": {
+            "enabled": true,
+            "name": "پلنر تسک‌ها"
+        },
+        "projects": {
+            "enabled": true,
+            "name": "مدیریت پروژه‌ها"
+        },
+        "lifeplan": {
+            "enabled": true,
+            "name": "لایف‌پلن"
+        },
+        "vision": {
+            "enabled": true,
+            "name": "ویژن برد"
+        },
+        "finance": {
+            "enabled": true,
+            "name": "مدیریت مالی"
+        },
+        "health": {
+            "enabled": true,
+            "name": "سلامت"
+        },
+        "calendar": {
+            "enabled": true,
+            "name": "تقویم شمسی"
+        },
+        "dashboard": {
+            "enabled": true,
+            "name": "داشبورد"
+        },
+        "habits": {
+            "enabled": true,
+            "name": "مدیریت عادت‌ها"
+        }
     }
 }
