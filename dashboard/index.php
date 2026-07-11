@@ -259,6 +259,9 @@ $doneHabits = count(array_filter($habits, function($h) { return isset($h['done']
 $totalContacts = count($contacts);
 $selectedProjects = array_filter($userProjects, function($p) { return isset($p['_selected']) && $p['_selected'] == true; });
 
+// ==================== تسک‌های امروز ====================
+$todayTasks = getTasksForDate($current_jy, $current_jm, $current_jd);
+
 // ==================== هدر یکپارچه ====================
 include __DIR__ . '/../includes/header.php';
 ?>
@@ -651,8 +654,8 @@ include __DIR__ . '/../includes/header.php';
         border-color: #667eea;
     }
 
-    /* ===== بخش پروژه‌ها ===== */
-    .projects-section {
+    /* ===== بخش تسک‌های امروز ===== */
+    .today-tasks-section {
         background: var(--bg-card);
         border-radius: 16px;
         padding: 18px 20px;
@@ -660,11 +663,11 @@ include __DIR__ . '/../includes/header.php';
         transition: all 0.3s ease;
     }
 
-    .projects-section:hover {
+    .today-tasks-section:hover {
         border-color: rgba(102,126,234,0.3);
     }
 
-    .projects-header {
+    .today-tasks-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -673,7 +676,7 @@ include __DIR__ . '/../includes/header.php';
         gap: 8px;
     }
 
-    .projects-title {
+    .today-tasks-title {
         font-size: 16px;
         font-weight: 600;
         color: var(--text-primary);
@@ -682,11 +685,11 @@ include __DIR__ . '/../includes/header.php';
         gap: 8px;
     }
 
-    .projects-title i {
-        color: #f9d423;
+    .today-tasks-title i {
+        color: #667eea;
     }
 
-    .projects-title .count-badge {
+    .today-tasks-title .count-badge {
         font-size: 12px;
         background: var(--bg-input);
         padding: 2px 10px;
@@ -695,7 +698,7 @@ include __DIR__ . '/../includes/header.php';
         font-weight: normal;
     }
 
-    .btn-select-projects {
+    .btn-view-all-tasks {
         background: var(--bg-input);
         color: var(--text-secondary);
         border: 1px solid var(--border-color);
@@ -709,39 +712,40 @@ include __DIR__ . '/../includes/header.php';
         align-items: center;
         gap: 6px;
         white-space: nowrap;
+        text-decoration: none;
     }
 
-    .btn-select-projects:hover {
+    .btn-view-all-tasks:hover {
         background: var(--bg-card-hover);
         border-color: #667eea;
         color: var(--text-primary);
     }
 
-    /* لیست پروژه‌های انتخاب شده */
-    .selected-projects-grid {
-        display: grid;
-        grid-template-columns: 1fr;
+    /* لیست تسک‌های امروز */
+    .today-tasks-list {
+        display: flex;
+        flex-direction: column;
         gap: 10px;
         max-height: 400px;
         overflow-y: auto;
         padding-right: 5px;
     }
 
-    .selected-projects-grid::-webkit-scrollbar {
+    .today-tasks-list::-webkit-scrollbar {
         width: 4px;
     }
 
-    .selected-projects-grid::-webkit-scrollbar-track {
+    .today-tasks-list::-webkit-scrollbar-track {
         background: var(--bg-input);
         border-radius: 4px;
     }
 
-    .selected-projects-grid::-webkit-scrollbar-thumb {
+    .today-tasks-list::-webkit-scrollbar-thumb {
         background: #667eea;
         border-radius: 4px;
     }
 
-    .project-card {
+    .today-task-item {
         background: var(--bg-input);
         border-radius: 12px;
         padding: 12px;
@@ -749,94 +753,104 @@ include __DIR__ . '/../includes/header.php';
         border: 1px solid var(--border-color);
     }
 
-    .project-card:hover {
+    .today-task-item:hover {
         background: var(--bg-card-hover);
-        border-color: rgba(249, 212, 35, 0.3);
+        border-color: rgba(102, 126, 234, 0.3);
     }
 
-    .project-header {
+    .task-main-info {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        gap: 8px;
         margin-bottom: 8px;
     }
 
-    .project-name {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text-primary);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .project-color-dot {
-        width: 10px;
-        height: 10px;
+    .task-status-dot {
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
-        display: inline-block;
         flex-shrink: 0;
     }
 
-    .project-remove-btn {
-        background: none;
-        border: none;
-        color: var(--text-muted);
-        cursor: pointer;
-        padding: 4px 8px;
-        border-radius: 6px;
-        transition: all 0.3s;
+    .task-status-dot.done {
+        background: #28a745;
+    }
+
+    .task-status-dot.pending {
+        background: #ffc107;
+    }
+
+    .task-title {
         font-size: 14px;
-    }
-
-    .project-remove-btn:hover {
-        background: rgba(220, 53, 69, 0.2);
-        color: #dc3545;
-    }
-
-    .project-progress-container {
-        margin-top: 8px;
-    }
-
-    .project-progress-bar {
-        width: 100%;
-        height: 8px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 4px;
+        font-weight: 600;
+        color: var(--text-primary);
+        flex: 1;
+        white-space: nowrap;
         overflow: hidden;
-        position: relative;
+        text-overflow: ellipsis;
     }
 
-    .project-progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #f9d423, #ff4e50);
-        border-radius: 4px;
-        transition: width 0.5s ease;
+    .task-title.done {
+        text-decoration: line-through;
+        opacity: 0.6;
     }
 
-    .project-progress-text {
+    .task-meta-info {
         display: flex;
-        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .task-time {
         font-size: 11px;
         color: var(--text-muted);
-        margin-top: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(255,255,255,0.05);
+        padding: 2px 8px;
+        border-radius: 6px;
     }
 
-    .empty-projects-msg {
+    .task-project-badge {
+        font-size: 11px;
+        color: var(--text-secondary);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(255,255,255,0.05);
+        padding: 2px 8px;
+        border-radius: 6px;
+        border: 1px solid transparent;
+    }
+
+    .task-category-badge {
+        font-size: 11px;
+        color: var(--text-muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(255,255,255,0.05);
+        padding: 2px 8px;
+        border-radius: 6px;
+    }
+
+    .empty-today-tasks-msg {
         text-align: center;
         padding: 30px 10px;
         color: var(--text-muted);
         font-size: 13px;
     }
 
-    .empty-projects-msg i {
+    .empty-today-tasks-msg i {
         font-size: 32px;
         display: block;
         margin-bottom: 10px;
         opacity: 0.3;
     }
 
-    .empty-projects-msg .hint {
+    .empty-today-tasks-msg .hint {
         font-size: 12px;
         color: var(--text-light);
         margin-top: 8px;
@@ -1465,47 +1479,70 @@ include __DIR__ . '/../includes/header.php';
                 </button>
             </div>
 
-            <!-- ===== ستون راست: پروژه‌ها ===== -->
-            <div class="projects-section">
-                <div class="projects-header">
-                    <div class="projects-title">
-                        <i class="fas fa-folder-open"></i>
-                        پروژه‌ها
-                        <span class="count-badge"><?php echo count($selectedProjects); ?> عدد</span>
+            <!-- ===== ستون راست: تسک‌های امروز ===== -->
+            <div class="today-tasks-section">
+                <div class="today-tasks-header">
+                    <div class="today-tasks-title">
+                        <i class="fas fa-list-check"></i>
+                        تسک‌های امروز
+                        <span class="count-badge"><?php echo count($todayTasks); ?> عدد</span>
                     </div>
-                    <button class="btn-select-projects" onclick="openProjectPickerModal()">
-                        <i class="fas fa-plus-circle"></i>
-                        انتخاب پروژه
-                    </button>
+                    <a href="../planner/index.php" class="btn-view-all-tasks">
+                        <i class="fas fa-external-link-alt"></i>
+                        مشاهده همه
+                    </a>
                 </div>
                 <div class="card-content">
-                    <?php if (empty($selectedProjects)): ?>
-                        <div class="empty-projects-msg">
-                            <i class="fas fa-folder-open"></i>
-                            هیچ پروژه‌ای انتخاب نشده است.
-                            <div class="hint">برای اضافه کردن، روی دکمه "انتخاب پروژه" کلیک کنید.</div>
+                    <?php if (empty($todayTasks)): ?>
+                        <div class="empty-today-tasks-msg">
+                            <i class="fas fa-calendar-check"></i>
+                            هیچ تسکی برای امروز وجود ندارد
+                            <div class="hint">می‌توانید از پلنر تسک جدید اضافه کنید</div>
                         </div>
                     <?php else: ?>
-                        <div class="selected-projects-grid">
-                            <?php foreach ($selectedProjects as $project): ?>
-                                <div class="project-card">
-                                    <div class="project-header">
-                                        <div class="project-name">
-                                            <span class="project-color-dot" style="background: <?php echo htmlspecialchars($project['color'] ?? '#667eea'); ?>;"></span>
-                                            <?php echo htmlspecialchars($project['name']); ?>
-                                        </div>
-                                        <button class="project-remove-btn" onclick="removeProjectFromDashboard('<?php echo $project['id']; ?>')" title="حذف از داشبورد">
-                                            <i class="fas fa-times"></i>
-                                        </button>
+                        <div class="today-tasks-list">
+                            <?php foreach ($todayTasks as $task): 
+                                // پیدا کردن نام پروژه بر اساس project_id
+                                $projectName = '';
+                                $projectColor = '#667eea';
+                                if (!empty($task['project_id'])) {
+                                    foreach ($userProjects as $proj) {
+                                        if ($proj['id'] == $task['project_id']) {
+                                            $projectName = $proj['name'];
+                                            $projectColor = $proj['color'] ?? '#667eea';
+                                            break;
+                                        }
+                                    }
+                                } elseif (!empty($task['project'])) {
+                                    // برای سازگاری با نسخه قدیمی
+                                    $projectName = $task['project'];
+                                }
+                                $category = $task['category'] ?? 'بدون دسته';
+                            ?>
+                                <div class="today-task-item">
+                                    <div class="task-main-info">
+                                        <span class="task-status-dot <?= ($task['done'] ?? false) ? 'done' : 'pending' ?>"></span>
+                                        <span class="task-title <?= ($task['done'] ?? false) ? 'done' : '' ?>">
+                                            <?= htmlspecialchars($task['title']) ?>
+                                        </span>
                                     </div>
-                                    <div class="project-progress-container">
-                                        <div class="project-progress-bar">
-                                            <div class="project-progress-fill" style="width: <?php echo $project['_progress']['percent']; ?>%;"></div>
-                                        </div>
-                                        <div class="project-progress-text">
-                                            <span><?php echo $project['_progress']['done']; ?> از <?php echo $project['_progress']['total']; ?> تسک</span>
-                                            <span><?php echo $project['_progress']['percent']; ?>%</span>
-                                        </div>
+                                    <div class="task-meta-info">
+                                        <?php if (!empty($task['time'])): ?>
+                                            <span class="task-time">
+                                                <i class="fas fa-clock"></i>
+                                                <?= htmlspecialchars($task['time']) ?>
+                                            </span>
+                                        <?php endif; ?>
+                                        <?php if (!empty($projectName)): ?>
+                                            <span class="task-project-badge" style="border-color: <?= htmlspecialchars($projectColor) ?>;">
+                                                <i class="fas fa-folder" style="color: <?= htmlspecialchars($projectColor) ?>;"></i>
+                                                <?= htmlspecialchars($projectName) ?>
+                                            </span>
+                                        <?php endif; ?>
+                                        <span class="task-category-badge">
+                                            <i class="fas fa-tag"></i>
+                                            <?= htmlspecialchars($category) ?>
+                                        </span>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -2035,7 +2072,7 @@ include __DIR__ . '/../includes/header.php';
                             countBadge.textContent = projectsData.count + ' عدد';
                         }
                         
-                        const section = document.querySelector('.projects-section .card-content');
+                        const section = document.querySelector('.today-tasks-section .card-content');
                         
                         if (projectsData.projects.length === 0) {
                             if (section) {
@@ -2137,7 +2174,7 @@ include __DIR__ . '/../includes/header.php';
                         countBadge.textContent = remainingCards.length + ' عدد';
                     }
                     if (remainingCards.length === 0) {
-                        const section = document.querySelector('.projects-section .card-content');
+                        const section = document.querySelector('.today-tasks-section .card-content');
                         if (section) {
                             section.innerHTML = `
                                 <div class="empty-projects-msg">
@@ -2182,7 +2219,9 @@ include __DIR__ . '/../includes/header.php';
         });
     }
 
+    // ============================================
     // بستن مودال با کلیک بیرون
+    // ============================================
     document.getElementById('projectPickerModal').addEventListener('click', function(e) {
         if (e.target === this) closeProjectPickerModal();
     });
